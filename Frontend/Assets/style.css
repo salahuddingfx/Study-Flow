@@ -455,3 +455,9 @@
             height: 40px;
             animation: spin 1s linear infinite;
         }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }

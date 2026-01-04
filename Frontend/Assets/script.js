@@ -112,6 +112,7 @@ createApp({
 
             // Goals & Streaks
             goals: [], 
+            achievements: [],
             currentStreak: 0,
 
             // Alarm Settings
@@ -519,14 +520,22 @@ createApp({
         currentView(newView) {
             if (newView === 'analytics') {
                 this.$nextTick(() => {
-                    this.updateCharts();
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            this.updateCharts();
+                        }, 500);
+                    });
                 });
             }
         },
 
         analyticsView() {
             this.$nextTick(() => {
-                this.updateCharts();
+                this.$nextTick(() => {
+                    setTimeout(() => {
+                        this.updateCharts();
+                    }, 500);
+                });
             });
         },
 
@@ -932,6 +941,11 @@ createApp({
                          method: 'POST',
                          body: JSON.stringify(session)
                      });
+
+                     // Check for new achievements
+                     await this.apiRequest('/api/achievements/check-progress', {
+                         method: 'POST'
+                     });
                 } catch (e) {
                     console.error("Failed to save session", e);
                 }
@@ -1058,6 +1072,11 @@ createApp({
                         method: 'PUT',
                         body: JSON.stringify({ completed: task.completed })
                     });
+
+                    // Check for new achievements
+                    await this.apiRequest('/api/achievements/check-progress', {
+                        method: 'POST'
+                    });
                 } catch(e) {
                      console.error(e);
                 }
@@ -1094,6 +1113,12 @@ createApp({
 
                 const sessionsData = await this.apiRequest('/api/sessions');
                 this.sessions = sessionsData || [];
+
+                const goalsData = await this.apiRequest('/api/goals');
+                this.goals = goalsData || [];
+
+                const achievementsData = await this.apiRequest('/api/achievements');
+                this.achievements = achievementsData || [];
             } catch (error) {
                 console.error("Failed to load user data", error);
             }
@@ -1399,10 +1424,14 @@ createApp({
                 return;
             }
             this.updatingCharts = true;
-            this.chartKey++;
             console.log('Updating charts for view:', this.analyticsView);
             if (!this.$refs.studyTimeChart || !this.$refs.subjectChart) {
                 console.log('Chart refs not available');
+                return;
+            }
+
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded');
                 return;
             }
 
@@ -1925,5 +1954,18 @@ loadYouTubeVideo(videoId, title = 'YouTube Video') {
         }
     }
 }).mount('#app');
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                console.log('ServiceWorker registered successfully');
+            })
+            .catch((error) => {
+                console.log('ServiceWorker registration failed:', error);
+            });
+    });
+}
 
 /* jshint ignore:end */

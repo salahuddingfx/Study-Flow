@@ -31,7 +31,13 @@
   <meta name="application-name" content="StudyFlow">
   <meta name="msapplication-TileColor" content="#8b5cf6">
   <meta name="msapplication-TileImage" content="/ms-icon-144x144.png"><!-- Favicon -->
+  <link rel="preload" href="Frontend/Assets/style.css" as="style">
+  <link rel="preload" href="Frontend/Assets/script.js" as="script">
+  <link rel="dns-prefetch" href="//cdn.tailwindcss.com">
+  <link rel="dns-prefetch" href="//unpkg.com">
+  <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%238b5cf6;stop-opacity:1' /><stop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23grad)'/><path d='M30 50 Q50 30 70 50 Q50 70 30 50' fill='white' opacity='0.9'/><circle cx='50' cy='50' r='8' fill='white'/></svg>">
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="Frontend/Assets/style.css">
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script><!-- Vue 3 CDN -->
@@ -48,7 +54,44 @@
   <div id="app"><!-- Custom Cursor -->
    <div class="custom-cursor" ref="cursor"></div>
    <div class="custom-cursor-dot" ref="cursorDot"></div><!-- Particle Container -->
-   <div class="particle-container" ref="particleContainer"></div><!-- Login Success Animation -->
+   <div class="particle-container" ref="particleContainer"></div><!-- Audio Player -->
+   <audio ref="audioPlayer" @ended="onTrackEnded" @error="handleAudioError" crossorigin="anonymous"></audio><!-- YouTube Player -->
+   <div v-if="showYouTubePlayer && youtubeVideoId" class="fixed bottom-4 right-4 z-40 glass rounded-2xl p-4 shadow-2xl max-w-sm">
+    <div class="flex items-center justify-between mb-3">
+     <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center"><i class="ph-bold ph-youtube-logo text-sm text-white"></i></div>
+      <div>
+       <div class="font-semibold text-sm">YouTube Music</div>
+       <div class="text-xs opacity-70">Playing from YouTube</div>
+      </div>
+     </div>
+     <button @click="stopYouTubeVideo" class="text-red-400 hover:text-red-300"><i class="ph-bold ph-x text-lg"></i></button>
+    </div>
+    <div class="aspect-video rounded-lg overflow-hidden mb-3">
+     <div id="youtube-player" class="w-full h-full"></div>
+    </div>
+    <div class="flex items-center justify-center gap-2">
+     <button @click="toggleYouTubeMute" class="btn-secondary p-1.5 rounded-full hover:bg-purple-600 transition-colors">
+      <i :class="youtubeMuted ? 'ph-bold ph-speaker-x' : 'ph-bold ph-speaker-high'" class="text-sm"></i>
+     </button>
+     <div class="flex items-center gap-1">
+      <i class="ph-bold ph-speaker-low text-purple-400 text-xs"></i>
+      <input type="range" min="0" max="100" v-model="youtubeVolume" @input="setYouTubeVolume" class="w-12 accent-purple-500">
+      <i class="ph-bold ph-speaker-high text-purple-400 text-xs"></i>
+     </div>
+     <div class="flex items-center gap-1">
+      <span class="text-xs text-purple-400">Speed</span>
+      <input type="range" min="0.25" max="2" step="0.25" v-model="youtubeSpeed" @input="setYouTubeSpeed" class="w-10 accent-purple-500">
+      <span class="text-xs text-purple-400">{{ youtubeSpeed }}x</span>
+     </div>
+     <button @click="playYouTubeManually" class="btn-primary p-1.5 rounded-full hover:bg-pink-600 transition-colors">
+      <i :class="isPlaying ? 'ph-bold ph-pause' : 'ph-bold ph-play'" class="text-sm"></i>
+     </button>
+     <button @click="openInYouTube" class="btn-secondary p-1.5 rounded-full hover:bg-red-600 transition-colors">
+      <i class="ph-bold ph-youtube-logo text-sm"></i>
+     </button>
+    </div>
+   </div><!-- Login Success Animation -->
    <div v-if="showLoginSuccess" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 modal-backdrop">
     <div class="text-center animate-fadeIn">
      <div class="mb-6 relative"><i class="ph-bold ph-check-circle text-8xl text-green-400 animate-pulse"></i>
@@ -399,43 +442,6 @@
       <div class="flex items-center gap-4 mb-4"><button @click="toggleMusic" class="w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center"> <i :class="isPlaying ? 'ph-bold ph-pause' : 'ph-bold ph-play'" class="text-2xl"></i> </button> <button @click="stopMusic" class="w-12 h-12 rounded-full bg-gray-600 hover:bg-gray-700 flex items-center justify-center"> <i class="ph-bold ph-stop text-2xl"></i> </button>
        <div class="flex-1 flex items-center gap-3"><i class="ph-bold ph-speaker-high text-xl"></i> <input type="range" v-model="musicVolume" @input="updateVolume" min="0" max="100" class="flex-1"> <span class="text-sm w-12">{{ musicVolume }}%</span>
        </div>
-      </div>
-      <audio ref="audioPlayer" @ended="onTrackEnded" @error="handleAudioError" crossorigin="anonymous"></audio>
-     </div><!-- YouTube Player -->
-     <div v-if="showYouTubePlayer && youtubeVideoId" class="glass rounded-2xl p-6 mb-6">
-      <div class="flex items-center justify-between mb-4">
-       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-xl bg-red-600 flex items-center justify-center"><i class="ph-bold ph-youtube-logo text-2xl text-white"></i></div>
-        <div>
-         <div class="font-semibold">YouTube Music</div>
-         <div class="text-sm opacity-70">Playing from YouTube</div>
-        </div>
-       </div>
-       <button @click="stopYouTubeVideo" class="text-red-400 hover:text-red-300"><i class="ph-bold ph-x text-2xl"></i></button>
-      </div>
-      <div class="aspect-video rounded-xl overflow-hidden">
-       <div id="youtube-player" class="w-full h-full"></div>
-      </div>
-      <div class="flex items-center justify-center gap-4 mt-4 px-2 py-2 bg-black/20 rounded-xl">
-       <button @click="toggleYouTubeMute" class="btn-secondary p-2 rounded-full hover:bg-purple-600 transition-colors">
-        <i :class="youtubeMuted ? 'ph-bold ph-speaker-x' : 'ph-bold ph-speaker-high'" class="text-xl"></i>
-       </button>
-       <div class="flex items-center gap-2">
-        <i class="ph-bold ph-speaker-low text-purple-400"></i>
-        <input type="range" min="0" max="100" v-model="youtubeVolume" @input="setYouTubeVolume" class="w-20 accent-purple-500">
-        <i class="ph-bold ph-speaker-high text-purple-400"></i>
-       </div>
-       <div class="flex items-center gap-2">
-        <span class="text-sm text-purple-400">Speed</span>
-        <input type="range" min="0.25" max="2" step="0.25" v-model="youtubeSpeed" @input="setYouTubeSpeed" class="w-16 accent-purple-500">
-        <span class="text-sm text-purple-400">{{ youtubeSpeed }}x</span>
-       </div>
-       <button @click="playYouTubeManually" class="btn-primary p-2 rounded-full hover:bg-pink-600 transition-colors">
-        <i :class="isPlaying ? 'ph-bold ph-pause' : 'ph-bold ph-play'" class="text-xl"></i>
-       </button>
-       <button @click="openInYouTube" class="btn-secondary p-2 rounded-full hover:bg-red-600 transition-colors">
-        <i class="ph-bold ph-youtube-logo text-xl"></i>
-       </button>
       </div>
      </div><!-- Playlists Tab -->
      <!-- Playlists Tab -->
@@ -989,13 +995,13 @@
         <div class="glass rounded-2xl p-6">
          <h3 class="text-xl font-semibold mb-4">Study Time Trend</h3>
          <div class="chart-container">
-          <canvas ref="studyTimeChart" :key="chartKey"></canvas>
+          <canvas ref="studyTimeChart"></canvas>
          </div>
         </div><!-- Subject Distribution Chart -->
         <div class="glass rounded-2xl p-6">
          <h3 class="text-xl font-semibold mb-4">Subject Distribution</h3>
          <div class="chart-container">
-          <canvas ref="subjectChart" :key="chartKey"></canvas>
+          <canvas ref="subjectChart"></canvas>
          </div>
         </div>
        </div><!-- Subject Progress -->

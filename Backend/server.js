@@ -81,7 +81,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Static Files
-app.use(express.static(path.join(__dirname, '../Frontend'), {
+app.use(express.static(path.join(__dirname, '..'), {
     maxAge: '1d', 
     etag: false
 }));
@@ -136,7 +136,7 @@ app.use('/api/achievements', require('./routes/achievement.routes'));
 
 // Catch-all
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../Frontend/Index.html'));
+    res.sendFile(path.join(__dirname, '../index.html'));
 });
 
 // Error Handling
