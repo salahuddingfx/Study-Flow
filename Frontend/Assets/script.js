@@ -10,9 +10,11 @@ createApp({
         return {
             // API Configuration
             // script.js এর এই অংশটি আপডেট করুন
-            API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-              ? 'http://localhost:5500'  // 👈 এখানে অবশ্যই 5500 হতে হবে (3000 থাকলে এরর খাবেন)
-              : 'https://study-flow-backend-x29c.onrender.com', 
+            // API Configuration
+        // লজিক বাদ দিয়ে সরাসরি আপনার লাইভ লিঙ্ক বসান
+        API_BASE_URL: 'https://study-flow-backend-x29c.onrender.com',
+
+        // ... বাকি কোড একই থাকবে 
 
             // Loading Text for Real Effect
             loadingText: 'Initializing...', 
