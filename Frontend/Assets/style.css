@@ -344,38 +344,47 @@
             cursor: none !important;
         }
         
-        .custom-cursor {
-            position: fixed;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(139, 92, 246, 0.8);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 9999;
-            transition: transform 0.15s ease, border-color 0.2s ease;
-            mix-blend-mode: difference;
-        }
+        /* Custom Cursor Fix */
+.custom-cursor {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(139, 92, 246, 0.8);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: difference;
+    
+    /* নিচের লাইনটি খুব গুরুত্বপূর্ণ - transition বন্ধ বা খুব ফাস্ট করতে হবে */
+    transition: none; 
+    /* অথবা খুব হালকা ইফেক্ট চাইলে: transition: transform 0.05s linear; */
+}
+
+.custom-cursor-dot {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    background: rgba(139, 92, 246, 0.9);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10000;
+    
+    /* ডট এর জন্য transition একদম বন্ধ করে দিন */
+    transition: none;
+}
         
-        .custom-cursor-dot {
-            position: fixed;
-            width: 6px;
-            height: 6px;
-            background: rgba(139, 92, 246, 0.9);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 10000;
-            transition: transform 0.1s ease;
-        }
-        
-        .custom-cursor.hover {
-            transform: scale(1.8);
-            border-color: rgba(236, 72, 153, 0.9);
-        }
-        
-        .custom-cursor-dot.hover {
-            transform: scale(1.5);
-            background: rgba(236, 72, 153, 0.9);
-        }
+        /* হোভার করলে কার্সার বড় না হয়ে কালার চেঞ্জ হবে (ল্যাগ ফিক্স) */
+.custom-cursor.hover {
+    /* transform: scale(1.8);  <-- এটা মুছে দিন, এটাই সমস্যা করছে */
+    background: rgba(236, 72, 153, 0.1); /* হালকা ব্যাকগ্রাউন্ড কালার */
+    border-color: rgba(236, 72, 153, 1); /* বর্ডার গাঢ় হবে */
+    border-width: 2px;
+}
+
+.custom-cursor-dot.hover {
+    /* transform: scale(1.5); <-- এটাও মুছে দিন */
+    background: rgba(236, 72, 153, 1);
+}
         
         /* Particle Container */
         .particle-container {

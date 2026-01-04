@@ -153,7 +153,7 @@
     <div class="glass-strong rounded-3xl p-4 sm:p-6 md:p-8 max-w-2xl w-full my-8 animate-slideUp max-h-[90vh] overflow-y-auto" @click.stop><!-- Developer Profile Header -->
      <div class="text-center mb-6 sm:mb-8">
       <div class="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-4xl sm:text-5xl font-bold overflow-hidden">
-       <img src="https://github.com/salahuddingfx.png" alt="Salah Uddin Kader" class="w-full h-full object-cover rounded-full">
+       <img src="https://avatars.githubusercontent.com/salahuddingfx" alt="Salah Uddin Kader" class="w-full h-full object-cover rounded-full">
       </div>
       <h3 class="text-2xl sm:text-3xl font-bold mb-2">Salah Uddin Kader</h3>
       <p class="text-sm sm:text-base text-purple-400 font-medium">Full Stack Developer &amp; UI/UX Designer</p>
@@ -190,6 +190,25 @@
       <div class="grid grid-cols-2 gap-2 sm:gap-3"><a href="https://github.com/salahuddingfx" target="_blank" rel="noopener noreferrer" class="glass-strong px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center gap-2 hover:bg-white/10"> <i class="ph-bold ph-github-logo text-lg sm:text-xl"></i> <span class="text-xs sm:text-sm font-medium">GitHub</span> </a> <a href="https://facebook.com/salahuddingfx" target="_blank" rel="noopener noreferrer" class="glass-strong px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center gap-2 hover:bg-white/10"> <i class="ph-bold ph-facebook-logo text-lg sm:text-xl text-blue-400"></i> <span class="text-xs sm:text-sm font-medium">Facebook</span> </a> <a href="https://twitter.com/salahuddingfx" target="_blank" rel="noopener noreferrer" class="glass-strong px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center gap-2 hover:bg-white/10"> <i class="ph-bold ph-twitter-logo text-lg sm:text-xl text-sky-400"></i> <span class="text-xs sm:text-sm font-medium">Twitter</span> </a> <a href="mailto:salauddinkaderappy@gmail.com" class="glass-strong px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center gap-2 hover:bg-white/10"> <i class="ph-bold ph-envelope text-lg sm:text-xl text-purple-400"></i> <span class="text-xs sm:text-sm font-medium">Email</span> </a>
       </div>
      </div><button @click="showDeveloperModal = false" class="w-full btn-primary px-6 py-3 rounded-xl font-semibold text-white"> Close </button>
+    </div>
+   </div><!-- Data Management Modal -->
+   <div v-if="showDataModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop overflow-y-auto" @click="showDataModal = false">
+    <div class="glass-strong rounded-3xl p-4 sm:p-6 md:p-8 max-w-lg w-full my-8 animate-slideUp max-h-[90vh] overflow-y-auto" @click.stop>
+     <h3 class="text-2xl font-bold mb-6">Data Management</h3>
+     <div class="space-y-6">
+      <div class="glass p-4 rounded-xl">
+       <h4 class="text-lg font-semibold mb-3">Export Data</h4>
+       <p class="text-sm opacity-80 mb-4">Download all your study data as a JSON file for backup.</p>
+       <button @click="exportUserData" class="btn-primary px-6 py-2 rounded-xl font-medium">Export Data</button>
+      </div>
+      <div class="glass p-4 rounded-xl">
+       <h4 class="text-lg font-semibold mb-3">Import Data</h4>
+       <p class="text-sm opacity-80 mb-4">Upload a previously exported JSON file to restore your data.</p>
+       <input type="file" accept=".json" @change="handleImportFile" class="mb-3">
+       <button @click="importUserData" class="btn-secondary px-6 py-2 rounded-xl font-medium">Import Data</button>
+      </div>
+     </div>
+     <button @click="showDataModal = false" class="w-full btn-primary px-6 py-3 rounded-xl font-semibold text-white mt-6"> Close </button>
     </div>
    </div><!-- Change Credentials Modal -->
    <div v-if="showChangeCredentials" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" @click="showChangeCredentials = false">
@@ -660,7 +679,7 @@
       </div>
      </div>
      <nav class="flex-1 space-y-2"><button @click="currentView = 'home'" :class="currentView === 'home' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-house text-xl"></i> Home </button> <button @click="currentView = 'timer'" :class="currentView === 'timer' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> Focus Timer </button> <button @click="currentView = 'tasks'" :class="currentView === 'tasks' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-check-square text-xl"></i> Daily Tasks </button> <button @click="currentView = 'analytics'" :class="currentView === 'analytics' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-chart-bar text-xl"></i> Analytics </button>
-      <div class="pt-4 border-t border-gray-700"><button @click="showThemeModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-palette text-xl"></i> Themes </button> <button @click="showNotificationSettings = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-bell text-xl"></i> Notifications </button> <button @click="showAdvancedTimer = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-timer text-xl"></i> Timer Settings </button> <button @click="showMusicModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-music-notes text-xl"></i> Music <span v-if="isPlaying" class="ml-auto"> <i class="ph-fill ph-speaker-high text-green-400 animate-pulse"></i> </span> </button> <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400 hover:bg-red-500/10 transition-all"> <i class="ph-bold ph-sign-out text-xl"></i> Logout </button>
+      <div class="pt-4 border-t border-gray-700"><button @click="showThemeModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-palette text-xl"></i> Themes </button> <button @click="showNotificationSettings = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-bell text-xl"></i> Notifications </button> <button @click="showAdvancedTimer = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-timer text-xl"></i> Timer Settings </button> <button @click="showMusicModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-music-notes text-xl"></i> Music <span v-if="isPlaying" class="ml-auto"> <i class="ph-fill ph-speaker-high text-green-400 animate-pulse"></i> </span> </button> <button @click="showDataModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-database text-xl"></i> Data Management </button> <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400 hover:bg-red-500/10 transition-all"> <i class="ph-bold ph-sign-out text-xl"></i> Logout </button>
       </div>
      </nav>
     </aside><!-- Main Content -->
@@ -674,6 +693,7 @@
      <div v-if="mobileMenuOpen" class="lg:hidden glass-strong border-b border-gray-700 p-4 animate-slideIn">
       <nav class="space-y-2"><button @click="currentView = 'home'; mobileMenuOpen = false" :class="currentView === 'home' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-house text-xl"></i> Home </button> <button @click="currentView = 'timer'; mobileMenuOpen = false" :class="currentView === 'timer' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> Focus Timer </button> <button @click="currentView = 'tasks'; mobileMenuOpen = false" :class="currentView === 'tasks' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-check-square text-xl"></i> Daily Tasks </button> <button @click="currentView = 'analytics'; mobileMenuOpen = false" :class="currentView === 'analytics' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-chart-bar text-xl"></i> Analytics </button>
        <div class="pt-2 border-t border-gray-700"><button @click="showThemeModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-palette text-xl"></i> Themes </button> <button @click="showNotificationSettings = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-bell text-xl"></i> Notifications </button> <button @click="showAdvancedTimer = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> Timer Settings </button> <button @click="showMusicModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-music-notes text-xl"></i> Music <span v-if="isPlaying" class="ml-auto"> <i class="ph-fill ph-speaker-high text-green-400 animate-pulse"></i> </span> </button>
+       <button @click="showDataModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-database text-xl"></i> Data Management </button>
        </div><button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400"> <i class="ph-bold ph-sign-out text-xl"></i> Logout </button>
       </nav>
      </div><!-- Content Area -->
@@ -986,13 +1006,13 @@
        <div class="grid md:grid-cols-2 gap-6 mb-6"><!-- Study Time Chart -->
         <div class="glass rounded-2xl p-6">
          <h3 class="text-xl font-semibold mb-4">Study Time Trend</h3>
-         <div class="chart-container">
+         <div class="chart-container h-64 sm:h-80">
           <canvas ref="studyTimeChart"></canvas>
          </div>
         </div><!-- Subject Distribution Chart -->
         <div class="glass rounded-2xl p-6">
          <h3 class="text-xl font-semibold mb-4">Subject Distribution</h3>
-         <div class="chart-container">
+         <div class="chart-container h-64 sm:h-80">
           <canvas ref="subjectChart"></canvas>
          </div>
         </div>

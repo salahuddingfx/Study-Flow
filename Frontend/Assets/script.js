@@ -32,6 +32,7 @@ createApp({
 
             // Modals
             showDeveloperModal: false,
+            showDataModal: false,
             showChangeCredentials: false,
             showThemeModal: false,
             showNotificationSettings: false,
@@ -68,6 +69,8 @@ createApp({
             userEmail: '',
             userProfileImage: '',
             userId: null,
+            exportData: null,
+            importFile: null,
 
             // Credentials Change
             credentialsForm: {
@@ -242,6 +245,30 @@ createApp({
                     `translate(${e.clientX - 3}px, ${e.clientY - 3}px)`;
             }
         };
+        // --- Hover Effect Logic (New Code) ---
+        this._hoverChecker = (e) => {
+            const target = e.target;
+            
+            // চেক করা হচ্ছে মাউস কোনো বাটন, লিংক বা ইনপুট ফিল্ডের ওপর আছে কি না
+            const isHoverable = target.closest('a') || 
+                                target.closest('button') || 
+                                target.closest('.card-hover') || 
+                                target.closest('input') || 
+                                target.closest('select') ||
+                                target.closest('.btn-primary') ||
+                                target.closest('.btn-secondary');
+
+            if (isHoverable) {
+                if (this.$refs.cursor) this.$refs.cursor.classList.add('hover');
+                if (this.$refs.cursorDot) this.$refs.cursorDot.classList.add('hover');
+            } else {
+                if (this.$refs.cursor) this.$refs.cursor.classList.remove('hover');
+                if (this.$refs.cursorDot) this.$refs.cursorDot.classList.remove('hover');
+            }
+        };
+        
+        // মাউস মুভ করার সাথে সাথে চেক করবে
+        document.addEventListener('mouseover', this._hoverChecker);
         document.addEventListener('mousemove', this._mouseMoveHandler);
 
         this.updateDateTime(); 
@@ -356,6 +383,9 @@ createApp({
         }
         if (this.dateTimeInterval) {
             clearInterval(this.dateTimeInterval);
+        }
+        if (this._hoverChecker) {
+            document.removeEventListener('mouseover', this._hoverChecker);
         }
     },
 
@@ -513,6 +543,84 @@ createApp({
                 totalSessions,
                 avgSessionLength
             };
+        },
+
+        // Data Export/Import Methods
+        // Data Export/Import Methods
+        async exportUserData() {
+            try {
+                const data = {
+                    user: {
+                        username: this.currentUser,
+                        email: this.userEmail,
+                        firstName: this.userFullName.split(' ')[0],
+                        lastName: this.userFullName.split(' ')[1] || ''
+                    },
+                    subjects: this.subjects,
+                    tasks: this.tasks,
+                    sessions: this.sessions,
+                    goals: this.goals,
+                    achievements: this.achievements,
+                    exportedAt: new Date().toISOString()
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `studyflow-data-${this.currentUser}-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                this.showInlineMessage('Data exported successfully!');
+            } catch (error) {
+                this.showInlineMessage('Failed to export data');
+            }
+        },
+
+        handleImportFile(event) {
+            this.importFile = event.target.files[0];
+        },
+
+        async importUserData() {
+            if (!this.importFile) {
+                this.showInlineMessage('Please select a file to import');
+                return;
+            }
+
+            try {
+                const text = await this.importFile.text();
+                const data = JSON.parse(text);
+
+                // Import subjects
+                if (data.subjects) {
+                    for (const subject of data.subjects) {
+                        await this.apiRequest('/api/subjects', 'POST', subject);
+                    }
+                }
+
+                // Import tasks
+                if (data.tasks) {
+                    for (const task of data.tasks) {
+                        await this.apiRequest('/api/tasks', 'POST', task);
+                    }
+                }
+
+                // Import goals
+                if (data.goals) {
+                    for (const goal of data.goals) {
+                        await this.apiRequest('/api/goals', 'POST', goal);
+                    }
+                }
+
+                // Reload data
+                await this.loadUserData();
+
+                this.showInlineMessage('Data imported successfully!');
+                this.importFile = null;
+            } catch (error) {
+                this.showInlineMessage('Failed to import data. Please check the file format.');
+            }
         }
 
     },
@@ -668,6 +776,14 @@ createApp({
 
             this.socket.on('subject-deleted', (subjectName) => {
                 this.subjects = this.subjects.filter(s => s.name !== subjectName);
+            });
+
+            this.socket.on('achievements-unlocked', (achievements) => {
+                achievements.forEach(achievement => {
+                    this.showInlineMessage(`🏆 Achievement Unlocked: ${achievement.title}!`);
+                });
+                // Reload achievements
+                this.loadUserData();
             });
 
             this.socket.on('disconnect', () => {
