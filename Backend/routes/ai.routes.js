@@ -10,7 +10,7 @@ const Goal = require('../models/Goal');
 // যদি API Key না থাকে, তবে ডামি রেসপন্স দিবে
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
 // Using unlimited model as default to avoid rate limits
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp';
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-3-flash';
 
 // AI Route now protected to access user data
 router.post('/ask', protect, async (req, res) => {
@@ -58,17 +58,13 @@ router.post('/ask', protect, async (req, res) => {
             4. If the user asks for motivation, use their goals or tasks to inspire them.
         `;
 
-        // Fallback chain: Start with unlimited models, then stable ones
+        // Fallback chain: Use only verified working models
         const candidates = [
-            'gemini-2.0-flash-exp',           // Unlimited experimental model
-            'gemini-exp-1206',                // Experimental (often unlimited)
-            'gemma-2-9b-it',                  // Gemma 9B model
-            'gemma-2-27b-it',                 // Gemma 27B model
-            'gemini-2.5-flash',               // Rate limited (5 RPM)
-            'gemini-3-flash',
-            'gemini-2.5-flash-lite',
-            'gemini-1.5-pro',
-            'gemini-1.0-pro'
+            'gemini-2.5-flash',               // Primary model (works - 4/5 RPM)
+            'gemini-3-flash',                 // Backup model
+            'gemini-2.5-flash-lite',          // Lite version
+            'gemini-1.5-flash',               // Stable fallback
+            'gemini-1.5-pro'                  // Last resort
         ];
         let text = null;
         let lastErr = null;
@@ -114,11 +110,11 @@ router.post('/ask', protect, async (req, res) => {
 // Health check to verify AI readiness
 router.get('/health', (req, res) => {
     const availableModels = [
-        { name: 'gemini-2.0-flash-exp', rateLimit: 'Unlimited ⚡', recommended: true },
-        { name: 'gemini-exp-1206', rateLimit: 'Unlimited ⚡' },
-        { name: 'gemma-2-9b-it', rateLimit: 'Varies' },
-        { name: 'gemma-2-27b-it', rateLimit: 'Varies' },
-        { name: 'gemini-2.5-flash', rateLimit: '5 RPM / 20 RPD ⚠️' },
+        { name: 'gemini-2.5-flash', rateLimit: '5 RPM ✅', recommended: true },
+        { name: 'gemini-3-flash', rateLimit: '5 RPM ⚡' },
+        { name: 'gemini-2.5-flash-lite', rateLimit: '10 RPM ⚡' },
+        { name: 'gemini-1.5-flash', rateLimit: 'Stable ✓' },
+        { name: 'gemini-1.5-pro', rateLimit: 'Stable ✓' },
     ];
     
     res.json({ 

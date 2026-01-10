@@ -1668,5 +1668,39 @@
    </div>
   </div>
   <script src="Assets/script.js"></script>
+  
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('✅ Service Worker registered successfully:', registration.scope);
+          })
+          .catch(error => {
+            console.log('❌ Service Worker registration failed:', error);
+          });
+      });
+    }
+
+    // PWA Install Prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      // Show install button/banner (optional UI)
+      console.log('💡 App can be installed!');
+      
+      // You can show a custom install button here
+      // For now, browser will show default install prompt
+    });
+
+    // Track if app was installed
+    window.addEventListener('appinstalled', () => {
+      console.log('🎉 StudyFlow installed successfully!');
+      deferredPrompt = null;
+    });
+  </script>
  </body>
 </html>

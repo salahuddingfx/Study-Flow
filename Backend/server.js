@@ -11,7 +11,8 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const path = require('path');
 const compression = require('compression'); 
-const rateLimit = require('express-rate-limit'); 
+const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 
 // 1️⃣ Initialize Database
@@ -99,20 +100,52 @@ io.on('connection', (socket) => {
     if (socket.userId) socket.join(`user_${socket.userId}`);
 
     // Timer Events
-    socket.on('start-timer', (data) => socket.to(`user_${socket.userId}`).emit('timer-started', data));
-    socket.on('pause-timer', (data) => socket.to(`user_${socket.userId}`).emit('timer-paused', data));
-    socket.on('reset-timer', (data) => socket.to(`user_${socket.userId}`).emit('timer-reset', data));
-    socket.on('timer-tick', (data) => socket.to(`user_${socket.userId}`).emit('timer-update', data));
+    const handleStartTimer = (data) => socket.to(`user_${socket.userId}`).emit('timer-started', data);
+    const handlePauseTimer = (data) => socket.to(`user_${socket.userId}`).emit('timer-paused', data);
+    const handleResetTimer = (data) => socket.to(`user_${socket.userId}`).emit('timer-reset', data);
+    const handleTimerTick = (data) => socket.to(`user_${socket.userId}`).emit('timer-update', data);
+
+    socket.on('start-timer', handleStartTimer);
+    socket.on('pause-timer', handlePauseTimer);
+    socket.on('reset-timer', handleResetTimer);
+    socket.on('timer-tick', handleTimerTick);
 
     // Task Events
-    socket.on('task-created', (task) => socket.to(`user_${socket.userId}`).emit('task-added', task));
-    socket.on('task-updated', (task) => socket.to(`user_${socket.userId}`).emit('task-updated', task));
-    socket.on('task-deleted', (id) => socket.to(`user_${socket.userId}`).emit('task-deleted', id));
+    const handleTaskCreated = (task) => socket.to(`user_${socket.userId}`).emit('task-added', task);
+    const handleTaskUpdated = (task) => socket.to(`user_${socket.userId}`).emit('task-updated', task);
+    const handleTaskDeleted = (id) => socket.to(`user_${socket.userId}`).emit('task-deleted', id);
+
+    socket.on('task-created', handleTaskCreated);
+    socket.on('task-updated', handleTaskUpdated);
+    socket.on('task-deleted', handleTaskDeleted);
+
+    // Clean up listeners on disconnect to prevent memory leaks
+    socket.on('disconnect', () => {
+        socket.removeListener('start-timer', handleStartTimer);
+        socket.removeListener('pause-timer', handlePauseTimer);
+        socket.removeListener('reset-timer', handleResetTimer);
+        socket.removeListener('timer-tick', handleTimerTick);
+        socket.removeListener('task-created', handleTaskCreated);
+        socket.removeListener('task-updated', handleTaskUpdated);
+        socket.removeListener('task-deleted', handleTaskDeleted);
+    });
 });
 
 // Routes
 app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'success', uptime: process.uptime() });
+    const healthCheck = {
+        status: 'success',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+        aiStatus: process.env.GEMINI_API_KEY ? 'Active' : 'Inactive',
+        environment: process.env.NODE_ENV || 'development',
+        memory: {
+            used: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`,
+            total: `${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)} MB`
+        }
+    };
+    res.status(200).json(healthCheck);
 });
 
 // Auth & User Routes
@@ -183,13 +216,95 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-    console.log(`🚀 Server running optimized on port ${PORT}`);
+server.listen(PORT, async () => {
+    console.clear();
+    
+    // Colors
+    const colors = {
+        reset: '\x1b[0m',
+        bright: '\x1b[1m',
+        cyan: '\x1b[36m',
+        green: '\x1b[32m',
+        yellow: '\x1b[33m',
+        blue: '\x1b[34m',
+        magenta: '\x1b[35m',
+        red: '\x1b[31m'
+    };
+
+    // Typewriter Effect Function
+    const typewriter = (text, color = '', speed = 30) => {
+        return new Promise((resolve) => {
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < text.length) {
+                    process.stdout.write(color + text[i] + colors.reset);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    console.log('');
+                    resolve();
+                }
+            }, speed);
+        });
+    };
+
+    // ASCII Art Header
+    console.log(colors.cyan + colors.bright);
+    console.log(`
+    ╔═══════════════════════════════════════════════════════════╗
+    ║                                                           ║
+    ║       ███████╗████████╗██╗   ██╗██████╗ ██╗   ██╗        ║
+    ║       ██╔════╝╚══██╔══╝██║   ██║██╔══██╗╚██╗ ██╔╝        ║
+    ║       ███████╗   ██║   ██║   ██║██║  ██║ ╚████╔╝         ║
+    ║       ╚════██║   ██║   ██║   ██║██║  ██║  ╚██╔╝          ║
+    ║       ███████║   ██║   ╚██████╔╝██████╔╝   ██║           ║
+    ║       ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝    ╚═╝           ║
+    ║                                                           ║
+    ║              ███████╗██╗      ██████╗ ██╗    ██╗         ║
+    ║              ██╔════╝██║     ██╔═══██╗██║    ██║         ║
+    ║              █████╗  ██║     ██║   ██║██║ █╗ ██║         ║
+    ║              ██╔══╝  ██║     ██║   ██║██║███╗██║         ║
+    ║              ██║     ███████╗╚██████╔╝╚███╔███╔╝         ║
+    ║              ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝          ║
+    ║                                                           ║
+    ╚═══════════════════════════════════════════════════════════╝
+    ` + colors.reset);
+
+    // Typewriter Animation
+    await typewriter('    ✨ StudyFlow by Salahuddin', colors.magenta + colors.bright, 50);
+    console.log('');
+    await typewriter('    🚀 Server Status: ONLINE', colors.green + colors.bright, 30);
+    console.log(colors.yellow + '    📡 Port: ' + colors.bright + PORT + colors.reset);
+    console.log(colors.blue + '    🌍 Environment: ' + colors.bright + (process.env.NODE_ENV || 'development') + colors.reset);
+    console.log(colors.magenta + '    💾 Database: ' + colors.bright + 'Connected' + colors.reset);
+    console.log(colors.cyan + '    ⏱️  Started at: ' + colors.bright + new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }) + colors.reset);
+    console.log('');
+    await typewriter('    ✅ All Routes Loaded Successfully!', colors.green, 25);
+    console.log(colors.yellow + '    🔥 AI Features: ' + (process.env.GEMINI_API_KEY ? colors.green + 'Active ✓' : colors.red + 'Inactive (Set GEMINI_API_KEY)') + colors.reset);
+    console.log('');
+    console.log(colors.cyan + '    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' + colors.reset);
+    await typewriter('    🎯 Ready to serve requests!', colors.bright + colors.green, 40);
+    console.log(colors.cyan + '    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' + colors.reset);
+    console.log('');
 });
 
-process.on('SIGTERM', () => {
-    console.log('SIGTERM received. Shutting down gracefully...');
+// Graceful shutdown handlers
+const gracefulShutdown = () => {
+    console.log('\n🛑 Shutting down gracefully...');
     server.close(() => {
-        console.log('Process terminated.');
+        console.log('✅ HTTP server closed');
+        mongoose.connection.close(false, () => {
+            console.log('✅ MongoDB connection closed');
+            process.exit(0);
+        });
     });
-});
+
+    // Force close after 10 seconds
+    setTimeout(() => {
+        console.error('⚠️ Forcing shutdown...');
+        process.exit(1);
+    }, 10000);
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);  // For Windows Ctrl+C
