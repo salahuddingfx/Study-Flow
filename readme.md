@@ -146,17 +146,15 @@ MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_super_secret_key
 NODE_ENV=development
 
-# AI Configuration (Unlimited Models Available!)
+# AI Configuration (Google Gemini)
 GEMINI_API_KEY=your_google_gemini_api_key
-GEMINI_MODEL=gemini-2.0-flash-exp  # Default: unlimited experimental model
+GEMINI_MODEL=gemini-1.5-flash  # Default: stable flash model
 ```
 
 **Available AI Models:**
-- `gemini-2.0-flash-exp` - ⚡ **Unlimited** (Recommended)
-- `gemini-exp-1206` - ⚡ **Unlimited**
-- `gemma-2-9b-it` - Gemma 9B
-- `gemma-2-27b-it` - Gemma 27B
-- `gemini-2.5-flash` - ⚠️ Rate Limited (5 RPM/20 RPD)
+- `gemini-1.5-flash` - ✅ **Stable & Reliable** (Recommended)
+- `gemini-1.5-pro` - ✅ **More Capable**
+- `gemini-1.0-pro` - ✅ **Stable**
 
 4️⃣ Start the Backend Server
 npm start
@@ -174,9 +172,9 @@ Or any static server of your choice.
 ### AI Setup (Gemini)
 - Get a **free API key** from [Google AI Studio](https://aistudio.google.com/app/apikey)
 - Add `GEMINI_API_KEY` to your Backend `.env`
-- The app uses **unlimited models by default** (gemini-2.0-flash-exp) to avoid rate limits
+- The app uses **stable models by default** (gemini-1.5-flash) for reliability
 - **Fallback system**: Automatically tries multiple models if one fails
-- **No rate limits** on experimental models! 🚀
+- Choose from stable, production-ready models! ✅
 ```
 
 ## 📁 Project Structure
@@ -211,8 +209,8 @@ Study Flow/
 ## 🔄 Recent Upgrades
 
 ### 🤖 AI System v2.0
-- ⚡ **Unlimited AI Models**: Now using `gemini-2.0-flash-exp` (no rate limits!)
-- 🔄 **Smart Fallback**: Auto-tries 9+ models including Gemma 2 series
+- ✅ **Stable AI Models**: Now using `gemini-1.5-flash` for reliability
+- 🔄 **Smart Fallback**: Auto-tries multiple verified models
 - 📊 **Model Tracking**: Response includes which model answered
 - 🎯 **Context-Aware**: AI knows your subjects, tasks, goals, and study history
 - 🔧 **Health Endpoint**: `/api/ai/health` shows model status
