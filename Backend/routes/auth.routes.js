@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { admin } = require('../middleware/admin.middleware');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -112,9 +113,9 @@ router.get('/me', async (req, res) => {
     }
 });
 
-// @desc    Make a user admin (temporary route for setup)
+// @desc    Make a user admin (protected route - requires admin access)
 // @route   POST /api/auth/make-admin
-router.post('/make-admin', async (req, res) => {
+router.post('/make-admin', admin, async (req, res) => {
     try {
         const { username } = req.body;
         const user = await User.findOneAndUpdate(

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
     try {
-        // এটি আপনার .env ফাইলের MONGO_URI ব্যবহার করবে
+        // Uses MONGO_URI from .env file
         const conn = await mongoose.connect(process.env.MONGO_URI, {
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,

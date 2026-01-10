@@ -7,10 +7,10 @@ const Task = require('../models/Task');
 const Session = require('../models/Session');
 const Goal = require('../models/Goal');
 
-// যদি API Key না থাকে, তবে ডামি রেসপন্স দিবে
+// If API Key is not available, return a dummy response
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
-// Using unlimited model as default to avoid rate limits
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-3-flash';
+// Using flash model as default for better availability
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
 // AI Route now protected to access user data
 router.post('/ask', protect, async (req, res) => {
@@ -60,11 +60,9 @@ router.post('/ask', protect, async (req, res) => {
 
         // Fallback chain: Use only verified working models
         const candidates = [
-            'gemini-2.5-flash',               // Primary model (works - 4/5 RPM)
-            'gemini-3-flash',                 // Backup model
-            'gemini-2.5-flash-lite',          // Lite version
-            'gemini-1.5-flash',               // Stable fallback
-            'gemini-1.5-pro'                  // Last resort
+            'gemini-1.5-flash',               // Primary model (stable and reliable)
+            'gemini-1.5-pro',                 // Backup model (more capable)
+            'gemini-1.0-pro'                  // Last resort fallback
         ];
         let text = null;
         let lastErr = null;
@@ -76,17 +74,23 @@ router.post('/ask', protect, async (req, res) => {
                 const response = await result.response;
                 text = response.text();
                 usedModel = m;
-                console.log(`✅ AI Success with model: ${m}`);
+                if (process.env.NODE_ENV === 'development') {
+                    console.log(`✅ AI Success with model: ${m}`);
+                }
                 break;
             } catch (err) {
-                console.log(`❌ AI Failed with ${m}:`, err.message);
+                if (process.env.NODE_ENV === 'development') {
+                    console.log(`❌ AI Failed with ${m}:`, err.message);
+                }
                 lastErr = err;
                 continue;
             }
         }
 
         if (!text) {
-            console.error('AI Fallback Error:', lastErr);
+            if (process.env.NODE_ENV === 'development') {
+                console.error('AI Fallback Error:', lastErr);
+            }
             return res.status(500).json({ message: 'No supported Gemini model responded. Check your API key and available models.' });
         }
         
@@ -97,7 +101,9 @@ router.post('/ask', protect, async (req, res) => {
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        console.error('AI Error:', error);
+        if (process.env.NODE_ENV === 'development') {
+            console.error('AI Error:', error);
+        }
         const message = error?.message?.includes('model')
             ? 'Unsupported Gemini model. Set GEMINI_MODEL to gemini-1.5-flash or gemini-1.5-pro.'
             : error?.message?.includes('API key')
@@ -110,11 +116,9 @@ router.post('/ask', protect, async (req, res) => {
 // Health check to verify AI readiness
 router.get('/health', (req, res) => {
     const availableModels = [
-        { name: 'gemini-2.5-flash', rateLimit: '5 RPM ✅', recommended: true },
-        { name: 'gemini-3-flash', rateLimit: '5 RPM ⚡' },
-        { name: 'gemini-2.5-flash-lite', rateLimit: '10 RPM ⚡' },
-        { name: 'gemini-1.5-flash', rateLimit: 'Stable ✓' },
+        { name: 'gemini-1.5-flash', rateLimit: 'Stable ✓', recommended: true },
         { name: 'gemini-1.5-pro', rateLimit: 'Stable ✓' },
+        { name: 'gemini-1.0-pro', rateLimit: 'Stable ✓' },
     ];
     
     res.json({ 

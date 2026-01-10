@@ -8,11 +8,11 @@ const userSchema = mongoose.Schema({
     firstName: String,
     lastName: String,
     profileImage: String,
-    // 👇 নতুন রোল ফিল্ড যোগ করা হয়েছে
+    // Role field for admin/user access control
     role: {
         type: String,
-        enum: ['user', 'admin'], // শুধু user বা admin হতে পারবে
-        default: 'user'          // অটোমেটিক 'user' সেট হবে
+        enum: ['user', 'admin'], // Only 'user' or 'admin' roles allowed
+        default: 'user'          // Defaults to 'user' role
     }
 }, { timestamps: true });
 

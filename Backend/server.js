@@ -56,7 +56,10 @@ const corsOptions = {
         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
-            console.log("Blocked by CORS:", origin);
+            // Log CORS issues in development only
+            if (process.env.NODE_ENV === 'development') {
+                console.log("Blocked by CORS:", origin);
+            }
             callback(null, true); 
         }
     },
@@ -175,9 +178,9 @@ const goalRoutes = require('./routes/goal.routes');
 goalRoutes.setIo(io);
 app.use('/api/goals', goalRoutes);
 
-// Achievement Routes (✅ FIXED with Socket.IO)
+// Achievement Routes (now properly configured with Socket.IO)
 const achievementRoutes = require('./routes/achievement.routes');
-achievementRoutes.setIo(io); // এটি মিসিং ছিল, এখন ঠিক করা হয়েছে
+achievementRoutes.setIo(io);
 app.use('/api/achievements', achievementRoutes);
 // Admin Routes (Admin Dashboard)
 app.use('/api/admin', require('./routes/admin.routes'));

@@ -170,7 +170,7 @@ switch (achievement.criteria.type) {
                     const studyDays = new Set();
                     sessions.forEach(session => {
                         // FIX: startTime -> timestamp
-                        // timestamp যদি স্ট্রিং হয়, তাই new Date() ব্যবহার করা নিরাপদ
+                        // Using new Date() to safely parse timestamp (handles both string and date formats)
                         const date = new Date(session.timestamp).toISOString().split('T')[0];
                         studyDays.add(date);
                     });
