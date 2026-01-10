@@ -7,7 +7,7 @@ const urlsToCache = [
   '/Assets/style.css',
   '/Assets/script.js',
   '/manifest.json',
-  '/Assets/preview-icon.png', // আইকনটিও যোগ করা হলো
+  '/Assets/brain-duotone.png', // আইকনটিও যোগ করা হলো
   
   // --- External Libraries (CDNs) ---
   // এগুলো ক্যাশ করলে লোডিং সুপারফাস্ট হবে

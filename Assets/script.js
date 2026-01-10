@@ -9,7 +9,9 @@ createApp({
     data() {
         return {
             // API Configuration
-            API_BASE_URL: 'https://study-flow-backend-x29c.onrender.com',
+            API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                ? 'http://localhost:5000' 
+                : 'https://study-flow-backend-x29c.onrender.com',
 
             // Loading Text for Real Effect
             loadingText: 'Initializing...', 
@@ -215,12 +217,93 @@ createApp({
             // Online/Offline status
             isOnline: navigator.onLine,
             lastSyncTime: null,
+
+            // Admin Panel
+            showAdminPanel: false,
+            isAdmin: false,
+            allUsers: [],
+            adminStats: {
+                totalUsers: 0,
+                activeUsers: 0,
+                totalSessions: 0,
+                totalMinutes: 0,
+                totalBlogs: 0,
+                totalSongs: 0
+            },
+            adminSessionsSummary: {
+                totalMinutes: 0,
+                totalSessions: 0,
+                perUser: []
+            },
+            adminSessionsChart: null,
+            adminLoading: false,
+            adminBlogs: [],
+            adminSongs: [],
+            newBlog: {
+                title: '',
+                content: '',
+                category: 'Study Related',
+                image: ''
+            },
+            newSong: {
+                title: '',
+                url: '',
+                category: 'focus'
+            },
+
+            // Public Blogs
+            selectedBlog: null,
+            blogsPublic: [
+                {
+                    _id: '1',
+                    title: 'The Art of Deep Focus',
+                    content: 'In our distracted world, the ability to focus is a superpower. Deep work is the ability to focus without distraction on a cognitively demanding task. It makes you better at what you do and provides the sense of true fulfillment that comes from craftsmanship. To master this, start by eliminating distractions...',
+                    image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=1000&auto=format&fit=crop',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    _id: '2',
+                    title: 'Science of Spaced Repetition',
+                    content: 'Spaced repetition is an evidence-based learning technique that is usually performed with flashcards. Newly introduced and more difficult flashcards are shown more frequently, while older and less difficult flashcards are shown less frequently in order to exploit the psychological effect of distraction...',
+                    image: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1000&auto=format&fit=crop',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    _id: '3',
+                    title: 'Optimizing Your Study Environment',
+                    content: 'Your physical environment directly impacts your cognitive performance. Lighting, ergonomics, noise levels, and even air quality play a significant role. A minimalist desk setup with warm lighting can reduce eye strain and keep your mind clear. Lets explore the elements of a perfect study station...',
+                    image: 'https://images.unsplash.com/photo-1497493292307-31c376b6e479?q=80&w=1000&auto=format&fit=crop',
+                    createdAt: new Date().toISOString()
+                }
+            ],
+
+            // Goals Management
+            goals: [],
+            newGoal: {
+                title: '',
+                type: 'weekly',
+                target: '',
+                unit: 'hours',
+                deadline: '',
+                priority: 'medium'
+            },
+
+            // AI Assistant
+            aiPrompt: '',
+            aiReply: '',
+            showAIChat: false, // Controls visibility of the floating AI chat
+            aiLoading: false,
+            aiChatHistory: [], // New Chat History Array
+            isTouchDevice: false, // New touch detection
         }; 
     }, 
 
     async mounted() {
         document.body.className = 'theme-dark';
         this.createParticles();
+        
+        // Detect Touch Device
+        this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
         // Display a random motivational quote
         this.currentQuote = this.motivationalQuotes[
@@ -230,8 +313,17 @@ createApp({
         // Load YouTube API Script
         this.loadYouTubeAPI(); 
 
+        // Add touch class to disable global cursor hide on touch devices
+        if (this.isTouchDevice) {
+            try {
+                document.documentElement.classList.add('hasTouch');
+            } catch (e) {}
+        }
+
         // --- UPDATED CURSOR LOGIC FOR NEW CSS ---
         this._mouseMoveHandler = (e) => {
+            if (this.isTouchDevice) return; // Disable cursor follow on touch
+
             this.cursorX = e.clientX;
             this.cursorY = e.clientY;
             
@@ -255,8 +347,16 @@ createApp({
                                 target.closest('.card-hover') || 
                                 target.closest('input') || 
                                 target.closest('select') ||
+                                target.closest('textarea') ||
                                 target.closest('.btn-primary') ||
-                                target.closest('.btn-secondary');
+                                target.closest('.btn-secondary') ||
+                                target.closest('.glass') ||
+                                target.closest('.glass-strong') ||
+                                target.closest('[role="button"]') ||
+                                target.closest('.clickable') ||
+                                target.closest('label') ||
+                                target.closest('.nav-item') ||
+                                target.closest('.card');
 
             if (isHoverable) {
                 if (this.$refs.cursor) this.$refs.cursor.classList.add('hover');
@@ -308,10 +408,10 @@ createApp({
         const token = localStorage.getItem('jwt');
 
         if (!token) {
-            await wait(100); 
+            await wait(1500); 
             this.loadingText = "Setting up guest environment...";
             this.currentUser = 'guest';
-            await wait(100); 
+            await wait(1000); 
             
             this.loadTheme();
             this.loadNotificationSettings();
@@ -324,6 +424,7 @@ createApp({
         }
 
         try {
+            await wait(1000);
             this.loadingText = "Connecting to server...";
             const res = await fetch(`${this.API_BASE_URL}/api/auth/me`, {
                 headers: {
@@ -362,7 +463,7 @@ createApp({
             this.startNotificationFeatures();
 
             this.loadingText = "Ready!";
-            await wait(100); 
+            await wait(1500); 
 
         } catch (err) {
             console.error('Auth restore failed', err);
@@ -778,6 +879,9 @@ createApp({
                 this.loadTimerSettings();
                 this.startNotificationFeatures();
 
+                // Check if user is admin
+                await this.checkAdminStatus();
+
             } catch (e) {
                 this.showInlineMessage(e.message || 'Login failed');
             } finally {
@@ -1158,6 +1262,56 @@ createApp({
             }
         },
 
+        async createGoal() {
+            if (!this.newGoal.title || !this.newGoal.target || !this.newGoal.deadline) {
+                this.showInlineMessage('Please fill all required fields');
+                return;
+            }
+
+            try {
+                const goalData = {
+                    ...this.newGoal,
+                    title: this.newGoal.title,
+                    target: Number(this.newGoal.target),
+                    unit: this.newGoal.unit,
+                    deadline: this.newGoal.deadline,
+                    priority: this.newGoal.priority
+                };
+
+                const res = await this.apiRequest('/api/goals', {
+                    method: 'POST',
+                    body: JSON.stringify(goalData)
+                });
+
+                if (res) {
+                    this.goals.unshift(res);
+                    this.showInlineMessage('Goal set successfully!');
+                    this.newGoal = {
+                        title: '',
+                        type: 'weekly',
+                        target: '',
+                        unit: 'hours',
+                        deadline: '',
+                        priority: 'medium'
+                    };
+                }
+            } catch (error) {
+                console.error('Failed to create goal', error);
+                this.showInlineMessage('Failed to create goal');
+            }
+        },
+
+        async deleteGoal(id) {
+            if (!confirm('Delete this goal?')) return;
+            try {
+                await this.apiRequest(`/api/goals/${id}`, { method: 'DELETE' });
+                this.goals = this.goals.filter(g => g._id !== id);
+                this.showInlineMessage('Goal deleted');
+            } catch (error) {
+                console.error('Failed to delete goal', error);
+            }
+        },
+
         async clearCompletedTasks() {
             this.tasks = this.tasks.filter(t => !t.completed);
         },
@@ -1178,6 +1332,23 @@ createApp({
 
                 const achievementsData = await this.apiRequest('/api/achievements');
                 this.achievements = achievementsData || [];
+
+                // Public blogs
+                try {
+                    const blogsRes = await fetch(`${this.API_BASE_URL}/api/blogs`);
+                    if (blogsRes.ok) {
+                        const fetchedBlogs = await blogsRes.json();
+                        // Only merge if we have fetched blogs, otherwise keep the defaults
+                        if (fetchedBlogs && fetchedBlogs.length > 0) {
+                            // Avoid duplicates if defaults are already there (simple check)
+                            const currentIds = new Set(this.blogsPublic.map(b => b._id));
+                            const uniqueFetched = fetchedBlogs.filter(b => !currentIds.has(b._id));
+                            this.blogsPublic = [...this.blogsPublic, ...uniqueFetched];
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Failed to load blogs', e);
+                }
             } catch (error) {
                 console.error("Failed to load user data", error);
             }
@@ -2200,6 +2371,336 @@ createApp({
             } catch (error) {
                 this.showInlineMessage('Failed to import data. Please check the file format.');
             }
+        },
+
+        // ==================== ADMIN PANEL METHODS ====================
+        
+        async checkAdminStatus() {
+            try {
+                const response = await fetch(`${this.API_BASE_URL}/api/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    this.isAdmin = userData.role === 'admin';
+                }
+            } catch (error) {
+                console.error('Admin check failed:', error);
+            }
+        },
+
+        async refreshAdminData() {
+            if (this.adminLoading) return;
+            
+            this.adminLoading = true;
+            try {
+                await this.loadAdminData();
+                this.showInlineMessage('Admin data refreshed successfully!');
+            } catch (error) {
+                console.error('Failed to refresh admin data:', error);
+                this.showInlineMessage('Failed to refresh admin data. Please try again.');
+            } finally {
+                this.adminLoading = false;
+            }
+        },
+
+        async loadAdminData() {
+            if (!this.isAdmin) return;
+
+            try {
+                // Load all users
+                const usersResponse = await fetch(`${this.API_BASE_URL}/api/admin/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (usersResponse.ok) {
+                    this.allUsers = await usersResponse.json();
+                    this.adminStats.totalUsers = this.allUsers.length;
+                }
+
+                // Load blogs
+                const blogsResponse = await fetch(`${this.API_BASE_URL}/api/blogs`);
+                if (blogsResponse.ok) {
+                    this.adminBlogs = await blogsResponse.json();
+                    this.adminStats.totalBlogs = this.adminBlogs.length;
+                }
+
+                // Load songs
+                const songsResponse = await fetch(`${this.API_BASE_URL}/api/songs`);
+                if (songsResponse.ok) {
+                    this.adminSongs = await songsResponse.json();
+                    this.adminStats.totalSongs = this.adminSongs.length;
+                }
+
+                // Load analytics summary
+                const analyticsRes = await fetch(`${this.API_BASE_URL}/api/admin/analytics`, {
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (analyticsRes.ok) {
+                    const analytics = await analyticsRes.json();
+                    this.adminStats.totalUsers = analytics.totalUsers;
+                    this.adminStats.totalSessions = analytics.totalSessions;
+                    this.adminSessionsSummary = analytics;
+                    this.adminStats.totalMinutes = analytics.totalMinutes || 0;
+                    this.renderAdminSessionsChart();
+                }
+            } catch (error) {
+                console.error('Failed to load admin data:', error);
+            }
+        },
+
+        async deleteUser(userId) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+
+            try {
+                const response = await fetch(`${this.API_BASE_URL}/api/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    this.showInlineMessage('User deleted successfully');
+                    await this.loadAdminData();
+                } else {
+                    this.showInlineMessage('Failed to delete user');
+                }
+            } catch (error) {
+                console.error('Delete user failed:', error);
+                this.showInlineMessage('Error deleting user');
+            }
+        },
+
+        async adminChangePassword(id) {
+            const newPassword = prompt("Enter new password for this user (min 6 chars):");
+            if (!newPassword) return;
+            if (newPassword.length < 6) {
+                alert("Password must be at least 6 characters.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${this.API_BASE_URL}/api/admin/users/${id}/password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ newPassword })
+                });
+
+                if (response.ok) {
+                    this.showInlineMessage('Password changed successfully');
+                } else {
+                    this.showInlineMessage('Failed to change password');
+                }
+            } catch (error) {
+                console.error('Change password failed:', error);
+                this.showInlineMessage('Error changing password');
+            }
+        },
+
+        async createBlog() {
+            if (!this.newBlog.title || !this.newBlog.content) {
+                this.showInlineMessage('Please fill all blog fields');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${this.API_BASE_URL}/api/blogs`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.newBlog)
+                });
+
+                if (response.ok) {
+                    this.showInlineMessage('Blog created successfully');
+                    this.newBlog = { title: '', content: '', category: 'Study Related', image: '' };
+                    await this.loadAdminData();
+                } else {
+                    this.showInlineMessage('Failed to create blog');
+                }
+            } catch (error) {
+                console.error('Create blog failed:', error);
+                this.showInlineMessage('Error creating blog');
+            }
+        },
+
+        async deleteBlog(blogId) {
+            if (!confirm('Are you sure you want to delete this blog?')) return;
+
+            try {
+                const response = await fetch(`${this.API_BASE_URL}/api/blogs/${blogId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    this.showInlineMessage('Blog deleted successfully');
+                    await this.loadAdminData();
+                } else {
+                    this.showInlineMessage('Failed to delete blog');
+                }
+            } catch (error) {
+                console.error('Delete blog failed:', error);
+                this.showInlineMessage('Error deleting blog');
+            }
+        },
+
+        async createSong() {
+            if (!this.newSong.title || !this.newSong.url) {
+                this.showInlineMessage('Please fill all song fields');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${this.API_BASE_URL}/api/songs`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.newSong)
+                });
+
+                if (response.ok) {
+                    this.showInlineMessage('Song added successfully');
+                    this.newSong = { title: '', url: '', category: 'focus' };
+                    await this.loadAdminData();
+                } else {
+                    this.showInlineMessage('Failed to add song');
+                }
+            } catch (error) {
+                console.error('Add song failed:', error);
+                this.showInlineMessage('Error adding song');
+            }
+        },
+
+        async deleteSong(songId) {
+            if (!confirm('Are you sure you want to delete this song?')) return;
+
+            try {
+                const response = await fetch(`${this.API_BASE_URL}/api/songs/${songId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    this.showInlineMessage('Song deleted successfully');
+                    await this.loadAdminData();
+                } else {
+                    this.showInlineMessage('Failed to delete song');
+                }
+            } catch (error) {
+                console.error('Delete song failed:', error);
+                this.showInlineMessage('Error deleting song');
+            }
+        },
+
+        async askAI() {
+            const prompt = this.aiPrompt.trim();
+            if (!prompt) return;
+
+            // Add user message to chat history immediately
+            this.aiChatHistory.push({ role: 'user', content: prompt });
+            this.aiPrompt = ''; // Clear input
+            this.aiLoading = true;
+            
+            // Scroll to bottom
+            this.$nextTick(() => {
+                const container = document.getElementById('ai-chat-container');
+                if (container) container.scrollTop = container.scrollHeight;
+            });
+
+            try {
+                // Use apiRequest helper to ensuring auth headers are sent
+                const data = await this.apiRequest('/api/ai/ask', {
+                    method: 'POST',
+                    body: JSON.stringify({ prompt })
+                });
+
+                if (data && data.answer) {
+                    this.aiChatHistory.push({ role: 'assistant', content: data.answer });
+                } else {
+                    this.aiChatHistory.push({ role: 'assistant', content: "I'm having trouble connecting to my brain right now." });
+                }
+            } catch (error) {
+                console.error('AI request failed', error);
+                this.aiChatHistory.push({ role: 'assistant', content: "Sorry, something went wrong. Please try again." });
+            } finally {
+                this.aiLoading = false;
+                this.$nextTick(() => {
+                    const container = document.getElementById('ai-chat-container');
+                    if (container) container.scrollTop = container.scrollHeight;
+                });
+            }
+        },
+
+        renderAdminSessionsChart() {
+            try {
+                const ctx = this.$refs.adminSessionsChart?.getContext('2d');
+                if (!ctx) return;
+
+                if (this.adminSessionsChart) {
+                    this.adminSessionsChart.destroy();
+                }
+
+                const labels = this.adminSessionsSummary.perUser.map(u => u.username);
+                const data = this.adminSessionsSummary.perUser.map(u => u.totalMinutes);
+
+                this.adminSessionsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels.length ? labels : ['No data'],
+                        datasets: [{
+                            label: 'Total Minutes',
+                            data: data.length ? data : [0],
+                            backgroundColor: '#8b5cf6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to render admin chart', error);
+            }
+        },
+
+        async openAdminPanel() {
+            if (!this.isAdmin) {
+                this.showInlineMessage('You do not have admin privileges');
+                return;
+            }
+            await this.loadAdminData();
+            this.showAdminPanel = true;
         }
     }
 }).mount('#app');

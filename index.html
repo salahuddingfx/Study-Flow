@@ -16,6 +16,9 @@
   <meta property="og:title" content="StudyFlow - Focus &amp; Productivity Timer">
   <meta property="og:description" content="Boost your productivity with StudyFlow - a beautiful focus timer app featuring Pomodoro technique, task management, and study analytics.">
   <meta property="og:image" content="https://studyflow-web.netlify.app/Assets/brain-duotone.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:type" content="website">
   <meta property="og:site_name" content="StudyFlow">
   <meta property="og:locale" content="en_US">
   <meta property="twitter:card" content="summary_large_image">
@@ -41,11 +44,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
-  <style>@view-transition { navigation: auto; }</style>
+  <style>
+    @view-transition { navigation: auto; }
+    [v-cloak] { display: none !important; }
+  </style>
  </head>
  <body class="theme-dark">
-  <div id="app"><div class="custom-cursor" ref="cursor"></div>
-   <div class="custom-cursor-dot" ref="cursorDot"></div><div class="particle-container" ref="particleContainer"></div><audio ref="audioPlayer" @ended="onTrackEnded" @error="handleAudioError" crossorigin="anonymous"></audio><div v-if="showYouTubePlayer && youtubeVideoId" class="fixed bottom-4 right-4 z-40 glass rounded-2xl p-4 shadow-2xl max-w-sm">
+  <div id="app" v-cloak><div :class="{ 'hidden': isTouchDevice }" class="custom-cursor" ref="cursor"></div>
+   <div :class="{ 'hidden': isTouchDevice }" class="custom-cursor-dot" ref="cursorDot"></div><div class="particle-container" ref="particleContainer"></div><audio ref="audioPlayer" @ended="onTrackEnded" @error="handleAudioError" crossorigin="anonymous"></audio><div v-if="showYouTubePlayer && youtubeVideoId" class="fixed bottom-4 right-4 z-40 glass rounded-2xl p-4 shadow-2xl max-w-sm">
     <div class="flex items-center justify-between mb-3">
      <div class="flex items-center gap-2">
       <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center"><i class="ph-bold ph-youtube-logo text-sm text-white"></i></div>
@@ -596,6 +602,189 @@
       <p class="text-xs opacity-70 mt-2">🎵 Focus music playing from YouTube</p>
      </div><button @click="showMusicModal = false" class="w-full btn-secondary px-6 py-3 rounded-xl font-semibold text-white"> Close </button>
     </div>
+   </div><div v-if="showAdminPanel" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop overflow-y-auto" @click="showAdminPanel = false">
+    <div class="glass-strong rounded-3xl p-8 max-w-6xl w-full my-8 animate-slideUp max-h-[90vh] overflow-y-auto" @click.stop>
+     <div class="flex items-center justify-between mb-8">
+      <div>
+       <h3 class="text-3xl font-bold flex items-center gap-3"><i class="ph-bold ph-shield-star text-yellow-400"></i> Admin Dashboard</h3>
+       <p class="text-sm opacity-60 mt-1">Manage users, blogs, and songs</p>
+      </div>
+      <div class="flex items-center gap-3">
+       <button @click="refreshAdminData" class="btn-secondary px-4 py-2 rounded-xl font-medium flex items-center gap-2" :disabled="adminLoading">
+        <i v-if="!adminLoading" class="ph-bold ph-arrow-clockwise text-lg"></i>
+        <i v-else class="ph-bold ph-circle-notch text-lg animate-spin"></i>
+        <span v-if="!adminLoading">Refresh</span>
+        <span v-else>Refreshing...</span>
+       </button>
+       <button @click="showAdminPanel = false" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20"><i class="ph-bold ph-x text-xl"></i></button>
+      </div>
+     </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+     <div class="glass p-4 rounded-xl text-center">
+      <i class="ph-bold ph-users text-3xl text-purple-400 mb-2"></i>
+      <div class="text-2xl font-bold">{{ adminStats.totalUsers }}</div>
+      <div class="text-xs opacity-60">Total Users</div>
+     </div>
+     <div class="glass p-4 rounded-xl text-center">
+      <i class="ph-bold ph-article text-3xl text-blue-400 mb-2"></i>
+      <div class="text-2xl font-bold">{{ adminStats.totalBlogs }}</div>
+      <div class="text-xs opacity-60">Blog Posts</div>
+     </div>
+     <div class="glass p-4 rounded-xl text-center">
+      <i class="ph-bold ph-music-notes text-3xl text-green-400 mb-2"></i>
+      <div class="text-2xl font-bold">{{ adminStats.totalSongs }}</div>
+      <div class="text-xs opacity-60">Songs</div>
+     </div>
+     <div class="glass p-4 rounded-xl text-center">
+      <i class="ph-bold ph-clock text-3xl text-orange-400 mb-2"></i>
+      <div class="text-2xl font-bold">{{ adminStats.totalSessions }}</div>
+      <div class="text-xs opacity-60">Sessions</div>
+     </div>
+     <div class="glass p-4 rounded-xl text-center">
+      <i class="ph-bold ph-gauge text-3xl text-pink-400 mb-2"></i>
+        <div class="text-2xl font-bold">{{ adminStats.totalMinutes }}</div>
+      <div class="text-xs opacity-60">Total Minutes</div>
+     </div>
+    </div>
+
+    <div class="glass rounded-2xl p-4 mb-6 h-64">
+     <div class="flex items-center justify-between mb-3">
+      <h4 class="text-lg font-semibold">All Users Study Time</h4>
+      <span class="text-xs opacity-60">Minutes by user</span>
+     </div>
+     <canvas ref="adminSessionsChart" class="w-full h-full"></canvas>
+    </div>
+
+     <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <button @click="adminActiveTab = 'users'" :class="adminActiveTab === 'users' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-6 py-2 rounded-xl font-medium whitespace-nowrap">
+       <i class="ph-bold ph-users"></i> Users
+      </button>
+      <button @click="adminActiveTab = 'blogs'" :class="adminActiveTab === 'blogs' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-6 py-2 rounded-xl font-medium whitespace-nowrap">
+       <i class="ph-bold ph-article"></i> Blogs
+      </button>
+      <button @click="adminActiveTab = 'songs'" :class="adminActiveTab === 'songs' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-6 py-2 rounded-xl font-medium whitespace-nowrap">
+       <i class="ph-bold ph-music-notes"></i> Songs
+      </button>
+     </div>
+
+     <div v-if="adminActiveTab === 'users'" class="animate-fadeIn">
+      <h4 class="text-xl font-bold mb-4 text-neon">User Management</h4>
+      <div class="glass rounded-xl p-6 max-h-96 overflow-y-auto custom-scrollbar">
+       <div v-if="allUsers.length === 0" class="text-center py-8 opacity-70">
+        <i class="ph-bold ph-users text-5xl mb-3"></i>
+        <p>No users found</p>
+       </div>
+       <div v-else class="space-y-3">
+        <div v-for="user in allUsers" :key="user._id" class="glass-strong p-4 rounded-xl flex items-center justify-between">
+         <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg font-bold">
+           {{ user.username.charAt(0).toUpperCase() }}
+          </div>
+          <div>
+           <div class="font-semibold">{{ user.firstName }} {{ user.lastName }}</div>
+           <div class="text-sm opacity-70">@{{ user.username }} • {{ user.email }}</div>
+           <div class="text-xs opacity-50">{{ user.role === 'admin' ? '👑 Admin' : '👤 User' }}</div>
+          </div>
+         </div>
+         <div v-if="user.role !== 'admin'" class="flex gap-2">
+            <button @click="adminChangePassword(user._id)" class="text-yellow-400 hover:text-yellow-300 p-2 rounded-lg hover:bg-yellow-500/10" title="Change Password">
+             <i class="ph-bold ph-key text-xl"></i>
+            </button>
+            <button @click="deleteUser(user._id)" class="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10" title="Delete User">
+             <i class="ph-bold ph-trash text-xl"></i>
+            </button>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+
+     <div v-if="adminActiveTab === 'blogs'" class="animate-fadeIn">
+      <h4 class="text-xl font-bold mb-4">Blog Management</h4>
+      
+      <div class="glass rounded-xl p-6 mb-6">
+       <h5 class="font-semibold mb-4">Create New Blog</h5>
+       <div class="space-y-3">
+        <input v-model="newBlog.title" type="text" placeholder="Blog Title" class="w-full px-4 py-3 rounded-xl glass-strong">
+        <select v-model="newBlog.category" class="w-full px-4 py-3 rounded-xl glass-strong">
+            <option value="Study Related">Study Related</option>
+            <option value="Motivational">Motivational</option>
+            <option value="Others">Others</option>
+        </select>
+        <textarea v-model="newBlog.content" placeholder="Blog Content" rows="4" class="w-full px-4 py-3 rounded-xl glass-strong resize-none"></textarea>
+        <input v-model="newBlog.image" type="url" placeholder="Image URL (optional)" class="w-full px-4 py-3 rounded-xl glass-strong">
+        <button @click="createBlog" class="btn-primary px-6 py-3 rounded-xl font-semibold w-full">
+         <i class="ph-bold ph-plus"></i> Create Blog
+        </button>
+       </div>
+      </div>
+
+      <div class="glass rounded-xl p-6 max-h-96 overflow-y-auto">
+       <div v-if="adminBlogs.length === 0" class="text-center py-8 opacity-70">
+        <i class="ph-bold ph-article text-5xl mb-3"></i>
+        <p>No blogs yet</p>
+       </div>
+       <div v-else class="space-y-3">
+        <div v-for="blog in adminBlogs" :key="blog._id" class="glass-strong p-4 rounded-xl">
+         <div class="flex items-start justify-between gap-3">
+          <div class="flex-1">
+           <h5 class="font-bold mb-1">{{ blog.title }}</h5>
+           <p class="text-sm opacity-70 line-clamp-2">{{ blog.content }}</p>
+           <div class="text-xs opacity-50 mt-2">{{ formatDate(blog.createdAt) }}</div>
+          </div>
+          <button @click="deleteBlog(blog._id)" class="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10">
+           <i class="ph-bold ph-trash text-xl"></i>
+          </button>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+
+     <div v-if="adminActiveTab === 'songs'" class="animate-fadeIn">
+      <h4 class="text-xl font-bold mb-4">Music Management</h4>
+      
+      <div class="glass rounded-xl p-6 mb-6">
+       <h5 class="font-semibold mb-4">Add New Song</h5>
+       <div class="space-y-3">
+        <input v-model="newSong.title" type="text" placeholder="Song Title" class="w-full px-4 py-3 rounded-xl glass-strong">
+        <input v-model="newSong.url" type="url" placeholder="Song URL" class="w-full px-4 py-3 rounded-xl glass-strong">
+        <select v-model="newSong.category" class="w-full px-4 py-3 rounded-xl glass-strong">
+         <option value="focus">Focus</option>
+         <option value="ambient">Ambient</option>
+         <option value="classical">Classical</option>
+         <option value="lofi">Lo-Fi</option>
+        </select>
+        <button @click="createSong" class="btn-primary px-6 py-3 rounded-xl font-semibold w-full">
+         <i class="ph-bold ph-plus"></i> Add Song
+        </button>
+       </div>
+      </div>
+
+      <div class="glass rounded-xl p-6 max-h-96 overflow-y-auto">
+       <div v-if="adminSongs.length === 0" class="text-center py-8 opacity-70">
+        <i class="ph-bold ph-music-notes text-5xl mb-3"></i>
+        <p>No songs yet</p>
+       </div>
+       <div v-else class="space-y-3">
+        <div v-for="song in adminSongs" :key="song._id" class="glass-strong p-4 rounded-xl flex items-center justify-between">
+         <div class="flex items-center gap-3">
+          <i class="ph-bold ph-music-note text-2xl text-green-400"></i>
+          <div>
+           <div class="font-semibold">{{ song.title }}</div>
+           <div class="text-xs opacity-70">{{ song.category }}</div>
+          </div>
+         </div>
+         <button @click="deleteSong(song._id)" class="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10">
+          <i class="ph-bold ph-trash text-xl"></i>
+         </button>
+        </div>
+       </div>
+      </div>
+     </div>
+
+    </div>
    </div><div v-if="!showLoader && !isAuthenticated" class="min-h-screen flex items-center justify-center p-4">
     <div class="glass rounded-3xl p-8 w-full max-w-md animate-fadeIn">
      <div class="text-center mb-8"><i class="ph-bold ph-brain text-6xl text-purple-400 mb-4"></i>
@@ -676,8 +865,17 @@
         <span class="text-xs opacity-60">{{ isOnline ? 'Online' : 'Offline' }}</span>
        </div>
       </div>
-      <nav class="flex-1 space-y-2"><button @click="currentView = 'home'" :class="currentView === 'home' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-house text-xl"></i> Home </button> <button @click="currentView = 'timer'" :class="currentView === 'timer' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> Focus Timer </button> <button @click="currentView = 'tasks'" :class="currentView === 'tasks' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-check-square text-xl"></i> Daily Tasks </button> <button @click="currentView = 'analytics'" :class="currentView === 'analytics' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-chart-bar text-xl"></i> Analytics </button>
-       <div class="pt-4 border-t border-gray-700"><button @click="showThemeModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-palette text-xl"></i> Themes </button> <button @click="showNotificationSettings = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-bell text-xl"></i> Notifications </button> <button @click="showAdvancedTimer = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-timer text-xl"></i> Timer Settings </button> <button @click="showMusicModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-music-notes text-xl"></i> Music <span v-if="isPlaying" class="ml-auto"> <i class="ph-fill ph-speaker-high text-green-400 animate-pulse"></i> </span> </button> <button @click="showDataModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-database text-xl"></i> Data Management </button> <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400 hover:bg-red-500/10 transition-all"> <i class="ph-bold ph-sign-out text-xl"></i> Logout </button>
+      <nav class="flex-1 space-y-2"><button @click="currentView = 'home'" :class="currentView === 'home' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-house text-xl"></i> Home </button> <button @click="currentView = 'timer'" :class="currentView === 'timer' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> Focus Timer </button> <button @click="currentView = 'tasks'" :class="currentView === 'tasks' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-check-square text-xl"></i> Daily Tasks </button>
+      <button @click="currentView = 'goals'" :class="currentView === 'goals' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-target text-xl"></i> Goals </button>
+      <button @click="currentView = 'analytics'" :class="currentView === 'analytics' ? 'bg-purple-600' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium relative overflow-hidden group">
+         <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1s_infinite]"></span>
+         <i class="ph-bold ph-chart-bar text-xl"></i> Analytics 
+      </button>
+      <button @click="currentView = 'blog'" :class="currentView === 'blog' ? 'bg-purple-600' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium relative overflow-hidden group">
+         <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1s_infinite]"></span>
+         <i class="ph-bold ph-article text-xl"></i> Blog 
+      </button>
+       <div class="pt-4 border-t border-gray-700"><button @click="showThemeModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-palette text-xl"></i> Themes </button> <button @click="showNotificationSettings = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-bell text-xl"></i> Notifications </button> <button @click="showAdvancedTimer = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-timer text-xl"></i> Timer Settings </button> <button @click="showMusicModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-music-notes text-xl"></i> Music <span v-if="isPlaying" class="ml-auto"> <i class="ph-fill ph-speaker-high text-green-400 animate-pulse"></i> </span> </button> <button @click="showDataModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-database text-xl"></i> Data Management </button> <button v-if="isAdmin" @click="openAdminPanel" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10 text-yellow-400"> <i class="ph-bold ph-shield-star text-xl"></i> Admin Panel </button> <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400 hover:bg-red-500/10 transition-all"> <i class="ph-bold ph-sign-out text-xl"></i> Logout </button>
        </div>
       </nav>
      </aside><main class="flex-1 flex flex-col"><header class="lg:hidden glass-strong border-b border-gray-700 p-4 flex items-center justify-between"><button @click="mobileMenuOpen = !mobileMenuOpen" class="text-2xl text-purple-400"> <i :class="mobileMenuOpen ? 'ph-bold ph-x' : 'ph-bold ph-list'" class="text-3xl"></i> </button> <button @click="reloadApp" class="text-xl font-bold gradient-text hover:opacity-80 transition-opacity"> StudyFlow </button>
@@ -685,13 +883,22 @@
         <div :class="isOnline ? 'bg-green-500' : 'bg-red-500'" class="w-2 h-2 rounded-full animate-pulse"></div>
         <span class="text-xs opacity-60 lg:hidden">{{ isOnline ? 'Online' : 'Offline' }}</span>
        </div>
-      </header><div v-if="mobileMenuOpen" class="lg:hidden glass-strong border-b border-gray-700 p-4 animate-slideIn">
-       <nav class="space-y-2"><button @click="currentView = 'home'; mobileMenuOpen = false" :class="currentView === 'home' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-house text-xl"></i> Home </button> <button @click="currentView = 'timer'; mobileMenuOpen = false" :class="currentView === 'timer' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> Focus Timer </button> <button @click="currentView = 'tasks'; mobileMenuOpen = false" :class="currentView === 'tasks' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-check-square text-xl"></i> Daily Tasks </button> <button @click="currentView = 'analytics'; mobileMenuOpen = false" :class="currentView === 'analytics' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-chart-bar text-xl"></i> Analytics </button>
-        <div class="pt-2 border-t border-gray-700"><button @click="showThemeModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-palette text-xl"></i> Themes </button> <button @click="showNotificationSettings = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-bell text-xl"></i> Notifications </button> <button @click="showAdvancedTimer = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> Timer Settings </button> <button @click="showMusicModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-music-notes text-xl"></i> Music <span v-if="isPlaying" class="ml-auto"> <i class="ph-fill ph-speaker-high text-green-400 animate-pulse"></i> </span> </button>
-        <button @click="showDataModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-database text-xl"></i> Data Management </button>
-        </div><button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400"> <i class="ph-bold ph-sign-out text-xl"></i> Logout </button>
+      </header><div v-if="mobileMenuOpen" class="fixed inset-0 z-50 lg:hidden glass-strong backdrop-blur-xl p-4 animate-slideIn flex flex-col overflow-y-auto">
+       <div class="flex justify-end mb-4">
+        <button @click="mobileMenuOpen = false" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">
+         <i class="ph-bold ph-x text-xl"></i>
+        </button>
+       </div>
+       <nav class="space-y-2 flex-1"><button @click="currentView = 'home'; mobileMenuOpen = false" :class="currentView === 'home' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-house text-xl"></i> Home </button> <button @click="currentView = 'timer'; mobileMenuOpen = false" :class="currentView === 'timer' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> Focus Timer </button> <button @click="currentView = 'tasks'; mobileMenuOpen = false" :class="currentView === 'tasks' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-check-square text-xl"></i> Daily Tasks </button>
+        <button @click="currentView = 'goals'; mobileMenuOpen = false" :class="currentView === 'goals' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-target text-xl"></i> Goals </button> 
+        <button @click="currentView = 'analytics'; mobileMenuOpen = false" :class="currentView === 'analytics' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-chart-bar text-xl"></i> Analytics </button>
+        <button @click="currentView = 'blog'; mobileMenuOpen = false" :class="currentView === 'blog' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-article text-xl"></i> Blog </button>
+        <div class="pt-4 mt-2 border-t border-gray-700 space-y-2"><button @click="showThemeModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-palette text-xl"></i> Themes </button> <button @click="showNotificationSettings = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-bell text-xl"></i> Notifications </button> <button @click="showAdvancedTimer = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-timer text-xl"></i> Timer Settings </button> <button @click="showMusicModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-music-notes text-xl"></i> Music <span v-if="isPlaying" class="ml-auto"> <i class="ph-fill ph-speaker-high text-green-400 animate-pulse"></i> </span> </button>
+        <button @click="showDataModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-database text-xl"></i> Data Management </button>
+        <button v-if="isAdmin" @click="openAdminPanel(); mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-yellow-400 hover:bg-white/5"> <i class="ph-bold ph-shield-star text-xl"></i> Admin Panel </button>
+        </div><button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400 hover:bg-red-500/10 mt-4"> <i class="ph-bold ph-sign-out text-xl"></i> Logout </button>
        </nav>
-      </div><div class="flex-1 overflow-y-auto p-4 lg:p-8"><div v-if="currentView === 'home'" class="max-w-6xl mx-auto animate-fadeIn"><div class="text-center mb-12">
+      </div><div class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8"><div v-if="currentView === 'home'" class="max-w-6xl mx-auto animate-fadeIn"><div class="text-center mb-12">
          <div class="mb-6"><i class="ph-bold ph-brain text-7xl text-purple-400 animate-pulse"></i>
          </div>
          <h1 class="text-5xl md:text-6xl font-bold gradient-text mb-4">Welcome to StudyFlow</h1>
@@ -797,40 +1004,40 @@
          <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Boost Your Productivity?</h2>
          <p class="text-lg opacity-80 mb-8">Join thousands of students and professionals who trust StudyFlow for their focus needs.</p><button @click="currentView = 'timer'" class="btn-primary px-10 py-4 rounded-xl font-semibold text-lg flex items-center gap-2 mx-auto"> <i class="ph-bold ph-rocket-launch text-xl"></i> Get Started Now </button>
         </div>
-       </div><div v-if="currentView === 'timer'" class="max-w-4xl mx-auto animate-fadeIn">
-  <h2 class="text-3xl font-bold mb-6 text-center md:text-left">Focus Timer</h2>
+       </div><div v-if="currentView === 'timer'" class="max-w-4xl mx-auto animate-fadeIn px-4 sm:px-0">
+  <h2 class="text-2xl sm:text-3xl font-bold mb-6 text-center md:text-left">Focus Timer</h2>
   
-  <div class="glass rounded-2xl p-6 mb-6 text-center">
+  <div class="glass rounded-2xl p-4 sm:p-6 mb-6 text-center">
    <i class="ph-bold ph-quotes text-3xl text-purple-400 mb-3"></i>
-   <p class="text-lg italic mb-2">"{{ currentQuote }}"</p>
+   <p class="text-base sm:text-lg italic mb-2">"{{ currentQuote }}"</p>
    <button @click="changeQuote" class="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1 mx-auto"> <i class="ph-bold ph-arrow-clockwise"></i> New Quote </button>
   </div>
 
   <div class="glass rounded-2xl p-4 sm:p-6 mb-6">
    <div class="flex flex-wrap justify-center gap-2 sm:gap-3 mb-6">
-    <button @click="setTimerMode('focus')" :class="timerMode === 'focus' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-4 py-2 text-sm sm:text-base rounded-xl font-medium flex-grow sm:flex-grow-0"> Focus </button> 
-    <button @click="setTimerMode('shortBreak')" :class="timerMode === 'shortBreak' ? 'bg-green-600 text-white' : 'btn-secondary'" class="px-4 py-2 text-sm sm:text-base rounded-xl font-medium flex-grow sm:flex-grow-0"> Short Break </button> 
-    <button @click="setTimerMode('longBreak')" :class="timerMode === 'longBreak' ? 'bg-blue-600 text-white' : 'btn-secondary'" class="px-4 py-2 text-sm sm:text-base rounded-xl font-medium flex-grow sm:flex-grow-0"> Long Break </button> 
-    <button @click="setTimerMode('custom')" :class="timerMode === 'custom' ? 'bg-orange-600 text-white' : 'btn-secondary'" class="px-4 py-2 text-sm sm:text-base rounded-xl font-medium flex-grow sm:flex-grow-0"> Custom </button>
+    <button @click="setTimerMode('focus')" :class="timerMode === 'focus' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-3 sm:px-4 py-2 text-xs sm:text-base rounded-xl font-medium flex-1 sm:flex-initial text-center whitespace-nowrap"> Focus </button> 
+    <button @click="setTimerMode('shortBreak')" :class="timerMode === 'shortBreak' ? 'bg-green-600 text-white' : 'btn-secondary'" class="px-3 sm:px-4 py-2 text-xs sm:text-base rounded-xl font-medium flex-1 sm:flex-initial text-center whitespace-nowrap"> Short Break </button> 
+    <button @click="setTimerMode('longBreak')" :class="timerMode === 'longBreak' ? 'bg-blue-600 text-white' : 'btn-secondary'" class="px-3 sm:px-4 py-2 text-xs sm:text-base rounded-xl font-medium flex-1 sm:flex-initial text-center whitespace-nowrap"> Long Break </button> 
+    <button @click="setTimerMode('custom')" :class="timerMode === 'custom' ? 'bg-orange-600 text-white' : 'btn-secondary'" class="px-3 sm:px-4 py-2 text-xs sm:text-base rounded-xl font-medium flex-1 sm:flex-initial text-center whitespace-nowrap"> Custom </button>
    </div>
 
    <div v-if="timerMode === 'custom'" class="mb-6 glass-strong p-4 rounded-xl">
     <label class="block text-sm font-medium mb-2">Set Custom Duration (minutes)</label>
-    <div class="flex gap-3">
-     <input v-model.number="customMinutes" type="number" min="1" max="180" class="flex-1 px-4 py-3 rounded-xl glass w-full" placeholder="Enter minutes"> 
-     <button @click="applyCustomTime" class="btn-primary px-6 py-3 rounded-xl font-semibold"> Apply </button>
+    <div class="flex gap-2 sm:gap-3">
+     <input v-model.number="customMinutes" type="number" min="1" max="180" class="flex-1 px-4 py-3 rounded-xl glass w-full min-w-0" placeholder="Min"> 
+     <button @click="applyCustomTime" class="btn-primary px-4 sm:px-6 py-3 rounded-xl font-semibold shrink-0"> Apply </button>
     </div>
    </div>
 
-   <div class="flex justify-center mb-6 relative w-full max-w-[280px] mx-auto aspect-square">
-    <div class="relative w-full h-full">
+   <div class="flex justify-center mb-6 relative w-full h-[280px] sm:h-[320px]">
+    <div class="relative w-full h-full max-w-[280px] sm:max-w-[320px]">
      <svg viewBox="0 0 280 280" class="w-full h-full transform -rotate-90">
       <circle cx="140" cy="140" r="120" stroke="rgba(255,255,255,0.1)" stroke-width="12" fill="none" /> 
       <circle cx="140" cy="140" r="120" :stroke="timerColor" stroke-width="12" fill="none" :stroke-dasharray="753.98" :stroke-dashoffset="timerProgress" class="progress-ring-circle" :class="{ 'pulse-warning': timeRemaining <= 60 && timerRunning }" />
      </svg>
      
-     <div class="absolute inset-0 flex flex-col items-center justify-center">
-      <div class="text-4xl sm:text-5xl font-bold">
+     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+      <div class="text-4xl sm:text-5xl md:text-6xl font-bold">
        {{ formattedTime }}
       </div>
       <div class="text-xs sm:text-sm opacity-70 mt-2">
@@ -840,11 +1047,11 @@
     </div>
    </div>
 
-   <div class="flex justify-center gap-4 mb-6">
-    <button @click="toggleTimer" class="btn-primary px-6 sm:px-8 py-3 rounded-xl font-semibold flex items-center gap-2"> 
+   <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-6">
+    <button @click="toggleTimer" class="btn-primary px-6 sm:px-8 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"> 
      <i :class="timerRunning ? 'ph-bold ph-pause' : 'ph-bold ph-play'" class="text-xl"></i> {{ timerRunning ? 'Pause' : 'Start' }} 
     </button> 
-    <button @click="resetTimer" class="btn-secondary px-6 sm:px-8 py-3 rounded-xl font-semibold flex items-center gap-2"> 
+    <button @click="resetTimer" class="btn-secondary px-6 sm:px-8 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"> 
      <i class="ph-bold ph-arrow-clockwise text-xl"></i> Reset 
     </button>
    </div>
@@ -962,61 +1169,61 @@
           </div><button @click="clearCompletedTasks" class="text-sm text-purple-400 hover:text-purple-300"> Clear Completed </button>
          </div>
         </div>
-       </div><div v-if="currentView === 'analytics'" class="max-w-6xl mx-auto animate-fadeIn">
-        <h2 class="text-3xl font-bold mb-6">Analytics &amp; Profile</h2><div class="glass rounded-2xl p-6 mb-6">
-         <div class="flex flex-wrap gap-3"><button @click="analyticsView = 'daily'" :class="analyticsView === 'daily' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-6 py-2 rounded-xl font-medium"> <i class="ph-bold ph-calendar"></i> Daily </button> <button @click="analyticsView = 'weekly'" :class="analyticsView === 'weekly' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-6 py-2 rounded-xl font-medium"> <i class="ph-bold ph-calendar-blank"></i> Weekly </button> <button @click="analyticsView = 'monthly'" :class="analyticsView === 'monthly' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-6 py-2 rounded-xl font-medium"> <i class="ph-bold ph-calendar-dots"></i> Monthly </button>
+       </div><div v-if="currentView === 'analytics'" class="max-w-6xl mx-auto animate-fadeIn px-4 sm:px-0">
+        <h2 class="text-3xl font-bold mb-6">Analytics &amp; Profile</h2><div class="glass rounded-2xl p-4 sm:p-6 mb-6">
+         <div class="flex flex-wrap gap-2 sm:gap-3"><button @click="analyticsView = 'daily'" :class="analyticsView === 'daily' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-3 sm:px-6 py-2 rounded-xl font-medium text-sm sm:text-base flex-1 sm:flex-initial flex items-center justify-center gap-2"> <i class="ph-bold ph-calendar"></i> Daily </button> <button @click="analyticsView = 'weekly'" :class="analyticsView === 'weekly' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-3 sm:px-6 py-2 rounded-xl font-medium text-sm sm:text-base flex-1 sm:flex-initial flex items-center justify-center gap-2"> <i class="ph-bold ph-calendar-blank"></i> Weekly </button> <button @click="analyticsView = 'monthly'" :class="analyticsView === 'monthly' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-3 sm:px-6 py-2 rounded-xl font-medium text-sm sm:text-base flex-1 sm:flex-initial flex items-center justify-center gap-2"> <i class="ph-bold ph-calendar-dots"></i> Monthly </button>
          </div>
-        </div><div class="grid md:grid-cols-3 gap-6 mb-6">
-         <div class="glass rounded-2xl p-6 card-hover">
+        </div><div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6">
+         <div class="glass rounded-2xl p-4 sm:p-6 card-hover">
           <div class="flex items-center gap-4">
            <div class="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center"><i class="ph-bold ph-clock text-2xl text-purple-400"></i>
            </div>
            <div>
-            <div class="text-3xl font-bold">
+            <div class="text-2xl sm:text-3xl font-bold">
              {{ currentPeriodStats.totalMinutes }}
             </div>
-            <div class="text-sm opacity-70">
+            <div class="text-xs sm:text-sm opacity-70">
              Total Minutes
             </div>
            </div>
           </div>
          </div>
-         <div class="glass rounded-2xl p-6 card-hover">
+         <div class="glass rounded-2xl p-4 sm:p-6 card-hover">
           <div class="flex items-center gap-4">
            <div class="w-12 h-12 rounded-xl bg-green-600/20 flex items-center justify-center"><i class="ph-bold ph-fire text-2xl text-green-400"></i>
            </div>
            <div>
-            <div class="text-3xl font-bold">
+            <div class="text-2xl sm:text-3xl font-bold">
              {{ currentPeriodStats.totalSessions }}
             </div>
-            <div class="text-sm opacity-70">
+            <div class="text-xs sm:text-sm opacity-70">
              Sessions
             </div>
            </div>
           </div>
          </div>
-         <div class="glass rounded-2xl p-6 card-hover">
+         <div class="glass rounded-2xl p-4 sm:p-6 card-hover">
           <div class="flex items-center gap-4">
            <div class="w-12 h-12 rounded-xl bg-blue-600/20 flex items-center justify-center"><i class="ph-bold ph-chart-line text-2xl text-blue-400"></i>
            </div>
            <div>
-            <div class="text-3xl font-bold">
+            <div class="text-2xl sm:text-3xl font-bold">
              {{ currentPeriodStats.avgSessionLength }}
             </div>
-            <div class="text-sm opacity-70">
+            <div class="text-xs sm:text-sm opacity-70">
              Avg Session (min)
             </div>
            </div>
           </div>
          </div>
-        </div><div class="grid md:grid-cols-2 gap-6 mb-6"><div class="glass rounded-2xl p-6">
+        </div><div class="grid md:grid-cols-2 gap-6 mb-6"><div class="glass rounded-2xl p-4 sm:p-6">
            <h3 class="text-xl font-semibold mb-4">Study Time Trend</h3>
-           <div class="chart-container h-64 sm:h-80">
+           <div class="chart-container relative h-64 sm:h-80 w-full">
             <canvas ref="studyTimeChart"></canvas>
            </div>
-          </div><div class="glass rounded-2xl p-6">
+          </div><div class="glass rounded-2xl p-4 sm:p-6">
            <h3 class="text-xl font-semibold mb-4">Subject Distribution</h3>
-           <div class="chart-container h-64 sm:h-80">
+           <div class="chart-container relative h-64 sm:h-80 w-full">
             <canvas ref="subjectChart"></canvas>
            </div>
           </div>
@@ -1149,7 +1356,269 @@
           <p class="opacity-70 mb-4">Clear all your study data and start fresh.</p><button @click="clearAllData" class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-xl font-semibold text-white"> Clear All Data </button>
          </div>
         </div>
-       </div><footer class="glass-strong border-t border-gray-700 p-6">
+       </div>
+       
+       <div v-if="currentView === 'goals'" class="max-w-4xl mx-auto animate-fadeIn">
+        <h2 class="text-3xl font-bold mb-6 flex items-center gap-2"><i class="ph-bold ph-target text-purple-400"></i> Goals</h2>
+        
+        <div class="glass rounded-2xl p-6 mb-6">
+         <div class="grid md:grid-cols-2 gap-4 mb-4">
+           <input v-model="newGoal.title" type="text" class="w-full px-4 py-3 rounded-xl glass-strong" placeholder="Goal title (e.g., Read 5 Books)">
+           <select v-model="newGoal.type" class="w-full px-4 py-3 rounded-xl glass-strong">
+               <option value="daily">Daily Goal</option>
+               <option value="weekly">Weekly Goal</option>
+               <option value="monthly">Monthly Goal</option>
+               <option value="subject-specific">Subject Specific</option>
+               <option value="total-hours">Total Hours</option>
+           </select>
+         </div>
+         <div class="grid md:grid-cols-2 gap-4 mb-4">
+           <div class="flex gap-2">
+             <input v-model="newGoal.target" type="number" class="w-full px-4 py-3 rounded-xl glass-strong" placeholder="Target">
+             <select v-model="newGoal.unit" class="px-4 py-3 rounded-xl glass-strong w-28">
+               <option value="hours">Hours</option>
+               <option value="sessions">Sessions</option>
+               <option value="pages">Pages</option>
+             </select>
+           </div>
+           <input v-model="newGoal.deadline" type="date" class="w-full px-4 py-3 rounded-xl glass-strong text-white">
+         </div>
+         <div class="mb-4">
+            <select v-model="newGoal.priority" class="w-full px-4 py-3 rounded-xl glass-strong">
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+            </select>
+         </div>
+         <button @click="createGoal" class="w-full btn-primary px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"> <i class="ph-bold ph-plus-circle text-xl"></i> Add Goal </button>
+        </div>
+
+        <div v-if="goals.length === 0" class="text-center opacity-70 py-12"><i class="ph-bold ph-trophy text-6xl mb-4"></i>
+          <p class="text-lg">No goals set yet. Challenge yourself!</p>
+        </div>
+        
+        <div v-else class="grid md:grid-cols-2 gap-4">
+          <div v-for="goal in goals" :key="goal._id" class="glass rounded-2xl p-6 border-l-4" :class="{
+             'border-green-400': goal.priority === 'low', 
+             'border-yellow-400': goal.priority === 'medium', 
+             'border-red-400': goal.priority === 'high' 
+          }">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="text-xl font-bold">{{ goal.title }}</h3>
+              <button @click="deleteGoal(goal._id)" class="text-red-400 hover:text-red-300"><i class="ph-bold ph-trash"></i></button>
+            </div>
+            <div class="flex items-center gap-2 text-sm opacity-70 mb-4">
+              <i class="ph-bold ph-calendar"></i>
+              <span>Due: {{ formatDate(goal.deadline) }}</span>
+            </div>
+            
+            <div class="mb-2 flex justify-between text-sm">
+             <span>Progress</span>
+             <span>{{ goal.progress || 0 }} / {{ goal.target }} {{ goal.unit }}</span>
+            </div>
+            <div class="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+               <div class="h-full bg-purple-500 rounded-full" :style="{ width: Math.min(((goal.progress || 0) / goal.target) * 100, 100) + '%' }"></div>
+            </div>
+          </div>
+        </div>
+       </div>
+
+       <!-- AI Floating Button and Popup -->
+       <div v-if="isAuthenticated && !showLoader" class="fixed bottom-6 right-6 z-50">
+        <!-- Floating Trigger Button -->
+        <button 
+            @click="showAIChat = !showAIChat"
+            class="w-16 h-16 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/30 flex items-center justify-center hover:scale-110 transition-transform duration-300 group"
+        >
+            <i :class="showAIChat ? 'ph-bold ph-x' : 'ph-bold ph-robot'" class="text-3xl text-white group-hover:rotate-12 transition-transform"></i>
+            <!-- Notification Dot -->
+            <span class="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full animate-pulse border-2 border-gray-900" v-if="!showAIChat"></span>
+        </button>
+
+        <!-- AI Chat Popup Modal -->
+        <div v-if="showAIChat" class="absolute bottom-20 right-0 w-[400px] h-[600px] glass-strong rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-slideUp border border-purple-500/30">
+            <!-- Header -->
+            <div class="p-4 bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-b border-white/10 flex justify-between items-center backdrop-blur-md">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 p-0.5">
+                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=StudyFlow" class="w-full h-full rounded-full bg-black/20" alt="AI">
+                        </div>
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-gray-900 rounded-full"></span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white leading-tight">StudyFlow AI</h3>
+                        <p class="text-xs text-purple-200">Online • Helpful Assistant</p>
+                    </div>
+                </div>
+                <button @click="showAIChat = false" class="hover:bg-white/10 p-2 rounded-lg transition-colors">
+                    <i class="ph-bold ph-minus text-white"></i>
+                </button>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-4" id="ai-chat-container">
+                <!-- Welcome Message -->
+                <div class="flex gap-3">
+                     <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                         <i class="ph-bold ph-robot text-white text-sm"></i>
+                     </div>
+                     <div class="glass p-3 rounded-2xl rounded-tl-none max-w-[85%]">
+                         <p class="text-sm text-gray-200">Hello {{ userFullName }}! 👋 I'm your deeper study assistant. I can see your tasks and goals. How can I help you today?</p>
+                     </div>
+                </div>
+
+                <!-- Chat Loop -->
+                <div v-for="(msg, index) in aiChatHistory" :key="index" class="flex gap-3" :class="msg.role === 'user' ? 'flex-row-reverse' : ''">
+                     <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" 
+                          :class="msg.role === 'user' ? 'bg-blue-600' : 'bg-purple-600'">
+                         <i :class="msg.role === 'user' ? 'ph-bold ph-user' : 'ph-bold ph-robot'" class="text-white text-sm"></i>
+                     </div>
+                     <div class="p-3 rounded-2xl max-w-[85%] text-sm" 
+                          :class="msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'glass text-gray-200 rounded-tl-none'">
+                         <p class="whitespace-pre-wrap">{{ msg.content }}</p>
+                     </div>
+                </div>
+
+                <!-- Loading Typing Indicator -->
+                <div v-if="aiLoading" class="flex gap-3">
+                     <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                         <i class="ph-bold ph-robot text-white text-sm"></i>
+                     </div>
+                     <div class="glass p-3 rounded-2xl rounded-tl-none">
+                         <div class="flex gap-1.5 p-1">
+                             <div class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"></div>
+                             <div class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce delay-75"></div>
+                             <div class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce delay-150"></div>
+                         </div>
+                     </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 border-t border-white/10 bg-black/20 backdrop-blur-md">
+                <div class="relative">
+                    <input 
+                        v-model="aiPrompt" 
+                        @keyup.enter="askAI" 
+                        type="text" 
+                        class="w-full pl-4 pr-12 py-3 rounded-xl bg-gray-800/50 border border-white/10 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-sm transition-all" 
+                        placeholder="Ask something..."
+                    >
+                    <button 
+                        @click="askAI" 
+                        :disabled="aiLoading || !aiPrompt.trim()"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-purple-600 hover:bg-purple-500 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <i class="ph-bold ph-paper-plane-right text-white"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+       </div>
+
+       <div v-if="currentView === 'blog'" class="max-w-6xl mx-auto animate-fadeIn">
+        <div class="text-center mb-10">
+         <h2 class="text-4xl font-bold mb-2 flex items-center justify-center gap-3"><i class="ph-bold ph-article text-blue-400 text-5xl"></i> Study Blog</h2>
+         <p class="text-lg opacity-80">Discover tips, insights, and stories to boost your productivity</p>
+        </div>
+        
+        <div v-if="!blogsPublic.length" class="glass rounded-3xl p-12 text-center">
+         <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+          <i class="ph-bold ph-notebook text-4xl text-white"></i>
+         </div>
+         <h3 class="text-2xl font-semibold mb-3">No Blog Posts Yet</h3>
+         <p class="text-lg opacity-70 mb-6">We're working on bringing you amazing content. Check back soon!</p>
+         <div class="flex justify-center gap-2">
+          <div class="w-3 h-3 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+          <div class="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
+          <div class="w-3 h-3 bg-pink-400 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+         </div>
+        </div>
+        
+        <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+         <div v-for="blog in blogsPublic" :key="blog._id" @click="selectedBlog = blog" class="glass rounded-3xl overflow-hidden hover:scale-105 transition-all duration-300 hover:shadow-2xl group cursor-pointer h-full flex flex-col">
+          <div class="h-48 overflow-hidden relative">
+             <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+             <img :src="blog.image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80'" alt="Blog Cover" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+             <div class="absolute top-4 right-4 z-20">
+                <span class="px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-xs font-bold text-white border border-white/10">Read</span>
+             </div>
+          </div>
+          
+          <div class="p-6 flex-1 flex flex-col">
+           <div class="flex items-center gap-2 text-xs opacity-60 mb-3">
+            <i class="ph-bold ph-calendar"></i>
+            <span>{{ formatDate(blog.createdAt || blog._id) }}</span>
+           </div>
+           
+           <h3 class="text-xl font-bold mb-3 group-hover:text-purple-400 transition-colors leading-tight">{{ blog.title }}</h3>
+           
+           <p class="text-sm opacity-70 leading-relaxed mb-4 line-clamp-3">{{ blog.content }}</p>
+           
+           <div class="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-sm font-medium text-purple-300">
+             <span>Read Article</span>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-purple-600 transition-colors">
+             <i class="ph-bold ph-arrow-right group-hover:text-white transition-colors"></i>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        
+        <!-- Blog Detail Modal -->
+        <div v-if="selectedBlog" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop overflow-y-auto" @click="selectedBlog = null">
+            <div class="glass-strong rounded-3xl max-w-4xl w-full my-8 animate-slideUp overflow-hidden flex flex-col max-h-[90vh] shadow-2xl border border-white/10" @click.stop>
+                <div class="relative h-64 sm:h-80 shrink-0">
+                    <img :src="selectedBlog.image" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                    <div class="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent"></div>
+                    
+                    <button @click="selectedBlog = null" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md flex items-center justify-center transition-colors text-white z-50 group border border-white/10">
+                        <i class="ph-bold ph-x text-xl group-hover:rotate-90 transition-transform duration-300"></i>
+                    </button>
+                    
+                    <div class="absolute bottom-0 left-0 p-6 sm:p-10 w-full z-10">
+                         <span class="px-3 py-1 bg-purple-600 rounded-full text-xs font-bold text-white mb-4 inline-block shadow-lg shadow-purple-900/50">Productivity</span>
+                         <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-4 drop-shadow-lg">{{ selectedBlog.title }}</h2>
+                         <div class="flex items-center gap-6 text-gray-200 text-sm font-medium">
+                             <span class="flex items-center gap-2"><i class="ph-bold ph-calendar text-purple-400"></i> {{ formatDate(selectedBlog.createdAt) }}</span>
+                             <span class="flex items-center gap-2"><i class="ph-bold ph-user text-blue-400"></i> StudyFlow Admin</span>
+                             <span class="flex items-center gap-2"><i class="ph-bold ph-clock text-pink-400"></i> 5 min read</span>
+                         </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 sm:p-10 overflow-y-auto bg-black/20 backdrop-blur-xl">
+                    <div class="prose prose-invert max-w-none">
+                        <p class="text-lg opacity-90 leading-relaxed whitespace-pre-wrap font-light text-gray-100">{{ selectedBlog.content }}</p>
+                    </div>
+                    
+                    <div class="mt-12 p-6 glass rounded-2xl flex items-center justify-between border border-white/5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold">SF</div>
+                            <div>
+                                <h4 class="font-bold mb-0.5">Written by StudyFlow</h4>
+                                <p class="text-xs opacity-60">Productivity Experts</p>
+                            </div>
+                        </div>
+                         <div class="flex gap-2">
+                             <button class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5"><i class="ph-bold ph-share-network"></i></button>
+                             <button class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/5"><i class="ph-bold ph-bookmark-simple"></i></button>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="blogsPublic.length > 0" class="text-center mt-10">
+         <p class="text-lg opacity-70">More content coming soon! Stay tuned for updates.</p>
+        </div>
+       </div>
+       
+       <footer class="glass-strong border-t border-gray-700 p-6">
        <div class="max-w-6xl mx-auto"><div class="grid md:grid-cols-4 gap-8 mb-8"><div>
           <div class="flex items-center gap-2 mb-4"><i class="ph-bold ph-brain text-2xl text-purple-400"></i>
            <h3 class="text-lg font-bold">StudyFlow</h3>

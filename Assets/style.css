@@ -162,20 +162,21 @@ body.theme-light .text-gray-500 {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
+    background: #0f172a; /* Darker background */
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(139, 92, 246, 0.5);
-    border-radius: 4px;
+    background: linear-gradient(to bottom, #4f46e5, #9333ea); /* Gradient Scrollbar */
+    border-radius: 5px;
+    border: 2px solid #0f172a;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(139, 92, 246, 0.7);
+    background: linear-gradient(to bottom, #4338ca, #7e22ce);
 }
 
 /* Loader animation */
@@ -258,22 +259,67 @@ body.theme-light .text-gray-500 {
 /* Button hover effects */
 .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    z-index: -1;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+.btn-primary:hover::after {
+    opacity: 1;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 0 20px rgba(118, 75, 162, 0.6), 0 0 40px rgba(102, 126, 234, 0.4); /* Neon Glow */
 }
 
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
-    transition: background 0.2s, transform 0.2s;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
 }
 
 .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
     transform: translateY(-1px);
+}
+
+/* Floating Animation */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+/* Neon Text Pulse */
+@keyframes neonPulse {
+    0%, 100% { text-shadow: 0 0 5px rgba(167, 139, 250, 0.5), 0 0 10px rgba(167, 139, 250, 0.3); }
+    50% { text-shadow: 0 0 20px rgba(167, 139, 250, 0.8), 0 0 30px rgba(167, 139, 250, 0.5); }
+}
+
+.text-neon {
+    animation: neonPulse 3s infinite alternate;
 }
 
 /* Progress ring animation */
@@ -294,8 +340,19 @@ body.theme-light .text-gray-500 {
     transform: translateX(-100%);
 }
 
-.mobile-menu-enter-active {
-    transform: translateX(0);
+@keyframes shimmer {
+    100% { transform: translateX(100%); }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #a855f7;
+    border-radius: 3px;
 }
 
 /* Gradient text */
@@ -374,8 +431,18 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* Default cursor hidden */
-* {
+/* Hide custom cursor only on non-touch devices; allow normal cursor on touch */
+html:not(.hasTouch) * {
     cursor: none !important;
+}
+
+/* Restore cursor for interactive elements in non-touch mode (for better UX) */
+html:not(.hasTouch) button,
+html:not(.hasTouch) a,
+html:not(.hasTouch) input,
+html:not(.hasTouch) textarea,
+html:not(.hasTouch) select {
+    cursor: none !important; /* Still hide but cursor tracks hover state */
 }
 
 /* --- Colorful Glass Cursor Design --- */
@@ -500,6 +567,13 @@ input:focus, textarea:focus, select:focus {
     position: relative;
     height: 300px;
     width: 100%;
+    max-width: 100%;
+}
+
+/* Prevent horizontal overflow globally */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 /* Loading spinner */

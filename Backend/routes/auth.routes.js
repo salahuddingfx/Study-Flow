@@ -15,9 +15,6 @@ router.post('/register', async (req, res) => {
     try {
         const { username, email, password, firstName, lastName } = req.body;
 
-        console.log('Registration attempt:', { username, email, firstName, lastName });
-        console.log('Password provided:', !!password);
-
         // Validate required fields
         if (!username || !email || !password) {
             return res.status(400).json({ message: 'Username, email, and password are required' });
@@ -27,8 +24,6 @@ router.post('/register', async (req, res) => {
         if (userExists) {
             return res.status(400).json({ message: 'User or Email already exists' });
         }
-
-        console.log('Creating user...');
         
         // Hash password
         const salt = await bcrypt.genSalt(10);
@@ -41,9 +36,6 @@ router.post('/register', async (req, res) => {
             firstName,
             lastName
         });
-
-        console.log('User created:', user.username);
-        console.log('User password after creation:', user.password.substring(0, 20) + '...');
 
         if (user) {
             res.status(201).json({
@@ -67,14 +59,10 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        console.log('Login attempt for username:', username);
         const user = await User.findOne({ username });
-        console.log('User found:', !!user);
 
         if (user) {
-            console.log('Stored password hash:', user.password);
             const isMatch = await user.matchPassword(password);
-            console.log('Password match:', isMatch);
 
             if (isMatch) {
                 res.json({
@@ -121,6 +109,35 @@ router.get('/me', async (req, res) => {
         }
     } else {
         res.status(401).json({ message: 'No token' });
+    }
+});
+
+// @desc    Make a user admin (temporary route for setup)
+// @route   POST /api/auth/make-admin
+router.post('/make-admin', async (req, res) => {
+    try {
+        const { username } = req.body;
+        const user = await User.findOneAndUpdate(
+            { username: username },
+            { $set: { role: 'admin' } },
+            { new: true }
+        ).select('-password');
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        res.json({ 
+            success: true,
+            message: `${username} is now an admin!`, 
+            user: {
+                username: user.username,
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 

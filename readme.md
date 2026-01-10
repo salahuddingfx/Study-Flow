@@ -133,31 +133,50 @@ git clone https://github.com/salahuddingfx/Study-Flow.git
 cd Study-Flow
 
 2️⃣ Install Dependencies
+cd Backend
 npm install
 
 3️⃣ Environment Configuration
 
-Create a .env file in the root directory:
+Create a `.env` file in the **Backend** directory:
 
-PORT=5500
+```env
+PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_super_secret_key
 NODE_ENV=development
+
+# AI Configuration (Unlimited Models Available!)
+GEMINI_API_KEY=your_google_gemini_api_key
+GEMINI_MODEL=gemini-2.0-flash-exp  # Default: unlimited experimental model
+```
+
+**Available AI Models:**
+- `gemini-2.0-flash-exp` - ⚡ **Unlimited** (Recommended)
+- `gemini-exp-1206` - ⚡ **Unlimited**
+- `gemma-2-9b-it` - Gemma 9B
+- `gemma-2-27b-it` - Gemma 27B
+- `gemini-2.5-flash` - ⚠️ Rate Limited (5 RPM/20 RPD)
 
 4️⃣ Start the Backend Server
 npm start
 
 5️⃣ Run the Frontend
 
-Use VS Code Live Server
-or run:
+Use VS Code Live Server (recommended)
 
-python -m http.server 8000
+Backend → http://localhost:5000
 
+Frontend → http://127.0.0.1:5500/index.html (Live Server)
 
-Backend → http://localhost:5500
+Or any static server of your choice.
 
-Frontend → http://localhost:8000
+### AI Setup (Gemini)
+- Get a **free API key** from [Google AI Studio](https://aistudio.google.com/app/apikey)
+- Add `GEMINI_API_KEY` to your Backend `.env`
+- The app uses **unlimited models by default** (gemini-2.0-flash-exp) to avoid rate limits
+- **Fallback system**: Automatically tries multiple models if one fails
+- **No rate limits** on experimental models! 🚀
 ```
 
 ## 📁 Project Structure
@@ -186,6 +205,50 @@ Study Flow/
 ├── DEPLOYMENT.md
 ├── readme.md
 └── render.yaml
+
+---
+
+## 🔄 Recent Upgrades
+
+### 🤖 AI System v2.0
+- ⚡ **Unlimited AI Models**: Now using `gemini-2.0-flash-exp` (no rate limits!)
+- 🔄 **Smart Fallback**: Auto-tries 9+ models including Gemma 2 series
+- 📊 **Model Tracking**: Response includes which model answered
+- 🎯 **Context-Aware**: AI knows your subjects, tasks, goals, and study history
+- 🔧 **Health Endpoint**: `/api/ai/health` shows model status
+
+### 🎨 UX Improvements
+- 🖱️ **Enhanced Custom Cursor**: Works on 17+ interactive element types
+- 📱 **Mobile Optimized**: Full-screen menu, no overflow, touch-friendly
+- 🎭 **Glassmorphism**: Beautiful cursor with hover effects (desktop only)
+- 📰 **Blog System**: Default posts with images + modal reader
+- 🔐 **Admin Panel**: Full dashboard with analytics and user management
+
+### 🛡️ Security & Performance
+- 🔒 Sensitive debug logs removed
+- 📝 `.env.example` template added
+- ⚡ Compression middleware enabled
+- 🛡️ Helmet.js security headers
+- 🚦 Rate limiting configured
+
+---
+
+## 🧪 Quick Test Checklist
+
+- Login → Navigate Timer/Analytics → No horizontal scroll on mobile.
+- Open Blog → Default posts visible → Click to read modal opens.
+- Toggle AI widget → Ask a question → Typing indicator and responses flow.
+- Admin Panel opens when `isAdmin` is true; charts render.
+
+---
+
+## ⚙️ Environment & Running
+
+- Backend: Express on port `5000` (from `.env`).
+- Frontend: Open `index.html` via VS Code Live Server.
+- AI: `GEMINI_API_KEY` in Backend `.env`.
+
+If you change ports, update `API_BASE_URL` in `Assets/script.js` accordingly.
 ```
 
 ## 🎮 Usage Guide

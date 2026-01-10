@@ -146,7 +146,21 @@ app.use('/api/goals', goalRoutes);
 const achievementRoutes = require('./routes/achievement.routes');
 achievementRoutes.setIo(io); // এটি মিসিং ছিল, এখন ঠিক করা হয়েছে
 app.use('/api/achievements', achievementRoutes);
+// Admin Routes (Admin Dashboard)
+app.use('/api/admin', require('./routes/admin.routes'));
 
+// AI Routes (AI Features)
+app.use('/api/ai', require('./routes/ai.routes'));
+
+// Blog Routes (Blog System)
+const blogRoutes = require('./routes/blog.routes');
+blogRoutes.setIo(io);
+app.use('/api/blogs', blogRoutes);
+
+// Song Routes (Music System)
+const songRoutes = require('./routes/song.routes');
+songRoutes.setIo(io);
+app.use('/api/songs', songRoutes);
 // Catch-all Route
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../index.html'));
