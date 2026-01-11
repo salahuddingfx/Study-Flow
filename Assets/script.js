@@ -9,9 +9,7 @@ createApp({
     data() {
         return {
             // API Configuration
-            API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                ? 'http://localhost:5000' 
-                : 'https://study-flow-nfym.onrender.com',
+            API_BASE_URL: 'https://study-flow-nfym.onrender.com',
 
             // Loading Text for Real Effect
             loadingText: 'Initializing...', 
