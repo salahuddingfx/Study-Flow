@@ -47,7 +47,7 @@ const allowedOrigins = [
     'http://127.0.0.1:5500',
     'http://localhost:5500',
     'https://salahuddingfx.github.io',      // GitHub Pages
-    'https://studyflow-web.netlify.app',    // Netlify App
+    'https://studyflow-apk.netlify.app',    // Netlify App
     process.env.FRONTEND_URL 
 ];
 
