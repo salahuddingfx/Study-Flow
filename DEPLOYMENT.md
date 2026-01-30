@@ -26,7 +26,7 @@
 2. Click **"Variables"** tab
 3. Add these environment variables:
    ```
-   MONGO_URI=mongodb+srv://your-username:your-password@cluster.mongodb.net/studyflow
+   MONGO_URI=mongodb+srv://your-username:your-password@cluster.mongodb.net/your_project
    JWT_SECRET=your_super_secure_random_string_here
    NODE_ENV=production
    ```
