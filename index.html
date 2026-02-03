@@ -235,6 +235,68 @@
      </div><button @click="showDeveloperModal = false" class="w-full btn-primary px-6 py-3 rounded-xl font-semibold text-white"> Close </button>
     </div>
    </div>
+   
+   <!-- Achievement Level Modal -->
+   <div v-if="showAchievementModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop overflow-y-auto" @click="showAchievementModal = false">
+    <div class="glass-strong rounded-3xl p-1 max-w-3xl w-full my-8 animate-slideUp overflow-hidden" @click.stop>
+     <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 p-6 sm:p-8">
+      <div class="flex justify-between items-start mb-6">
+       <h2 class="text-3xl font-bold gradient-text">Achievement System</h2>
+       <button @click="showAchievementModal = false" class="text-white/60 hover:text-white transition-colors"><i class="ph-bold ph-x text-2xl"></i></button>
+      </div>
+      
+      <!-- User Level Info -->
+      <div class="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 rounded-2xl p-6 mb-6 border border-purple-500/30">
+       <div class="flex items-center justify-between mb-4">
+        <div>
+         <p class="text-sm text-gray-300 mb-1">Current Level</p>
+         <h3 class="text-4xl font-bold gradient-text">{{ userLevel.levelName }}</h3>
+        </div>
+        <div class="text-right">
+         <div class="text-5xl font-bold text-purple-400">{{ userLevel.level }}/5</div>
+         <p class="text-sm text-gray-300 mt-2">{{ userLevel.points }} points</p>
+        </div>
+       </div>
+       
+       <!-- Level Progress Bar -->
+       <div class="w-full bg-black/30 rounded-full h-3 overflow-hidden">
+        <div :style="{ width: levelProgressPercent + '%' }" class="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-500"></div>
+       </div>
+       <p class="text-xs text-gray-400 mt-2">{{ userLevel.points }}/3000 points to Diamond</p>
+      </div>
+      
+      <!-- Level Tiers -->
+      <div class="mb-6">
+       <h3 class="text-lg font-semibold mb-3">Achievement Levels</h3>
+       <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+        <div v-for="tier in levelTiers" :key="tier.level" 
+         :class="{'ring-2 ring-yellow-400 scale-105': userLevel.level >= tier.level}" 
+         class="p-3 rounded-lg text-center transition-all duration-300" 
+         :style="{ backgroundColor: tier.color + '20', borderColor: tier.color + '60' }"
+         style="border: 1px solid;">
+         <div class="font-bold text-sm" :style="{ color: tier.color }">{{ tier.name }}</div>
+         <div class="text-xs text-gray-300">{{ tier.range }}</div>
+        </div>
+       </div>
+      </div>
+      
+      <!-- Stats -->
+      <div class="grid grid-cols-2 gap-3 mb-6">
+       <div class="bg-black/20 rounded-lg p-4">
+        <p class="text-gray-300 text-sm mb-1">Achievements Unlocked</p>
+        <p class="text-2xl font-bold text-purple-400">{{ userLevel.totalUnlocked }}/{{ totalAchievements }}</p>
+       </div>
+       <div class="bg-black/20 rounded-lg p-4">
+        <p class="text-gray-300 text-sm mb-1">Completion Rate</p>
+        <p class="text-2xl font-bold text-pink-400">{{ Math.round((userLevel.totalUnlocked/totalAchievements)*100) }}%</p>
+       </div>
+      </div>
+      
+      <button @click="showAchievementModal = false" class="w-full btn-primary px-6 py-3 rounded-xl font-semibold text-white"> Close </button>
+     </div>
+    </div>
+   </div>
+   
    <div v-if="showDataModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop overflow-y-auto" @click="showDataModal = false">
     <div class="glass-strong rounded-3xl p-1 max-w-2xl w-full my-8 animate-slideUp overflow-hidden" @click.stop>
      <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 p-6 sm:p-8">
@@ -1964,6 +2026,7 @@
            <li><button @click="currentView = 'timer'" class="opacity-70 hover:opacity-100 hover:text-purple-400"> Focus Timer </button></li>
            <li><button @click="currentView = 'tasks'" class="opacity-70 hover:opacity-100 hover:text-purple-400"> Tasks </button></li>
            <li><button @click="currentView = 'analytics'" class="opacity-70 hover:opacity-100 hover:text-purple-400"> Analytics </button></li>
+           <li><button @click="showAchievementModal = true" class="opacity-70 hover:opacity-100 hover:text-purple-400 flex items-center gap-1"><i class="ph-bold ph-trophy"></i> Achievements </button></li>
            <li><button @click="showDeveloperModal = true" class="opacity-70 hover:opacity-100 hover:text-purple-400"> About Developer </button></li>
           </ul>
          </div><div>

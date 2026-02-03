@@ -35,6 +35,7 @@ createApp({
             showNotificationSettings: false,
             showAdvancedTimer: false,
             showMusicModal: false,
+            showAchievementModal: false,
 
             // Auth
             isAuthenticated: false,
@@ -99,6 +100,22 @@ createApp({
                 currentPassword: '',
                 newPassword: ''
             },
+
+            // Achievement System
+            userLevel: {
+                level: 1,
+                levelName: 'Bronze',
+                points: 0,
+                totalUnlocked: 0
+            },
+            totalAchievements: 24,
+            levelTiers: [
+                { level: 1, name: 'Bronze', color: '#CD7F32', range: '0-249' },
+                { level: 2, name: 'Silver', color: '#C0C0C0', range: '250-749' },
+                { level: 3, name: 'Gold', color: '#FFD700', range: '750-1499' },
+                { level: 4, name: 'Platinum', color: '#E5E4E2', range: '1500-2999' },
+                { level: 5, name: 'Diamond', color: '#B9F2FF', range: '3000+' }
+            ],
 
             // Navigation
             currentView: 'home',
@@ -633,6 +650,13 @@ createApp({
             return colors[this.timerMode];
         },
 
+        levelProgressPercent() {
+            if (this.userLevel.level >= 5) return 100;
+            const points = this.userLevel.points;
+            const nextLevelThreshold = [250, 750, 1500, 3000][this.userLevel.level - 1];
+            return Math.min((points / nextLevelThreshold) * 100, 100);
+        },
+
         formattedTime() {
             const minutes = Math.floor(this.timeRemaining / 60);
             const seconds = this.timeRemaining % 60;
@@ -777,6 +801,7 @@ createApp({
                         setTimeout(() => {
                             this.updateCharts();
                             this.loadLeaderboard();
+                            this.loadAchievementStats();
                         }, 500);
                     });
                 });
@@ -816,6 +841,33 @@ createApp({
     },
 
     methods: {
+
+        async loadAchievementStats() {
+            try {
+                if (!this.authToken) return;
+                const response = await fetch(`${this.API_BASE_URL}/api/achievements/stats`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const stats = await response.json();
+                    if (stats.userLevel) {
+                        this.userLevel = {
+                            level: stats.userLevel.level,
+                            levelName: stats.userLevel.levelName,
+                            points: stats.userLevel.points,
+                            totalUnlocked: stats.userLevel.totalUnlocked
+                        };
+                    }
+                }
+            } catch (error) {
+                console.log('Achievement stats load error:', error);
+            }
+        },
 
         createParticles() {
             const container = this.$refs.particleContainer;
