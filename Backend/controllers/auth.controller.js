@@ -260,6 +260,6 @@ module.exports = {
     getMe,
     makeAdmin,
     forgotPassword,
-    resetPassword
+    resetPassword,
     updateCredentials
 };
