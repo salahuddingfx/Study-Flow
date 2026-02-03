@@ -65,6 +65,8 @@ createApp({
                 username: '',
                 email: ''
             },
+            forgotPasswordLoading: false,
+            resetPasswordLoading: false,
             currentUser: '',
             userFullName: '',
             userEmail: '',
@@ -843,6 +845,54 @@ createApp({
             }
         },
 
+        showInlineMessage(message) {
+            // Create a temporary message element
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                max-width: 90%;
+                animation: slideDown 0.3s ease-out;
+            `;
+            document.body.appendChild(messageDiv);
+
+            // Add animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideDown {
+                    from {
+                        opacity: 0;
+                        transform: translateX(-50%) translateY(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(-50%) translateY(0);
+                    }
+                }
+            `;
+            if (!document.querySelector('style[data-toast]')) {
+                style.setAttribute('data-toast', 'true');
+                document.head.appendChild(style);
+            }
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideDown 0.3s ease-out reverse';
+                setTimeout(() => messageDiv.remove(), 300);
+            }, 3000);
+        },
+
         initializeSocket() {
             if (!this.authToken || !this.userId) return;
 
@@ -1188,8 +1238,15 @@ createApp({
         },
 
         async handleForgotPassword() {
+            // Validation
+            if (!this.forgotForm.username || !this.forgotForm.email) {
+                this.showInlineMessage('Please enter both username and email');
+                return;
+            }
+
+            this.forgotPasswordLoading = true;
             try {
-                await this.apiRequest('/api/user/forgot-password', {
+                const response = await this.apiRequest('/api/user/forgot-password', {
                     method: 'POST',
                     body: JSON.stringify({
                         username: this.forgotForm.username,
@@ -1197,27 +1254,61 @@ createApp({
                     })
                 });
                 
-                this.showInlineMessage('Password reset link sent to your email! Check your inbox.');
+                this.showInlineMessage('✅ Password reset link sent to your email! Check your inbox.');
                 this.authMode = 'login';
                 this.loginForm.username = this.forgotForm.username;
                 this.forgotForm = { username: '', email: '' };
             } catch (error) {
-                this.showInlineMessage('Password reset request failed: ' + error.message);
+                console.error('Forgot password error:', error);
+                this.showInlineMessage('❌ ' + (error.message || 'Password reset request failed'));
+            } finally {
+                this.forgotPasswordLoading = false;
             }
         },
 
         async handleResetPassword() {
+            // Validation
+            if (!this.resetPasswordForm.newPassword || !this.resetPasswordForm.confirmPassword) {
+                this.showInlineMessage('Please fill in all fields');
+                return;
+            }
+
             if (this.resetPasswordForm.newPassword !== this.resetPasswordForm.confirmPassword) {
-                this.showInlineMessage('Passwords do not match!');
+                this.showInlineMessage('❌ Passwords do not match!');
                 return;
             }
             
             if (this.resetPasswordForm.newPassword.length < 6) {
-                this.showInlineMessage('Password must be at least 6 characters!');
+                this.showInlineMessage('❌ Password must be at least 6 characters!');
                 return;
             }
 
+            this.resetPasswordLoading = true;
             try {
+                const response = await this.apiRequest(`/api/user/reset-password/${this.resetToken}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        newPassword: this.resetPasswordForm.newPassword
+                    })
+                });
+
+                this.showInlineMessage('✅ Password reset successful! Redirecting to login...');
+                
+                // Reset form
+                this.resetPasswordForm = { newPassword: '', confirmPassword: '' };
+                this.resetToken = null;
+                
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    this.authMode = 'login';
+                    this.isAuthenticated = false;
+                    localStorage.removeItem('jwt');
+                }, 2000);
+            } catch (error) {
+                console.error('Reset password error:', error);
+                this.showInlineMessage('❌ ' + (error.message || 'Password reset failed'));
+            } finally {
+                this.resetPasswordLoading = false;
                 const response = await this.apiRequest(`/api/user/reset-password/${this.resetToken}`, {
                     method: 'PUT',
                     body: JSON.stringify({

@@ -884,8 +884,11 @@
         <label class="block text-sm font-medium mb-2">Email</label>
         <input v-model="forgotForm.email" type="email" required class="w-full px-4 py-3 rounded-xl glass-strong" placeholder="Enter your registered email">
        </div>
-       <button type="submit" class="w-full py-3 rounded-xl btn-primary text-white font-semibold">
-        Send Reset Link
+       <button type="submit" class="w-full py-3 rounded-xl btn-primary text-white font-semibold" :disabled="forgotPasswordLoading">
+        <span v-if="!forgotPasswordLoading">Send Reset Link</span>
+        <div v-else class="flex items-center justify-center gap-2">
+         <div class="loading-spinner"></div><span>Sending...</span>
+        </div>
        </button>
       </form>
       <p class="text-center mt-6 opacity-70">Remember your password? <button @click="authMode = 'login'" class="text-purple-400 hover:text-purple-300 font-semibold"> Sign In </button></p>
@@ -979,9 +982,12 @@
        <button 
         type="submit" 
         class="w-full py-3 rounded-xl btn-primary text-white font-semibold hover:scale-105 transition-transform"
-        :disabled="!resetPasswordForm.newPassword || !resetPasswordForm.confirmPassword || resetPasswordForm.newPassword !== resetPasswordForm.confirmPassword"
+        :disabled="!resetPasswordForm.newPassword || !resetPasswordForm.confirmPassword || resetPasswordForm.newPassword !== resetPasswordForm.confirmPassword || resetPasswordLoading"
        >
-        Reset Password
+        <span v-if="!resetPasswordLoading">Reset Password</span>
+        <div v-else class="flex items-center justify-center gap-2">
+         <div class="loading-spinner"></div><span>Resetting...</span>
+        </div>
        </button>
       </form>
 
