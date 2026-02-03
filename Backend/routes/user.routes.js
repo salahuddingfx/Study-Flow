@@ -45,6 +45,18 @@ router.get('/weekly-summary', protect, async (req, res) => {
     }
 });
 
+// @desc    Get daily summary settings
+// @route   GET /api/user/daily-summary
+// @access  Private
+router.get('/daily-summary', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('dailySummaryEnabled');
+        res.json({ dailySummaryEnabled: user?.dailySummaryEnabled !== false });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc    Update weekly summary settings
 // @route   PUT /api/user/weekly-summary
 // @access  Private
@@ -56,6 +68,50 @@ router.put('/weekly-summary', protect, async (req, res) => {
         user.weeklySummaryEnabled = !!weeklySummaryEnabled;
         await user.save();
         res.json({ success: true, weeklySummaryEnabled: user.weeklySummaryEnabled });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Update daily summary settings
+// @route   PUT /api/user/daily-summary
+// @access  Private
+router.put('/daily-summary', protect, async (req, res) => {
+    try {
+        const { dailySummaryEnabled } = req.body;
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        user.dailySummaryEnabled = !!dailySummaryEnabled;
+        await user.save();
+        res.json({ success: true, dailySummaryEnabled: user.dailySummaryEnabled });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Get monthly summary settings
+// @route   GET /api/user/monthly-summary
+// @access  Private
+router.get('/monthly-summary', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('monthlySummaryEnabled');
+        res.json({ monthlySummaryEnabled: user?.monthlySummaryEnabled !== false });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Update monthly summary settings
+// @route   PUT /api/user/monthly-summary
+// @access  Private
+router.put('/monthly-summary', protect, async (req, res) => {
+    try {
+        const { monthlySummaryEnabled } = req.body;
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        user.monthlySummaryEnabled = !!monthlySummaryEnabled;
+        await user.save();
+        res.json({ success: true, monthlySummaryEnabled: user.monthlySummaryEnabled });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

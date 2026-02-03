@@ -1557,6 +1557,17 @@
            </div>
            <div class="glass-strong p-4 rounded-xl flex items-center justify-between">
             <div>
+             <div class="text-sm opacity-70">Daily Email Summary</div>
+             <div class="text-xs opacity-60">Get daily progress updates</div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+             <input type="checkbox" class="sr-only" v-model="dailySummaryEnabled" @change="toggleDailySummary">
+             <div class="w-11 h-6 bg-gray-600 rounded-full peer-focus:ring-2 peer-focus:ring-purple-500 transition-all" :class="dailySummaryEnabled ? 'bg-purple-600' : 'bg-gray-600'"></div>
+             <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all" :class="dailySummaryEnabled ? 'translate-x-5' : 'translate-x-0'"></div>
+            </label>
+           </div>
+           <div class="glass-strong p-4 rounded-xl flex items-center justify-between">
+            <div>
              <div class="text-sm opacity-70">Weekly Email Summary</div>
              <div class="text-xs opacity-60">Get weekly progress updates</div>
             </div>
@@ -1564,6 +1575,17 @@
              <input type="checkbox" class="sr-only" v-model="weeklySummaryEnabled" @change="toggleWeeklySummary">
              <div class="w-11 h-6 bg-gray-600 rounded-full peer-focus:ring-2 peer-focus:ring-purple-500 transition-all" :class="weeklySummaryEnabled ? 'bg-purple-600' : 'bg-gray-600'"></div>
              <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all" :class="weeklySummaryEnabled ? 'translate-x-5' : 'translate-x-0'"></div>
+            </label>
+           </div>
+           <div class="glass-strong p-4 rounded-xl flex items-center justify-between">
+            <div>
+             <div class="text-sm opacity-70">Monthly Email Summary</div>
+             <div class="text-xs opacity-60">Get monthly progress updates</div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+             <input type="checkbox" class="sr-only" v-model="monthlySummaryEnabled" @change="toggleMonthlySummary">
+             <div class="w-11 h-6 bg-gray-600 rounded-full peer-focus:ring-2 peer-focus:ring-purple-500 transition-all" :class="monthlySummaryEnabled ? 'bg-purple-600' : 'bg-gray-600'"></div>
+             <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all" :class="monthlySummaryEnabled ? 'translate-x-5' : 'translate-x-0'"></div>
             </label>
            </div>
           </div>
@@ -1924,7 +1946,7 @@
            <h3 class="text-lg font-bold">StudyFlow</h3>
           </div>
           <p class="text-sm opacity-70 mb-4">Your ultimate focus and productivity companion. Build to help students and professionals achieve their goals.</p>
-          <div class="flex gap-3"><a href="https://github.com" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i class="ph-bold ph-github-logo text-xl"></i> </a> <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i class="ph-bold ph-twitter-logo text-xl"></i> </a> <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i class="ph-bold ph-linkedin-logo text-xl"></i> </a>
+          <div class="flex gap-3"><a href="https://github.com/salahuddingfx/Study-Flow" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i class="ph-bold ph-github-logo text-xl"></i> </a> <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i class="ph-bold ph-twitter-logo text-xl"></i> </a> <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i class="ph-bold ph-linkedin-logo text-xl"></i> </a>
           </div>
          </div><div>
           <h3 class="text-lg font-bold mb-4">Features</h3>
@@ -1948,7 +1970,7 @@
           <h3 class="text-lg font-bold mb-4">Get in Touch</h3>
           <ul class="space-y-3 text-sm opacity-70">
            <li class="flex items-center gap-2"><i class="ph-bold ph-envelope text-purple-400"></i> <a href="mailto:hello@studyflow.app" class="hover:text-purple-400">hello@studyflow.app</a></li>
-           <li class="flex items-center gap-2"><i class="ph-bold ph-globe text-purple-400"></i> <a href="https://studyflow.app" target="_blank" rel="noopener noreferrer" class="hover:text-purple-400">studyflow.app</a></li>
+           <li class="flex items-center gap-2"><i class="ph-bold ph-globe text-purple-400"></i> <a href="https://studyflow.salahuddin.codes" target="_blank" rel="noopener noreferrer" class="hover:text-purple-400">StudyFlow</a></li>
            <li class="flex items-center gap-2"><i class="ph-bold ph-calendar text-purple-400"></i> {{ currentDateTime }}</li>
           </ul>
          </div>

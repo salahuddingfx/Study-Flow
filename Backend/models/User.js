@@ -21,8 +21,12 @@ const userSchema = mongoose.Schema({
     streakCurrent: { type: Number, default: 0 },
     streakLongest: { type: Number, default: 0 },
     lastStudyDate: Date,
+    dailySummaryEnabled: { type: Boolean, default: true },
+    lastDailySummarySent: Date,
     weeklySummaryEnabled: { type: Boolean, default: true },
     lastWeeklySummarySent: Date,
+    monthlySummaryEnabled: { type: Boolean, default: true },
+    lastMonthlySummarySent: Date,
     // Calendar & public profile
     calendarToken: String,
     publicProfileToken: String,

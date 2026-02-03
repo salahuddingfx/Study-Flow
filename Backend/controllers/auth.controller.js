@@ -149,7 +149,9 @@ const forgotPassword = async (req, res) => {
                 email: user.email,
                 subject: 'Password Reset Token - StudyFlow',
                 message,
-                url: resetUrl
+                url: resetUrl,
+                template: 'password-reset',
+                heading: 'StudyFlow Password Reset'
             });
 
             res.status(200).json({ success: true, data: 'Email sent' });

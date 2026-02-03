@@ -77,7 +77,9 @@ createApp({
             // Streaks & summaries
             streakCurrent: 0,
             streakLongest: 0,
+            dailySummaryEnabled: true,
             weeklySummaryEnabled: true,
+            monthlySummaryEnabled: true,
             // Calendar & public profile
             calendarUrl: '',
             publicProfileEnabled: false,
@@ -495,10 +497,6 @@ createApp({
 
         this._scrollHandler = () => {
             this.showScrollTop = window.scrollY > 300;
-            // Debug log
-            if (window.scrollY > 300 && !this.showScrollTop) {
-                console.log('🔝 Scroll button should show at scrollY:', window.scrollY);
-            }
         };
         window.addEventListener('scroll', this._scrollHandler);
 
@@ -1842,8 +1840,14 @@ createApp({
                 this.streakLongest = profile?.streakLongest || 0;
                 this.currentStreak = this.streakCurrent;
 
+                const daily = await this.apiRequest('/api/user/daily-summary');
+                this.dailySummaryEnabled = daily?.dailySummaryEnabled !== false;
+
                 const weekly = await this.apiRequest('/api/user/weekly-summary');
                 this.weeklySummaryEnabled = weekly?.weeklySummaryEnabled !== false;
+
+                const monthly = await this.apiRequest('/api/user/monthly-summary');
+                this.monthlySummaryEnabled = monthly?.monthlySummaryEnabled !== false;
 
                 const calendar = await this.apiRequest('/api/user/calendar-token');
                 this.calendarUrl = calendar?.calendarUrl || '';
@@ -1876,6 +1880,30 @@ createApp({
                 this.weeklySummaryEnabled = !!res?.weeklySummaryEnabled;
             } catch (e) {
                 this.showInlineMessage('Failed to update weekly summary setting');
+            }
+        },
+
+        async toggleDailySummary() {
+            try {
+                const res = await this.apiRequest('/api/user/daily-summary', {
+                    method: 'PUT',
+                    body: JSON.stringify({ dailySummaryEnabled: this.dailySummaryEnabled })
+                });
+                this.dailySummaryEnabled = !!res?.dailySummaryEnabled;
+            } catch (e) {
+                this.showInlineMessage('Failed to update daily summary setting');
+            }
+        },
+
+        async toggleMonthlySummary() {
+            try {
+                const res = await this.apiRequest('/api/user/monthly-summary', {
+                    method: 'PUT',
+                    body: JSON.stringify({ monthlySummaryEnabled: this.monthlySummaryEnabled })
+                });
+                this.monthlySummaryEnabled = !!res?.monthlySummaryEnabled;
+            } catch (e) {
+                this.showInlineMessage('Failed to update monthly summary setting');
             }
         },
 

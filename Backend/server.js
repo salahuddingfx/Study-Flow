@@ -331,68 +331,123 @@ server.listen(PORT, async () => {
     console.log(colors.cyan + '    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' + colors.reset);
     console.log('');
 
-    // Weekly summary scheduler (runs daily)
-    const sendWeeklySummaries = async () => {
-        try {
-            const now = new Date();
-            const startDate = new Date(now);
-            startDate.setDate(now.getDate() - 7);
+    const shouldSendByDays = (lastSent, days) => {
+        if (!lastSent) return true;
+        const diffDays = Math.floor((Date.now() - new Date(lastSent)) / (1000 * 60 * 60 * 24));
+        return diffDays >= days;
+    };
 
-            const users = await User.find({ weeklySummaryEnabled: { $ne: false } });
+    const buildSummaryMessage = (label, totalMinutes, sessionsCount, tasksCount, completedTasks, topSubject, streak) => (
+        `Your ${label} StudyFlow Summary\n\n` +
+        `Total study time: ${Math.round(totalMinutes)} minutes\n` +
+        `Sessions completed: ${sessionsCount}\n` +
+        `Tasks created: ${tasksCount}\n` +
+        `Tasks completed: ${completedTasks}\n` +
+        (topSubject ? `Top subject: ${topSubject.name} (${Math.round(topSubject.minutes)} min)\n` : '') +
+        `Current streak: ${streak || 0} days\n`
+    );
+
+    const sendSummaryEmail = async ({ user, label, daysBack, lastSentField, subject }) => {
+        const now = new Date();
+        const startDate = new Date(now);
+        startDate.setDate(now.getDate() - daysBack);
+
+        if (!shouldSendByDays(user[lastSentField], daysBack)) return;
+
+        const sessions = await Session.find({
+            user: user._id,
+            timestamp: { $gte: startDate, $lte: now }
+        });
+        const tasks = await Task.find({
+            user: user._id,
+            createdAt: { $gte: startDate, $lte: now }
+        });
+
+        const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+        const completedTasks = tasks.filter(t => t.completed).length;
+        const subjectBreakdown = {};
+        sessions.forEach(s => {
+            const subject = s.subject || 'Unspecified';
+            subjectBreakdown[subject] = (subjectBreakdown[subject] || 0) + (s.duration || 0);
+        });
+
+        const topSubjectName = Object.keys(subjectBreakdown).sort((a, b) => subjectBreakdown[b] - subjectBreakdown[a])[0];
+        const topSubject = topSubjectName
+            ? { name: topSubjectName, minutes: subjectBreakdown[topSubjectName] }
+            : null;
+
+        const message = buildSummaryMessage(label, totalMinutes, sessions.length, tasks.length, completedTasks, topSubject, user.streakCurrent);
+
+        await sendEmail({
+            email: user.email,
+            subject,
+            heading: `Your ${label} StudyFlow Summary`,
+            preheader: `Here is your ${label.toLowerCase()} progress snapshot.`,
+            message,
+            url: process.env.FRONTEND_URL || 'http://127.0.0.1:5500',
+            ctaLabel: 'View Dashboard'
+        });
+
+        user[lastSentField] = now;
+        await user.save();
+    };
+
+    // Summary scheduler (runs daily)
+    const sendSummaries = async () => {
+        try {
+            const users = await User.find({});
+
             for (const user of users) {
-                if (user.lastWeeklySummarySent) {
-                    const daysSince = Math.floor((now - new Date(user.lastWeeklySummarySent)) / (1000 * 60 * 60 * 24));
-                    if (daysSince < 7) continue;
+                if (user.dailySummaryEnabled !== false) {
+                    try {
+                        await sendSummaryEmail({
+                            user,
+                            label: 'Daily',
+                            daysBack: 1,
+                            lastSentField: 'lastDailySummarySent',
+                            subject: 'Your Daily StudyFlow Summary'
+                        });
+                    } catch (e) {
+                        console.error('Daily summary email failed:', e.message);
+                    }
                 }
 
-                const sessions = await Session.find({
-                    user: user._id,
-                    timestamp: { $gte: startDate, $lte: now }
-                });
-                const tasks = await Task.find({
-                    user: user._id,
-                    createdAt: { $gte: startDate, $lte: now }
-                });
+                if (user.weeklySummaryEnabled !== false) {
+                    try {
+                        await sendSummaryEmail({
+                            user,
+                            label: 'Weekly',
+                            daysBack: 7,
+                            lastSentField: 'lastWeeklySummarySent',
+                            subject: 'Your Weekly StudyFlow Summary'
+                        });
+                    } catch (e) {
+                        console.error('Weekly summary email failed:', e.message);
+                    }
+                }
 
-                const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
-                const completedTasks = tasks.filter(t => t.completed).length;
-                const subjectBreakdown = {};
-                sessions.forEach(s => {
-                    const subject = s.subject || 'Unspecified';
-                    subjectBreakdown[subject] = (subjectBreakdown[subject] || 0) + (s.duration || 0);
-                });
-
-                const topSubject = Object.keys(subjectBreakdown).sort((a, b) => subjectBreakdown[b] - subjectBreakdown[a])[0];
-
-                const message = `Your Weekly StudyFlow Summary\n\n` +
-                    `Total study time: ${Math.round(totalMinutes)} minutes\n` +
-                    `Sessions completed: ${sessions.length}\n` +
-                    `Tasks created: ${tasks.length}\n` +
-                    `Tasks completed: ${completedTasks}\n` +
-                    (topSubject ? `Top subject: ${topSubject} (${Math.round(subjectBreakdown[topSubject])} min)\n` : '') +
-                    `Current streak: ${user.streakCurrent || 0} days\n`;
-
-                try {
-                    await sendEmail({
-                        email: user.email,
-                        subject: 'Your Weekly StudyFlow Summary',
-                        message,
-                        url: process.env.FRONTEND_URL || 'http://127.0.0.1:5500'
-                    });
-                    user.lastWeeklySummarySent = now;
-                    await user.save();
-                } catch (e) {
-                    console.error('Weekly summary email failed:', e.message);
+                if (user.monthlySummaryEnabled !== false) {
+                    try {
+                        await sendSummaryEmail({
+                            user,
+                            label: 'Monthly',
+                            daysBack: 30,
+                            lastSentField: 'lastMonthlySummarySent',
+                            subject: 'Your Monthly StudyFlow Summary'
+                        });
+                    } catch (e) {
+                        console.error('Monthly summary email failed:', e.message);
+                    }
                 }
             }
         } catch (e) {
-            console.error('Weekly summary scheduler error:', e.message);
+            console.error('Summary scheduler error:', e.message);
         }
     };
 
     // Run once at startup and then daily
-    sendWeeklySummaries();
-    setInterval(sendWeeklySummaries, 24 * 60 * 60 * 1000);
+    sendSummaries();
+    setInterval(sendSummaries, 24 * 60 * 60 * 1000);
 });
 
 // Graceful shutdown handlers

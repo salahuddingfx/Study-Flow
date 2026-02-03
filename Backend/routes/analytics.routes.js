@@ -244,22 +244,36 @@ router.get('/leaderboard', async (req, res) => {
         const leaderboard = await Session.aggregate([
             { $match: matchStage },
             { $group: { _id: '$user', totalMinutes: { $sum: '$duration' }, sessions: { $sum: 1 } } },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            { $unwind: '$user' },
+            { $match: { 'user.role': { $ne: 'admin' } } },
             { $sort: { totalMinutes: -1 } },
-            { $limit: parseInt(limit) }
+            { $limit: parseInt(limit) },
+            {
+                $project: {
+                    totalMinutes: 1,
+                    sessions: 1,
+                    username: '$user.username',
+                    firstName: '$user.firstName',
+                    lastName: '$user.lastName'
+                }
+            }
         ]);
 
-        const userIds = leaderboard.map(l => l._id);
-        const users = await User.find({ _id: { $in: userIds } }).select('username firstName lastName');
-        const userMap = new Map(users.map(u => [u._id.toString(), u]));
-
         const results = leaderboard.map((item, index) => {
-            const user = userMap.get(item._id.toString());
-            const fullName = user?.firstName || user?.lastName
-                ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
-                : user?.username || 'User';
+            const fullName = item.firstName || item.lastName
+                ? `${item.firstName || ''} ${item.lastName || ''}`.trim()
+                : item.username || 'User';
             return {
                 rank: index + 1,
-                username: user?.username || 'user',
+                username: item.username || 'user',
                 fullName,
                 totalMinutes: item.totalMinutes,
                 sessions: item.sessions

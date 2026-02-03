@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="StudyFlow app icon">
+  <defs>
+    <linearGradient id="sfGradient512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#764ba2" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#sfGradient512)" />
+  <g fill="#ffffff">
+    <path d="M256 116c-54 0-98 44-98 98v22c0 17-10 32-26 39-24 10-39 34-39 60 0 40 33 73 73 73h32c17 0 32 10 39 26 10 24 34 39 60 39 40 0 73-33 73-73v-35c0-17 10-32 26-39 24-10 39-34 39-60 0-40-33-73-73-73h-32c-17 0-32-10-39-26-10-24-34-39-60-39z" opacity="0.95" />
+    <circle cx="256" cy="256" r="38" fill="#ffffff" />
+  </g>
+</svg>
