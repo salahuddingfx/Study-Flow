@@ -205,6 +205,55 @@ const resetPassword = async (req, res) => {
     }
 };
 
+// @desc    Update username/password (requires current password)
+// @route   PUT /api/auth/update-credentials
+// @access  Private
+const updateCredentials = async (req, res) => {
+    const { newUsername, currentPassword, newPassword } = req.body;
+
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (!currentPassword) {
+            return res.status(400).json({ message: 'Current password is required' });
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Current password is incorrect' });
+        }
+
+        if (newUsername && newUsername !== user.username) {
+            const exists = await User.findOne({ username: newUsername });
+            if (exists) {
+                return res.status(400).json({ message: 'Username already taken' });
+            }
+            user.username = newUsername;
+        }
+
+        if (newPassword) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(newPassword, salt);
+        }
+
+        const updatedUser = await user.save();
+        return res.json({
+            success: true,
+            message: 'Credentials updated successfully',
+            user: {
+                _id: updatedUser.id,
+                username: updatedUser.username,
+                email: updatedUser.email
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -212,4 +261,5 @@ module.exports = {
     makeAdmin,
     forgotPassword,
     resetPassword
+    updateCredentials
 };

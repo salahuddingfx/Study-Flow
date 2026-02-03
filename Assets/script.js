@@ -1151,11 +1151,23 @@ createApp({
 
         async handleChangeCredentials() {
             try {
-                await this.apiRequest('/api/auth/update-credentials', { 
+                if (!this.credentialsForm.currentPassword) {
+                    this.showInlineMessage('Current password is required');
+                    return;
+                }
+                if (!this.credentialsForm.newUsername && !this.credentialsForm.newPassword) {
+                    this.showInlineMessage('Enter a new username or new password');
+                    return;
+                }
+
+                const response = await this.apiRequest('/api/auth/update-credentials', { 
                     method: 'PUT',
                     body: JSON.stringify(this.credentialsForm)
                 });
                 
+                if (response?.user?.username) {
+                    this.currentUser = response.user.username;
+                }
                 this.showChangeCredentials = false;
                 this.credentialsForm = { newUsername: '', currentPassword: '', newPassword: '' };
                 this.showInlineMessage('Credentials updated successfully!');
