@@ -251,16 +251,18 @@ router.post('/quiz', protect, async (req, res) => {
         const questions = JSON.parse(text);
 
         // Save to Database
+        let quizId = null;
         if (req.user && req.user.id) {
-            await Quiz.create({
+            const savedQuiz = await Quiz.create({
                 user: req.user.id,
                 topic: topic,
                 questions: questions
             });
-            console.log("💾 Quiz saved to database");
+            quizId = savedQuiz._id;
+            console.log("💾 Quiz saved to database with ID:", quizId);
         }
         
-        res.json({ questions });
+        res.json({ questions, quizId });
     } catch (error) {
         console.error('Quiz Gen Error:', error);
         const message = error?.message?.includes('model')
@@ -269,6 +271,66 @@ router.post('/quiz', protect, async (req, res) => {
             ? 'Invalid API key. Check GEMINI_API_KEY.'
             : 'Quiz generation failed';
         res.status(500).json({ message });
+    }
+});
+
+// Update Quiz Score Route
+router.put('/quiz/:id', protect, async (req, res) => {
+    try {
+        const { score, completed } = req.body;
+        const quiz = await Quiz.findOne({ _id: req.params.id, user: req.user.id });
+        
+        if (!quiz) {
+            return res.status(404).json({ message: 'Quiz not found' });
+        }
+        
+        quiz.score = score;
+        quiz.completed = completed;
+        await quiz.save();
+        
+        // Award achievement points based on score
+        const User = require('../models/User');
+        const user = await User.findById(req.user.id);
+        
+        let pointsToAdd = 0;
+        if (user && completed) {
+            if (score === 100) {
+                pointsToAdd = 50; // Perfect score bonus
+            } else if (score >= 80) {
+                pointsToAdd = 30; // High score
+            } else if (score >= 60) {
+                pointsToAdd = 20; // Good score
+            } else if (score >= 40) {
+                pointsToAdd = 10; // Passing score
+            }
+            
+            if (pointsToAdd > 0) {
+                user.achievementPoints = (user.achievementPoints || 0) + pointsToAdd;
+                
+                // Update level based on points
+                const levelTiers = [
+                    { level: 1, name: 'Bronze', minPoints: 0 },
+                    { level: 2, name: 'Silver', minPoints: 250 },
+                    { level: 3, name: 'Gold', minPoints: 750 },
+                    { level: 4, name: 'Platinum', minPoints: 1500 },
+                    { level: 5, name: 'Diamond', minPoints: 3000 }
+                ];
+                
+                const currentTier = levelTiers.reverse().find(t => user.achievementPoints >= t.minPoints);
+                if (currentTier) {
+                    user.achievementLevel = currentTier.level;
+                    user.achievementLevelName = currentTier.name;
+                }
+                
+                await user.save();
+                console.log(`⭐ User ${user.username} earned ${pointsToAdd} points for quiz score ${score}%`);
+            }
+        }
+        
+        res.json({ message: 'Quiz updated successfully', score, pointsAwarded: pointsToAdd || 0 });
+    } catch (error) {
+        console.error('Quiz Update Error:', error);
+        res.status(500).json({ message: 'Quiz update failed' });
     }
 });
 

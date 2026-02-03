@@ -117,7 +117,7 @@ createApp({
                 points: 0,
                 totalUnlocked: 0
             },
-            totalAchievements: 35,
+            totalAchievements: 38,
             levelTiers: [
                 { level: 1, name: 'Bronze', color: '#CD7F32', range: '0-249' },
                 { level: 2, name: 'Silver', color: '#C0C0C0', range: '250-749' },
@@ -261,6 +261,7 @@ createApp({
             analyticsView: 'daily',
             studyTimeChart: null,
             subjectChart: null,
+            leaderboardChart: null,
             updatingCharts: false,
             chartKey: 0,
 
@@ -341,6 +342,8 @@ createApp({
             quizTopic: '',
             quizQuestions: [],
             quizLoading: false,
+            currentQuizId: null,
+            quizCompleted: false,
 
             // Calendar
             calendarInstance: null,
@@ -1327,6 +1330,8 @@ createApp({
             if (!this.quizTopic) return;
             this.quizLoading = true;
             this.quizQuestions = [];
+            this.currentQuizId = null;
+            this.quizCompleted = false;
 
             try {
                 const res = await this.apiRequest('/api/ai/quiz', {
@@ -1339,6 +1344,7 @@ createApp({
                         ...q,
                         userAnswer: undefined
                     }));
+                    this.currentQuizId = res.quizId; // Store quiz ID for later submission
                 } else {
                     this.showInlineMessage('Could not generate quiz. Try a different topic.');
                 }
@@ -1352,11 +1358,71 @@ createApp({
         checkAnswer(qIndex, optIndex) {
             if (this.quizQuestions[qIndex].userAnswer !== undefined) return;
             this.quizQuestions[qIndex].userAnswer = optIndex;
+            
+            // Check if all questions are answered
+            const allAnswered = this.quizQuestions.every(q => q.userAnswer !== undefined);
+            if (allAnswered && !this.quizCompleted) {
+                this.submitQuiz();
+            }
+        },
+
+        async submitQuiz() {
+            try {
+                // Calculate score
+                const correctAnswers = this.quizQuestions.filter((q, i) => 
+                    q.userAnswer === q.correctAnswer
+                ).length;
+                const score = Math.round((correctAnswers / this.quizQuestions.length) * 100);
+                
+                // Update quiz in database
+                if (this.currentQuizId) {
+                    await this.apiRequest(`/api/ai/quiz/${this.currentQuizId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            score: score,
+                            completed: true
+                        })
+                    });
+                    
+                    this.quizCompleted = true;
+                    
+                    // Check for new achievements
+                    await this.apiRequest('/api/achievements/check-progress', {
+                        method: 'POST'
+                    });
+                    
+                    // Reload quiz stats
+                    await this.loadQuizStats();
+                    
+                    // Emit to Socket.io for real-time updates
+                    if (this.socket && this.userId) {
+                        this.socket.emit('check-achievements', this.userId);
+                    }
+                    
+                    // Show message
+                    const percentage = score;
+                    let message = '';
+                    if (percentage === 100) {
+                        message = `🎉 Perfect score! +50 points earned!`;
+                    } else if (percentage >= 80) {
+                        message = `✨ Great job! ${percentage}% - Keep it up!`;
+                    } else if (percentage >= 60) {
+                        message = `👍 Good effort! ${percentage}% - You can do better!`;
+                    } else {
+                        message = `📚 ${percentage}% - Keep practicing!`;
+                    }
+                    this.showInlineMessage(message);
+                }
+            } catch (e) {
+                console.error('Quiz submission error:', e);
+            }
         },
 
         resetQuiz() {
             this.quizTopic = '';
             this.quizQuestions = [];
+            this.currentQuizId = null;
+            this.quizCompleted = false;
         },
 
         checkResetToken() {
@@ -1977,9 +2043,107 @@ createApp({
                 if (!res.ok) return;
                 const data = await res.json();
                 this.achievementLeaderboard = Array.isArray(data) ? data : [];
+                
+                // Render chart after data loads
+                this.$nextTick(() => {
+                    this.renderLeaderboardChart();
+                });
             } catch (e) {
                 console.warn('Achievement leaderboard load failed', e);
             }
+        },
+
+        renderLeaderboardChart() {
+            const canvas = this.$refs.leaderboardChart;
+            if (!canvas || this.achievementLeaderboard.length === 0) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy existing chart
+            if (this.leaderboardChart) {
+                this.leaderboardChart.destroy();
+            }
+            
+            // Prepare data
+            const labels = this.achievementLeaderboard.map((user, index) => 
+                user.username || `User ${index + 1}`
+            );
+            const points = this.achievementLeaderboard.map(user => user.achievementPoints || 0);
+            const levels = this.achievementLeaderboard.map(user => user.achievementLevel || 1);
+            
+            // Level colors
+            const levelColors = levels.map(level => {
+                const colors = {
+                    1: 'rgba(205, 127, 50, 0.8)',    // Bronze
+                    2: 'rgba(192, 192, 192, 0.8)',   // Silver
+                    3: 'rgba(255, 215, 0, 0.8)',     // Gold
+                    4: 'rgba(229, 228, 226, 0.8)',   // Platinum
+                    5: 'rgba(185, 242, 255, 0.8)'    // Diamond
+                };
+                return colors[level] || colors[1];
+            });
+            
+            this.leaderboardChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Achievement Points',
+                        data: points,
+                        backgroundColor: levelColors,
+                        borderColor: levelColors.map(c => c.replace('0.8', '1')),
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            callbacks: {
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const user = this.achievementLeaderboard[index];
+                                    const levelName = user?.achievementLevelName || 'Bronze';
+                                    return [
+                                        `Points: ${context.parsed.y}`,
+                                        `Level: ${levelName}`,
+                                        `Unlocked: ${user?.totalAchievementsUnlocked || 0}/38`
+                                    ];
+                                }.bind(this)
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
         },
 
         async loadQuizStats() {

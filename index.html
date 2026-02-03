@@ -1634,7 +1634,16 @@
           <div v-if="achievementLeaderboard.length === 0" class="text-center opacity-70 py-6">
            <p>No achievement data yet. Start studying to climb the ranks!</p>
           </div>
-          <div v-else class="space-y-2">
+          <div v-else>
+           <!-- Leaderboard Chart -->
+           <div class="mb-6">
+            <div class="chart-container relative h-80 w-full">
+             <canvas ref="leaderboardChart"></canvas>
+            </div>
+           </div>
+           
+           <!-- Leaderboard List -->
+           <div class="space-y-2">
            <div v-for="(user, index) in achievementLeaderboard" :key="user._id" class="glass-strong p-4 rounded-xl">
             <div class="flex items-center justify-between">
              <div class="flex items-center gap-3 flex-1">
@@ -1664,6 +1673,7 @@
               </div>
              </div>
             </div>
+           </div>
            </div>
           </div>
          </div>

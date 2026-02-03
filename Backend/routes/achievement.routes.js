@@ -415,8 +415,39 @@ const DEFAULT_ACHIEVEMENTS = [
         rarity: "legendary",
         level: 5,
         levelName: "Diamond",
-        points: 800
-    }
+        points: 800    },
+    {
+        title: "Quiz Master",
+        description: "Complete 20 quizzes with perfect scores",
+        icon: "graduation-cap",
+        category: "special",
+        criteria: { type: "quiz-perfects", value: 20, period: "all-time" },
+        rarity: "legendary",
+        level: 5,
+        levelName: "Diamond",
+        points: 600
+    },
+    {
+        title: "Knowledge Ninja",
+        description: "Complete 50 quizzes",
+        icon: "brain",
+        category: "special",
+        criteria: { type: "quiz-completed", value: 50, period: "all-time" },
+        rarity: "epic",
+        level: 4,
+        levelName: "Platinum",
+        points: 350
+    },
+    {
+        title: "Quick Learner",
+        description: "Complete 10 quizzes with 80%+ score",
+        icon: "lightning",
+        category: "special",
+        criteria: { type: "quiz-high-scores", value: 10, period: "all-time" },
+        rarity: "rare",
+        level: 3,
+        levelName: "Gold",
+        points: 180    }
 ];
 
 // @desc    Get all achievements for user
@@ -527,6 +558,24 @@ switch (achievement.criteria.type) {
                     });
 
                     newProgress = weekDays.size;
+                    break;
+
+                case 'quiz-perfects':
+                    const Quiz = require('../models/Quiz');
+                    const quizzes = await Quiz.find({ user: req.user.id, completed: true });
+                    newProgress = quizzes.filter(q => q.score === 100).length;
+                    break;
+
+                case 'quiz-completed':
+                    const Quiz2 = require('../models/Quiz');
+                    const allQuizzes = await Quiz2.find({ user: req.user.id, completed: true });
+                    newProgress = allQuizzes.length;
+                    break;
+
+                case 'quiz-high-scores':
+                    const Quiz3 = require('../models/Quiz');
+                    const highScoreQuizzes = await Quiz3.find({ user: req.user.id, completed: true });
+                    newProgress = highScoreQuizzes.filter(q => q.score >= 80).length;
                     break;
             }
 
