@@ -1,1 +1,14 @@
+# API Proxy
 /api/*  https://study-flow-nfym.onrender.com/api/:splat  200
+
+# Multi-Page App Routing
+/home             /dashboard.html   200
+/timer            /dashboard.html   200
+/tasks            /dashboard.html   200
+/analytics        /dashboard.html   200
+/goals            /dashboard.html   200
+/quiz             /dashboard.html   200
+/calendar         /dashboard.html   200
+
+# Default fallback to login
+/*                /login.html       200

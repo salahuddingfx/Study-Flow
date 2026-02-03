@@ -1,99 +1,82 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth.middleware');
-const User = require('../models/User');
+const {
+    getUserProfile,
+    updateUserProfile,
+    changePassword,
+    deleteUserAccount,
+    forgotPassword,
+    resetPassword
+} = require('../controllers/user.controller');
 
-// Sob related models import kora holo clean-up er jonno
+// Import models for data management routes
 const Task = require('../models/Task');
 const Session = require('../models/Session');
 const Subject = require('../models/Subject');
 const Goal = require('../models/Goal');
 const Achievement = require('../models/Achievement');
 
+// =====================
+// User Profile Routes
+// =====================
+
 // @desc    Get user profile
 // @route   GET /api/user/profile
 // @access  Private
-router.get('/profile', protect, async (req, res) => {
-    try {
-        const user = await User.findById(req.user.id).select('-password');
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.json(user);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+router.get('/profile', protect, getUserProfile);
 
 // @desc    Update user profile
 // @route   PUT /api/user/profile
 // @access  Private
-router.put('/profile', protect, async (req, res) => {
-    const { firstName, lastName, profileImage } = req.body;
+router.put('/profile', protect, updateUserProfile);
 
+// @desc    Change password
+// @route   PUT /api/user/change-password
+// @access  Private
+router.put('/change-password', protect, changePassword);
+
+// @desc    Delete account
+// @route   DELETE /api/user/account
+// @access  Private
+router.delete('/account', protect, deleteUserAccount);
+
+// =====================
+// Password Reset Routes
+// =====================
+
+// @desc    Forgot password (request reset)
+// @route   POST /api/user/forgot-password
+// @access  Public
+router.post('/forgot-password', forgotPassword);
+
+// @desc    Reset password with token
+// @route   PUT /api/user/reset-password/:resettoken
+// @access  Public
+router.put('/reset-password/:resettoken', resetPassword);
+
+// =====================
+// Data Management Routes
+// =====================
+
+// @desc    Load user data (subjects, sessions, tasks, goals, achievements)
+// @route   GET /api/user/data
+// @access  Private
+router.get('/data', protect, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+        const subjects = await Subject.find({ user: req.user.id });
+        const sessions = await Session.find({ user: req.user.id });
+        const tasks = await Task.find({ user: req.user.id });
+        const goals = await Goal.find({ user: req.user.id });
+        const achievements = await Achievement.find({ user: req.user.id });
 
-        user.firstName = firstName || user.firstName;
-        user.lastName = lastName || user.lastName;
-        user.profileImage = profileImage || user.profileImage;
-
-        const updatedUser = await user.save();
         res.json({
-            _id: updatedUser.id,
-            username: updatedUser.username,
-            email: updatedUser.email,
-            firstName: updatedUser.firstName,
-            lastName: updatedUser.lastName,
-            profileImage: updatedUser.profileImage
+            subjects,
+            sessions,
+            tasks,
+            goals,
+            achievements
         });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// @desc    Delete user account and ALL related data
-// @route   DELETE /api/user/profile
-// @access  Private
-router.delete('/profile', protect, async (req, res) => {
-    try {
-        const user = await User.findById(req.user.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        // 1. User er sob data delete kora
-        await Task.deleteMany({ user: req.user.id });
-        await Session.deleteMany({ user: req.user.id });
-        await Subject.deleteMany({ user: req.user.id });
-        await Goal.deleteMany({ user: req.user.id });
-        await Achievement.deleteMany({ user: req.user.id });
-
-        // 2. User account delete kora
-        await User.findByIdAndDelete(req.user.id);
-        
-        res.json({ message: 'User account and all data deleted' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// @desc    Clear all user data (Keep account) - FIX for "Clear Data" button
-// @route   DELETE /api/user/data
-// @access  Private
-router.delete('/data', protect, async (req, res) => {
-    try {
-        // Shudhu data delete hobe, account thakbe
-        await Task.deleteMany({ user: req.user.id });
-        await Session.deleteMany({ user: req.user.id });
-        await Subject.deleteMany({ user: req.user.id });
-        await Goal.deleteMany({ user: req.user.id });
-        await Achievement.deleteMany({ user: req.user.id }); 
-
-        res.json({ message: 'All user data cleared successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -141,6 +124,26 @@ router.put('/data', protect, async (req, res) => {
         res.json({ message: 'User data saved successfully' });
     } catch (error) {
         console.error('Save data error:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Clear all user data (Keep account)
+// @route   DELETE /api/user/data
+// @access  Private
+router.delete('/data', protect, async (req, res) => {
+    try {
+        await Task.deleteMany({ user: req.user.id });
+        await Session.deleteMany({ user: req.user.id });
+        await Subject.deleteMany({ user: req.user.id });
+        await Goal.deleteMany({ user: req.user.id });
+        await Achievement.deleteMany({ user: req.user.id }); 
+
+        res.json({ 
+            success: true,
+            message: 'All user data cleared successfully' 
+        });
+    } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });

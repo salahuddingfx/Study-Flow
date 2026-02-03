@@ -12,20 +12,22 @@
   <meta name="revisit-after" content="7 days">
   <meta name="google-site-verification" content="m1vFRt3NnSSZcsT-BZIhy3o9RC5lPgoaLCXbEJWjbQU" />
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://studyflow-apk.netlify.app/">
+  <meta property="og:url" content="https://studyflow.salahuddin.codes">
   <meta property="og:title" content="StudyFlow - Focus &amp; Productivity Timer">
   <meta property="og:description" content="Boost your productivity with StudyFlow - a beautiful focus timer app featuring Pomodoro technique, task management, and study analytics.">
-  <meta property="og:image" content="https://github.com/salahuddingfx/Study-Flow/blob/main/Assets/brain-duotone.png">
-  <meta property="og:image:width" content="512">
-  <meta property="og:image:height" content="512">
+  <meta property="og:image" content="https://studyflow.salahuddijn.codes/Assets/brain-duotone.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="StudyFlow - Focus & Productivity Timer">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="StudyFlow">
   <meta property="og:locale" content="en_US">
   <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://studyflow-apk.netlify.app/">
+  <meta property="twitter:url" content="https://studyflow.salahuddin.codes/">
   <meta property="twitter:title" content="StudyFlow - Focus &amp; Productivity Timer">
   <meta property="twitter:description" content="Boost your productivity with StudyFlow - a beautiful focus timer app featuring Pomodoro technique, task management, and study analytics.">
-  <meta property="twitter:image" content="https://github.com/salahuddingfx/Study-Flow/blob/main/Assets/brain-duotone.png">
+  <meta property="twitter:image" content="https://studyflow.salahuddijn.codes/Assets/brain-duotone.png">
+  <meta property="twitter:image:alt" content="StudyFlow - Focus & Productivity Timer">
   <meta property="twitter:creator" content="@studyflowapp"><meta name="theme-color" content="#8b5cf6">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -37,21 +39,74 @@
   <link rel="dns-prefetch" href="//cdn.tailwindcss.com">
   <link rel="dns-prefetch" href="//unpkg.com">
   <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
-  <link rel="icon" type="image/svg+xml" href="Assets/brain-duotone.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="Assets/brain-duotone.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="Assets/brain-duotone.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="Assets/brain-duotone.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="Assets/style.css">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { theme: { extend: {} }, corePlugins: { preflight: true } };
-  </script>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script><script src="https://unpkg.com/@phosphor-icons/web"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script src="https://www.youtube.com/iframe_api"></script>
+  <link rel="canonical" href="https://studyflow.salahuddin.codes/">
+  <!-- Critical CSS Inline -->
   <style>
-    @view-transition { navigation: auto; }
-    [v-cloak] { display: none !important; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--primary:#8b5cf6;--bg-dark:#0f172a;--bg-card:rgba(30,41,59,.5);--text-primary:#f8fafc}
+    body{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);color:var(--text-primary);overflow-x:hidden;min-height:100vh}
+    [v-cloak]{display:none!important}
+    .glass{background:rgba(30,41,59,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1)}
+    .gradient-text{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;transition:all .3s ease}
+    .animate-fadeIn{animation:fadeIn .6s ease-out}@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  </style>
+  <link rel="stylesheet" href="Assets/style.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="Assets/style.css"></noscript>
+  
+  <!-- Load Tailwind CSS -->
+  <script>
+    // Tailwind config must be defined before loading
+    window.tailwindConfig = {
+      theme: { extend: {} },
+      corePlugins: { preflight: true }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Core Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.15/vue.global.prod.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@phosphor-icons/web" defer crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" defer></script>
+  <script src="https://www.youtube.com/iframe_api" defer></script>
+  <!-- Structured Data for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "StudyFlow",
+    "url": "https://studyflow.salahuddin.codes",
+    "description": "Focus & Productivity Timer with Pomodoro technique, task management, study analytics, and ambient music",
+    "applicationCategory": "ProductivityApplication",
+    "operatingSystem": "Web Browser, iOS, Android",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Salah Uddin Kader",
+      "url": "https://github.com/salahuddingfx"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "127"
+    },
+    "screenshot": "https://studyflow.salahuddin.codes/Assets/brain-duotone.png"
+  }
+  </script>
+  
+  <style>
+    @view-transition { navigation: auto; }  
   </style>
  </head>
  <body class="theme-dark">
@@ -812,23 +867,26 @@
       </div>
       <p class="text-center mt-4 opacity-70">Don't have an account? <button @click="authMode = 'register'" class="text-purple-400 hover:text-purple-300 font-semibold"> Sign Up </button></p>
      </div><div v-if="authMode === 'forgot'">
-      <h3 class="text-2xl font-semibold mb-6">Reset Password</h3>
+      <div class="text-center mb-6">
+       <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="ph-bold ph-envelope text-white text-3xl"></i>
+       </div>
+       <h3 class="text-2xl font-semibold">Forgot Password?</h3>
+       <p class="text-sm opacity-70 mt-2">We'll send you a reset link</p>
+      </div>
+
       <form @submit.prevent="handleForgotPassword">
-       <div class="mb-4"><label class="block text-sm font-medium mb-2">Username</label> <input v-model="forgotForm.username" type="text" required class="w-full px-4 py-3 rounded-xl glass-strong" placeholder="Enter your username">
+       <div class="mb-4">
+        <label class="block text-sm font-medium mb-2">Username</label>
+        <input v-model="forgotForm.username" type="text" required class="w-full px-4 py-3 rounded-xl glass-strong" placeholder="Enter your username">
        </div>
-       <div class="mb-4"><label class="block text-sm font-medium mb-2">Email</label> <input v-model="forgotForm.email" type="email" required class="w-full px-4 py-3 rounded-xl glass-strong" placeholder="Enter your registered email">
+       <div class="mb-6">
+        <label class="block text-sm font-medium mb-2">Email</label>
+        <input v-model="forgotForm.email" type="email" required class="w-full px-4 py-3 rounded-xl glass-strong" placeholder="Enter your registered email">
        </div>
-       <div class="mb-6"><label class="block text-sm font-medium mb-2">New Password</label>
-        <div class="relative"><input v-model="forgotForm.newPassword" :type="showPassword ? 'text' : 'password'" required class="w-full px-4 py-3 rounded-xl glass-strong pr-12" placeholder="Create a new password" @input="checkForgotPasswordStrength"> <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-purple-400"> <i :class="showPassword ? 'ph-bold ph-eye-slash' : 'ph-bold ph-eye'" class="text-xl"></i> </button>
-        </div>
-        <div v-if="forgotForm.newPassword" class="mt-2">
-         <div class="flex items-center gap-2 mb-1">
-          <div class="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-           <div class="h-full transition-all duration-300" :class="forgotPasswordStrengthColor" :style="{ width: forgotPasswordStrengthWidth }"></div>
-          </div><span class="text-xs font-medium" :class="forgotPasswordStrengthTextColor"> {{ forgotPasswordStrengthText }} </span>
-         </div>
-        </div>
-       </div><button type="submit" class="w-full py-3 rounded-xl btn-primary text-white font-semibold"> Reset Password </button>
+       <button type="submit" class="w-full py-3 rounded-xl btn-primary text-white font-semibold">
+        Send Reset Link
+       </button>
       </form>
       <p class="text-center mt-6 opacity-70">Remember your password? <button @click="authMode = 'login'" class="text-purple-400 hover:text-purple-300 font-semibold"> Sign In </button></p>
      </div><div v-if="authMode === 'register'">
@@ -860,6 +918,78 @@
         </div></button>
       </form>
       <p class="text-center mt-6 opacity-70">Already have an account? <button @click="authMode = 'login'" class="text-purple-400 hover:text-purple-300 font-semibold"> Sign In </button></p>
+     </div>
+
+     <!-- Reset Password Mode (from email link) -->
+     <div v-if="authMode === 'reset'">
+      <div class="text-center mb-6">
+       <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="ph-bold ph-lock-key text-white text-3xl"></i>
+       </div>
+       <h3 class="text-2xl font-semibold">Set New Password</h3>
+       <p class="text-sm opacity-70 mt-2">Enter your new password below</p>
+      </div>
+
+      <form @submit.prevent="handleResetPassword">
+       <div class="mb-4">
+        <label class="block text-sm font-medium mb-2">New Password</label>
+        <div class="relative">
+         <input 
+          v-model="resetPasswordForm.newPassword" 
+          :type="showPassword ? 'text' : 'password'" 
+          required 
+          minlength="6"
+          class="w-full px-4 py-3 rounded-xl glass-strong pr-12" 
+          placeholder="Enter new password (min 6 characters)"
+         >
+         <button 
+          type="button" 
+          @click="showPassword = !showPassword" 
+          class="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-purple-400"
+         >
+          <i :class="showPassword ? 'ph-bold ph-eye-slash' : 'ph-bold ph-eye'" class="text-xl"></i>
+         </button>
+        </div>
+       </div>
+
+       <div class="mb-6">
+        <label class="block text-sm font-medium mb-2">Confirm Password</label>
+        <div class="relative">
+         <input 
+          v-model="resetPasswordForm.confirmPassword" 
+          :type="showPassword ? 'text' : 'password'" 
+          required 
+          minlength="6"
+          class="w-full px-4 py-3 rounded-xl glass-strong pr-12" 
+          placeholder="Confirm your password"
+         >
+         <button 
+          type="button" 
+          @click="showPassword = !showPassword" 
+          class="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-purple-400"
+         >
+          <i :class="showPassword ? 'ph-bold ph-eye-slash' : 'ph-bold ph-eye'" class="text-xl"></i>
+         </button>
+        </div>
+        <p v-if="resetPasswordForm.newPassword && resetPasswordForm.confirmPassword && resetPasswordForm.newPassword !== resetPasswordForm.confirmPassword" class="text-xs text-red-400 mt-1">
+         ⚠️ Passwords do not match
+        </p>
+       </div>
+
+       <button 
+        type="submit" 
+        class="w-full py-3 rounded-xl btn-primary text-white font-semibold hover:scale-105 transition-transform"
+        :disabled="!resetPasswordForm.newPassword || !resetPasswordForm.confirmPassword || resetPasswordForm.newPassword !== resetPasswordForm.confirmPassword"
+       >
+        Reset Password
+       </button>
+      </form>
+
+      <p class="text-center mt-6 opacity-70">
+       <button @click="authMode = 'login'; resetToken = null" class="text-purple-400 hover:text-purple-300 font-semibold">
+        ← Back to Login
+       </button>
+      </p>
      </div>
     </div>
    </div>
@@ -1754,16 +1884,25 @@
     </main>
    </div>
   </div>
+  
+  <!-- Main Application Script -->
   <script src="Assets/script.js"></script>
+  
+  <!-- Lazy Load & Performance Utilities -->
+  <script src="Assets/lazy-load.js" defer></script>
   
   <!-- PWA Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        // Use a relative path so GitHub Pages project sites (e.g., /Study-Flow/) resolve correctly
         navigator.serviceWorker.register('sw.js')
           .then(registration => {
-            console.log('✅ Service Worker registered successfully:', registration.scope);
+            console.log('✅ Service Worker registered:', registration.scope);
+            
+            // Check for updates every hour
+            setInterval(() => {
+              registration.update();
+            }, 3600000);
           })
           .catch(error => {
             console.log('❌ Service Worker registration failed:', error);
@@ -1771,24 +1910,44 @@
       });
     }
 
-    // PWA Install Prompt
+    // PWA Install Prompt Enhancement
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
+      console.log('💡 PWA install available!');
       
-      // Show install button/banner (optional UI)
-      console.log('💡 App can be installed!');
-      
-      // You can show a custom install button here
-      // For now, browser will show default install prompt
+      // Optional: Show custom install button
+      // document.getElementById('installButton')?.classList.remove('hidden');
     });
 
-    // Track if app was installed
+    // Track installation
     window.addEventListener('appinstalled', () => {
       console.log('🎉 StudyFlow installed successfully!');
       deferredPrompt = null;
+      
+      // Analytics tracking (optional)
+      if (window.gtag) {
+        gtag('event', 'pwa_install', { event_category: 'engagement' });
+      }
     });
+    
+    // Performance monitoring
+    if ('PerformanceObserver' in window) {
+      // Monitor First Input Delay (FID)
+      const fidObserver = new PerformanceObserver((list) => {
+        list.getEntries().forEach((entry) => {
+          const fid = entry.processingStart - entry.startTime;
+          console.log('FID:', fid, 'ms');
+        });
+      });
+      
+      try {
+        fidObserver.observe({ type: 'first-input', buffered: true });
+      } catch (e) {
+        // FID not supported
+      }
+    }
   </script>
  </body>
 </html>

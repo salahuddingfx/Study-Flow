@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+Disallow: /Backend/
+Disallow: /node_modules/
+Disallow: /Assets/script.js
+Disallow: /Assets/auth.js
+
+# Sitemap
+Sitemap: https://studyflow.salahuddin.codes/sitemap.xml
+
+# Crawl Delay
+Crawl-delay: 1
+
+# Popular Bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /

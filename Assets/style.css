@@ -404,7 +404,7 @@ input:focus, textarea:focus, select:focus {
 /* Scroll to top button */
 .scroll-to-top {
     position: fixed !important;
-    bottom: 30px !important;
+    bottom: 90px !important;
     right: 30px !important;
     width: 55px;
     height: 55px;
@@ -418,13 +418,14 @@ input:focus, textarea:focus, select:focus {
     box-shadow: 
         0 8px 25px rgba(102, 126, 234, 0.5),
         inset 0 0 15px rgba(255, 255, 255, 0.1);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 99999 !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999 !important;
     opacity: 0;
     visibility: hidden;
     transform: translateY(20px) scale(0.8);
     pointer-events: none;
     backdrop-filter: blur(10px);
+    animation: none;
 }
 
 .scroll-to-top.visible {
@@ -432,6 +433,7 @@ input:focus, textarea:focus, select:focus {
     visibility: visible !important;
     transform: translateY(0) scale(1) !important;
     pointer-events: all !important;
+    animation: bounceIn 0.5s ease-out;
 }
 
 .scroll-to-top:hover {
@@ -449,10 +451,28 @@ input:focus, textarea:focus, select:focus {
 
 @media (max-width: 768px) {
     .scroll-to-top {
-        bottom: 20px;
+        bottom: 90px !important;
         right: 20px;
-        width: 45px;
-        height: 45px;
+        width: 48px;
+        height: 48px;
+    }
+    
+    .scroll-to-top.visible {
+        display: flex !important;
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.3);
+    }
+    50% {
+        transform: translateY(-10px) scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }
 

@@ -52,6 +52,24 @@ jspm_packages/
 .idea/
 *.swp
 *.swo
+.DS_Store
+
+# Testing
+test-*.js
+test-*.html
+
+# Backend specific
+Backend/node_modules/
+Backend/.env
+Backend/*.err
+
+# Build
+dist/
+build/
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # OS generated files
 .DS_Store

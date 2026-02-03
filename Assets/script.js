@@ -43,6 +43,11 @@ createApp({
             showCurrentPassword: false,
             showNewPassword: false,
             authToken: null,
+            resetToken: null,
+            resetPasswordForm: {
+                newPassword: '',
+                confirmPassword: ''
+            },
 
             // Password strength
             passwordStrength: 0,
@@ -58,8 +63,7 @@ createApp({
             },
             forgotForm: {
                 username: '',
-                email: '',
-                newPassword: ''
+                email: ''
             },
             currentUser: '',
             userFullName: '',
@@ -278,7 +282,6 @@ createApp({
             ],
 
             // Goals Management
-            goals: [],
             newGoal: {
                 title: '',
                 type: 'weekly',
@@ -314,6 +317,17 @@ createApp({
     async mounted() {
         document.body.className = 'theme-dark';
         this.createParticles();
+        
+        // Check for reset token in URL FIRST - if found, skip auth
+        const hasResetToken = this.checkResetToken();
+        if (hasResetToken) {
+            // Skip auth check completely, show reset form immediately
+            this.loadTheme();
+            this.loadNotificationSettings();
+            this.loadTimerSettings();
+            this.loadMusicSettings();
+            return; // Exit mounted() early
+        }
         
         // Detect Touch Device
         this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -1159,17 +1173,100 @@ createApp({
             this.quizQuestions = [];
         },
 
+        checkResetToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            if (token) {
+                this.resetToken = token;
+                this.authMode = 'reset';
+                this.isAuthenticated = false;
+                this.showLoader = false; // Hide loader immediately
+                console.log('✓ Reset token detected:', token.substring(0, 10) + '...');
+                return true; // Signal that reset mode is active
+            }
+            return false;
+        },
+
         async handleForgotPassword() {
             try {
-                await this.apiRequest('/api/auth/reset-password', {
+                await this.apiRequest('/api/user/forgot-password', {
                     method: 'POST',
-                    body: JSON.stringify(this.forgotForm)
+                    body: JSON.stringify({
+                        username: this.forgotForm.username,
+                        email: this.forgotForm.email
+                    })
                 });
                 
-                this.showInlineMessage('Password reset successfully! Please login.');
+                this.showInlineMessage('Password reset link sent to your email! Check your inbox.');
                 this.authMode = 'login';
                 this.loginForm.username = this.forgotForm.username;
-                this.forgotForm = { username: '', email: '', newPassword: '' };
+                this.forgotForm = { username: '', email: '' };
+            } catch (error) {
+                this.showInlineMessage('Password reset request failed: ' + error.message);
+            }
+        },
+
+        async handleResetPassword() {
+            if (this.resetPasswordForm.newPassword !== this.resetPasswordForm.confirmPassword) {
+                this.showInlineMessage('Passwords do not match!');
+                return;
+            }
+            
+            if (this.resetPasswordForm.newPassword.length < 6) {
+                this.showInlineMessage('Password must be at least 6 characters!');
+                return;
+            }
+
+            try {
+                const response = await this.apiRequest(`/api/user/reset-password/${this.resetToken}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        newPassword: this.resetPasswordForm.newPassword
+                    })
+                });
+                
+                this.showInlineMessage('Password reset successful! Redirecting to login...');
+                
+                // Clear URL and redirect to login
+                setTimeout(() => {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    this.authMode = 'login';
+                    this.resetToken = null;
+                    this.resetPasswordForm = { newPassword: '', confirmPassword: '' };
+                }, 2000);
+            } catch (error) {
+                this.showInlineMessage('Password reset failed: ' + error.message);
+            }
+        },
+
+        async handleResetPassword() {
+            if (this.resetPasswordForm.newPassword !== this.resetPasswordForm.confirmPassword) {
+                this.showInlineMessage('Passwords do not match!');
+                return;
+            }
+            
+            if (this.resetPasswordForm.newPassword.length < 6) {
+                this.showInlineMessage('Password must be at least 6 characters!');
+                return;
+            }
+
+            try {
+                const response = await this.apiRequest(`/api/user/reset-password/${this.resetToken}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        newPassword: this.resetPasswordForm.newPassword
+                    })
+                });
+                
+                this.showInlineMessage('Password reset successful! Redirecting to login...');
+                
+                // Clear URL and redirect to login
+                setTimeout(() => {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    this.authMode = 'login';
+                    this.resetToken = null;
+                    this.resetPasswordForm = { newPassword: '', confirmPassword: '' };
+                }, 2000);
             } catch (error) {
                 this.showInlineMessage('Password reset failed: ' + error.message);
             }
