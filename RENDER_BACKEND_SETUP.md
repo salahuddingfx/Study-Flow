@@ -13,19 +13,7 @@ When deploying to Render, add these environment variables in the dashboard:
 ### **Required Variables:**
 
 ```
-PORT=5000
-NODE_ENV=production
-MONGO_URI=mongodb+srv://salahuddingfx:Salah3083@studyflow.v8hks4y.mongodb.net/?appName=StudyFlow
-JWT_SECRET=sk_prod_7Kx9mQ2wL8pRtVfJnB5dC1eGhZ4xYuAsWqNoPmR3sTu6vWxYz
-GEMINI_API_KEY=AIzaSyCxYru0eTJDoDh5gejj1U9V1CPWqG9O6Og
-SUPER_ADMIN_USERNAME=salahuddin
-SUPER_ADMIN_EMAIL=salauddinkaderappy@gmail.com
-FRONTEND_URL=https://studyflow.salahuddin.codes
-EMAIL_SERVICE=gmail
-EMAIL_USER=salauddinkaderappy@gmail.com
-EMAIL_PASSWORD=trln aqcs alrr wwfz
-FROM_EMAIL=salauddinkaderappy@gmail.com
-FROM_NAME=StudyFlow Admin
+
 ```
 
 ---
