@@ -1773,38 +1773,84 @@ createApp({
 
         async toggleTask(id) {
             const task = this.tasks.find(t => t._id === id || t.id === id);
-            if (task) {
+            if (!task) return;
+            
+            // Store previous state for rollback
+            const previousCompleted = task.completed;
+            const previousTimestamp = task.completedAt;
+            
+            try {
+                // Optimistically update UI
                 task.completed = !task.completed;
+                if (task.completed) {
+                    task.completedAt = new Date().toISOString();
+                } else {
+                    delete task.completedAt;
+                }
                 this.saveTasksCache();
 
                 if (!this.isOnline) {
                     if (task._id) {
-                        this.queueTaskOperation({ type: 'update', id: task._id, data: { completed: task.completed } });
+                        this.queueTaskOperation({ 
+                            type: 'update', 
+                            id: task._id, 
+                            data: { completed: task.completed } 
+                        });
                     } else {
                         this.updateQueuedCreate(task.id, { completed: task.completed });
                     }
-                    this.showInlineMessage('Saved offline. Will sync when online.');
+                    const message = task.completed ? '✅ Task marked complete' : '⭕ Task marked incomplete';
+                    this.showInlineMessage(message + ' (Offline - will sync)');
                     return;
                 }
 
-                try {
-                    await this.apiRequest(`/api/tasks/${task._id || task.id}`, {
-                        method: 'PUT',
-                        body: JSON.stringify({ completed: task.completed })
-                    });
-
-                    // Check for new achievements
-                    await this.apiRequest('/api/achievements/check-progress', {
-                        method: 'POST'
-                    });
-                    
-                    // Emit to Socket.io for real-time updates
-                    if (this.socket && this.userId) {
-                        this.socket.emit('check-achievements', this.userId);
-                    }
-                } catch(e) {
-                     console.error(e);
+                // Send to server
+                const response = await this.apiRequest(`/api/tasks/${task._id || task.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ completed: task.completed })
+                });
+                
+                // Update with server response
+                if (response) {
+                    Object.assign(task, response);
+                    this.saveTasksCache();
                 }
+
+                // Show success message
+                const message = task.completed 
+                    ? '✅ Task marked as done! +10 points' 
+                    : '⭕ Task marked as incomplete';
+                this.showInlineMessage(message);
+
+                // Check for new achievements after marking complete
+                if (task.completed) {
+                    try {
+                        await this.apiRequest('/api/achievements/check-progress', {
+                            method: 'POST'
+                        });
+                        
+                        // Emit to Socket.io for real-time achievement updates
+                        if (this.socket && this.userId) {
+                            this.socket.emit('check-achievements', this.userId);
+                        }
+                    } catch (err) {
+                        console.warn('Achievement check failed:', err);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Toggle task error:', error);
+                
+                // Rollback on error
+                task.completed = previousCompleted;
+                if (previousTimestamp) {
+                    task.completedAt = previousTimestamp;
+                } else {
+                    delete task.completedAt;
+                }
+                this.saveTasksCache();
+                
+                this.showInlineMessage('❌ Failed to update task. Rolled back.');
             }
         },
 
@@ -1875,14 +1921,47 @@ createApp({
             }
         },
 
+        async toggleGoalCompletion(id) {
+            const goal = this.goals.find(g => g._id === id);
+            if (!goal) return;
+            
+            try {
+                const newCurrent = goal.current >= goal.target ? 0 : goal.target;
+                
+                const response = await this.apiRequest(`/api/goals/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ current: newCurrent })
+                });
+                
+                if (response) {
+                    Object.assign(goal, response);
+                }
+                
+                const message = newCurrent >= goal.target 
+                    ? '🎉 Goal completed! +50 points'
+                    : '👍 Goal progress updated';
+                this.showInlineMessage(message);
+                
+                // Check achievements
+                await this.apiRequest('/api/achievements/check-progress', { method: 'POST' });
+                if (this.socket && this.userId) {
+                    this.socket.emit('check-achievements', this.userId);
+                }
+            } catch (error) {
+                console.error('Failed to update goal:', error);
+                this.showInlineMessage('❌ Failed to update goal');
+            }
+        },
+
         async deleteGoal(id) {
             if (!confirm('Delete this goal?')) return;
             try {
                 await this.apiRequest(`/api/goals/${id}`, { method: 'DELETE' });
                 this.goals = this.goals.filter(g => g._id !== id);
-                this.showInlineMessage('Goal deleted');
+                this.showInlineMessage('✅ Goal deleted');
             } catch (error) {
                 console.error('Failed to delete goal', error);
+                this.showInlineMessage('❌ Failed to delete goal');
             }
         },
 
@@ -3508,9 +3587,12 @@ createApp({
             if (!prompt) return;
 
             // Add user message to chat history immediately
-            this.aiChatHistory.push({ role: 'user', content: prompt });
+            this.aiChatHistory.push({ role: 'user', content: prompt, timestamp: new Date().toISOString() });
             this.aiPrompt = ''; // Clear input
             this.aiLoading = true;
+            
+            // Add typing indicator
+            this.aiChatHistory.push({ role: 'assistant', content: '...', isTyping: true });
             
             // Scroll to bottom
             this.$nextTick(() => {
@@ -3525,27 +3607,78 @@ createApp({
                     body: JSON.stringify({ prompt })
                 });
 
+                // Remove typing indicator
+                this.aiChatHistory = this.aiChatHistory.filter(msg => !msg.isTyping);
+
                 if (data && data.answer) {
-                    this.aiChatHistory.push({ role: 'assistant', content: data.answer });
+                    this.aiChatHistory.push({ 
+                        role: 'assistant', 
+                        content: data.answer,
+                        timestamp: new Date().toISOString()
+                    });
                     
-                    // Check if the AI performed an action (Task/Subject add)
+                    // Check if the AI performed an action (Task/Subject/Goal add)
                     if (data.actionPerformed) {
                          // Refresh data immediately to show changes in UI
                          await this.loadUserData();
-                         this.showInlineMessage(data.actionPerformed); // specific toast
+                         
+                         // Show success notification with action details
+                         const actionMessages = {
+                             'Task created': '✅ Task added successfully!',
+                             'Subject added': '📚 Subject added successfully!',
+                             'Goal set': '🎯 Goal created successfully!',
+                             'Task updated': '✅ Task updated!',
+                             'Subject updated': '📚 Subject updated!'
+                         };
+                         
+                         const message = actionMessages[data.actionPerformed] || data.actionPerformed;
+                         this.showInlineMessage(message);
                     }
 
                 } else {
-                    this.aiChatHistory.push({ role: 'assistant', content: "I'm having trouble connecting to my brain right now." });
+                    this.aiChatHistory.push({ 
+                        role: 'assistant', 
+                        content: "I'm having trouble connecting right now. Please try again in a moment.",
+                        timestamp: new Date().toISOString()
+                    });
                 }
             } catch (error) {
-                console.error('AI request failed', error);
-                this.aiChatHistory.push({ role: 'assistant', content: "Sorry, something went wrong. Please try again." });
+                console.error('AI request failed:', error);
+                
+                // Remove typing indicator
+                this.aiChatHistory = this.aiChatHistory.filter(msg => !msg.isTyping);
+                
+                let errorMessage = "Sorry, something went wrong. Please try again.";
+                
+                // More specific error messages
+                if (error.message?.includes('quota')) {
+                    errorMessage = "⏳ AI quota reached. Try again in a few minutes.";
+                } else if (error.message?.includes('network')) {
+                    errorMessage = "🌐 Network error. Check your connection.";
+                } else if (error.message?.includes('API key')) {
+                    errorMessage = "🔑 AI service temporarily unavailable.";
+                }
+                
+                this.aiChatHistory.push({ 
+                    role: 'assistant', 
+                    content: errorMessage,
+                    timestamp: new Date().toISOString(),
+                    isError: true
+                });
             } finally {
                 this.aiLoading = false;
+                
+                // Smooth scroll to bottom
                 this.$nextTick(() => {
-                    const container = document.getElementById('ai-chat-container');
-                    if (container) container.scrollTop = container.scrollHeight;
+                    setTimeout(() => {
+                        const container = document.getElementById('ai-chat-container');
+                        if (container) {
+                            container.scrollTo({
+                                top: container.scrollHeight,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }, 100);
                 });
             }
         },

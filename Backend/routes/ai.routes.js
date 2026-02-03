@@ -23,14 +23,20 @@ router.post('/ask', protect, async (req, res) => {
         const { prompt } = req.body;
         const userId = req.user.id;
         const userName = req.user.firstName ? `${req.user.firstName} ${req.user.lastName}` : req.user.username;
-        const today = new Date().toLocaleString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+        // Get current time in Bangladesh timezone
+        const now = new Date();
+        const today = now.toLocaleString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Asia/Dhaka'
         });
+        const dayOfWeek = now.toLocaleString('en-US', { weekday: 'long', timeZone: 'Asia/Dhaka' });
+        const currentHour = parseInt(now.toLocaleString('en-US', { hour: '2-digit', hour12: false, timeZone: 'Asia/Dhaka' }));
         // Fetch user data for context
         const [subjects, tasks, sessions, goals] = await Promise.all([
             Subject.find({ user: userId }),
@@ -52,38 +58,62 @@ router.post('/ask', protect, async (req, res) => {
 
         const model = genAI.getGenerativeModel({ model: DEFAULT_MODEL });
         
+        // Time-based greeting
+        let timeGreeting = 'Hello';
+        if (currentHour >= 5 && currentHour < 12) timeGreeting = 'Good morning';
+        else if (currentHour >= 12 && currentHour < 17) timeGreeting = 'Good afternoon';
+        else if (currentHour >= 17 && currentHour < 21) timeGreeting = 'Good evening';
+        else timeGreeting = 'Good night';
+
         // Enhanced prompt with context
         const fullPrompt = `
-            You are "StudyFlow AI", a personal study assistant for ${userName}.
-            Here is the user's current study data:
+            You are "StudyFlow AI", a friendly and smart personal study assistant for ${userName}.
+            Current Context:
             ${context}
 
             User's Question: "${prompt}"
 
             Instructions:
-            1. Use the study data to give personalized advice if relevant.
-            2. Be encouraging, concise, and helpful.
-            3. The current date provided in context is accurate. Use it to calculate days remaining for deadlines or to answer "what is today".
-            4. 🔴 CRITICAL AUTO-ACTION RULE 🔴: 
-               - If user says ANY variation of: "add [subject name]", "create task", "set goal", "add a subject", "make a task", etc.
-               - You MUST ALWAYS include the action JSON at the END of your response
-               - Format: |||{"action": "ACTION_TYPE", "data": {...}}|||
+            1. ALWAYS start with a time-appropriate greeting: "${timeGreeting}, ${userName}!" for the first interaction
+            2. Use the study data to give HIGHLY PERSONALIZED advice
+            3. Be ENCOURAGING, CONCISE (2-3 sentences max unless detailed explanation needed), and ACTIONABLE
+            4. The current date/time is: ${today} (Bangladesh time, Asia/Dhaka timezone)
+            5. CRITICAL: Detect time-related queries accurately:
+               - "What time is it?" → Use ${today}
+               - "What day is today?" → Use ${dayOfWeek}
+               - "Is it morning/afternoon/evening?" → Use ${timeGreeting} context
+            6. 🤖 SMART AUTO-ACTION DETECTION (MANDATORY):
+               
+               TRIGGER KEYWORDS (English + Bengali):
+               • Task: "add task", "create task", "new task", "make task", "task add koro", "task banaao"
+               • Subject: "add subject", "new subject", "subject add", "subject banaao", "subject add koro"
+               • Goal: "set goal", "create goal", "new goal", "goal set koro", "goal banaao"
+               
+               ACTION FORMAT: |||{"action": "TYPE", "data": {...}}|||
                
                Examples:
-               User: "Add CSE Basic as a subject" 
-               → Response: "Great! I'll add that for you. |||{"action": "add_subject", "data": {"name": "CSE Basic"}}|||"
+               ✅ "Add CSE Basic as a subject" 
+                  → "${timeGreeting}! I'll add CSE Basic for you. |||{"action": "add_subject", "data": {"name": "CSE Basic"}}|||"
                
-               User: "Create task to study math tomorrow"
-               → Response: "Got it! |||{"action": "create_task", "data": {"title": "Study math", "deadline": "2026-01-14"}}|||"
+               ✅ "Create task: study math tomorrow"
+                  → "Perfect! Task created. |||{"action": "create_task", "data": {"title": "Study math", "deadline": "YYYY-MM-DD", "priority": "medium"}}|||"
                
-               User: "Set goal to read 5 books this month"
-               → Response: "Excellent goal! |||{"action": "set_goal", "data": {"title": "Read books", "target": 5, "unit": "books", "type": "monthly"}}|||"
+               ✅ "Set goal to complete 10 hours this week"
+                  → "Great goal! |||{"action": "set_goal", "data": {"title": "Study hours", "target": 10, "unit": "hours", "type": "weekly"}}|||"
                
-               Supported actions: "create_task", "add_subject", "set_goal"
-               - create_task: required: title | optional: deadline (YYYY-MM-DD), priority (low/medium/high)
-               - add_subject: required: name
-               - set_goal: required: title, target (number), unit (string), type (daily/weekly/monthly)
-            5. If user is just asking questions or chatting, reply normally WITHOUT any JSON.
+               ✅ "task add koro - math homework"
+                  → "Thik ache! |||{"action": "create_task", "data": {"title": "Math homework", "priority": "medium"}}|||"
+               
+               SUPPORTED ACTIONS:
+               • create_task: {title: string, deadline?: "YYYY-MM-DD", priority?: "low"|"medium"|"high"}
+               • add_subject: {name: string, category?: string, color?: string}
+               • set_goal: {title: string, target: number, unit: string, type: "daily"|"weekly"|"monthly"}
+               
+            7. SMART RESPONSES:
+               - Questions/chat → Reply normally (NO JSON)
+               - Action requests → Reply + JSON
+               - Motivational advice → Be inspiring
+               - Study tips → Be practical and specific
         `;
 
         // Optimized Model Selection Based on Quota
@@ -145,7 +175,7 @@ router.post('/ask', protect, async (req, res) => {
                     }
                     
                     const newTask = await Task.create(taskData);
-                    actionResult = `Created task: "${newTask.title}"`;
+                    actionResult = `Task created`;
                     console.log("✅ Task created:", newTask);
                 } 
                 else if (actionJson.action === 'add_subject') {
@@ -153,7 +183,7 @@ router.post('/ask', protect, async (req, res) => {
                         user: userId,
                         name: actionJson.data.name
                     });
-                    actionResult = `Added subject: "${newSubject.name}"`;
+                    actionResult = `Subject added`;
                     console.log("✅ Subject created:", newSubject);
                 }
                 else if (actionJson.action === 'set_goal') {
@@ -165,7 +195,7 @@ router.post('/ask', protect, async (req, res) => {
                         type: actionJson.data.type || 'daily',
                         current: 0
                     });
-                    actionResult = `Set goal: "${newGoal.title}"`;
+                    actionResult = `Goal set`;
                     console.log("✅ Goal created:", newGoal);
                 }
                 
