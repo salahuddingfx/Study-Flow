@@ -529,9 +529,11 @@ createApp({
             this.loadingText = "Verifying user data...";
             const user = await res.json();
 
-            this.currentUser = user.username || user.user?.username; 
-            this.userEmail = user.email || user.user?.email || '';
-            this.userFullName = user.firstName ? `${user.firstName} ${user.lastName}` : this.currentUser;
+            this.currentUser = user?.username || '';
+            this.userEmail = user?.email || '';
+            this.userFullName = (user?.firstName && user?.lastName) 
+                ? `${user.firstName} ${user.lastName}`.trim()
+                : (user?.firstName || user?.lastName || user?.username || 'User');
             this.isAuthenticated = true;
             this.authToken = token;
 
@@ -1009,11 +1011,13 @@ createApp({
                 localStorage.setItem('jwt', data.token);
                 this.authToken = data.token;
 
-                this.currentUser = data.user?.username || '';
-                this.userEmail = data.user?.email || '';
-                this.userFullName = (data.user?.firstName && data.user?.lastName) 
-                    ? `${data.user.firstName} ${data.user.lastName}`.trim() 
-                    : (data.user?.username || 'User');
+                this.currentUser = data.user?.username || data.username || '';
+                this.userEmail = data.user?.email || data.email || '';
+                const firstName = data.user?.firstName || data.firstName || '';
+                const lastName = data.user?.lastName || data.lastName || '';
+                this.userFullName = (firstName && lastName)
+                    ? `${firstName} ${lastName}`.trim()
+                    : (this.currentUser || 'User');
                 this.isAuthenticated = true;
                 
                 this.showLoginSuccess = true;
