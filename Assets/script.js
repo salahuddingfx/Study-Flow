@@ -93,6 +93,7 @@ createApp({
             // Leaderboard
             leaderboardPeriod: 'weekly',
             leaderboardResults: [],
+            achievementLeaderboard: [],
 
             // Credentials Change
             credentialsForm: {
@@ -802,6 +803,7 @@ createApp({
                             this.updateCharts();
                             this.loadLeaderboard();
                             this.loadAchievementStats();
+                            this.loadAchievementLeaderboard();
                         }, 500);
                     });
                 });
@@ -1920,6 +1922,17 @@ createApp({
                 this.leaderboardResults = data?.results || [];
             } catch (e) {
                 console.warn('Leaderboard load failed', e);
+            }
+        },
+
+        async loadAchievementLeaderboard() {
+            try {
+                const res = await fetch(`${this.API_BASE_URL}/api/achievements/leaderboard?limit=10`);
+                if (!res.ok) return;
+                const data = await res.json();
+                this.achievementLeaderboard = Array.isArray(data) ? data : [];
+            } catch (e) {
+                console.warn('Achievement leaderboard load failed', e);
             }
         },
 

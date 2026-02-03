@@ -1505,6 +1505,23 @@
          <div class="glass rounded-2xl p-6 mb-6">
           <h3 class="text-xl font-semibold mb-4 flex items-center gap-2"><i class="ph-bold ph-trophy text-yellow-400"></i> Achievements</h3>
           
+          <!-- Achievement Level Card -->
+          <div class="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 rounded-xl p-4 mb-6 border border-purple-500/30">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <p class="text-sm text-gray-300">Your Level</p>
+                <h4 class="text-2xl font-bold gradient-text">{{ userLevel.levelName }}</h4>
+              </div>
+              <div class="text-right">
+                <div class="text-3xl font-bold text-purple-400">{{ userLevel.level }}/5</div>
+                <p class="text-xs text-gray-400">{{ userLevel.points }} pts</p>
+              </div>
+            </div>
+            <div class="w-full bg-black/30 rounded-full h-2">
+              <div :style="{ width: levelProgressPercent + '%' }" class="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500"></div>
+            </div>
+          </div>
+          
           <div v-if="achievements.length === 0" class="text-center opacity-70 py-8">
            <i class="ph-bold ph-medal text-5xl mb-3 text-gray-500"></i>
            <p>No achievements data found.</p>
@@ -1521,13 +1538,20 @@
             </div>
             
             <div class="flex-1">
-             <div class="flex justify-between items-start">
-               <h4 class="font-bold text-white" :class="{'text-yellow-100': achievement.unlocked}">{{ achievement.title }}</h4>
-               <i v-if="achievement.unlocked" class="ph-fill ph-check-circle text-green-400 text-lg"></i>
-               <i v-else class="ph-bold ph-lock text-gray-500 text-lg"></i>
+             <div class="flex justify-between items-start gap-2">
+               <div class="flex-1">
+                 <h4 class="font-bold text-white" :class="{'text-yellow-100': achievement.unlocked}">{{ achievement.title }}</h4>
+                 <p class="text-xs opacity-70 mt-0.5">{{ achievement.description }}</p>
+               </div>
+               <div class="flex items-center gap-1 shrink-0">
+                 <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold" 
+                      :style="{ backgroundColor: levelTiers[achievement.level-1].color + '30', color: levelTiers[achievement.level-1].color }">
+                  Lv{{ achievement.level }}
+                 </span>
+                 <i v-if="achievement.unlocked" class="ph-fill ph-check-circle text-green-400 text-lg"></i>
+                 <i v-else class="ph-bold ph-lock text-gray-500 text-lg"></i>
+               </div>
              </div>
-             
-             <p class="text-xs opacity-70 mt-0.5">{{ achievement.description }}</p>
              
              <div class="mt-2">
                <span v-if="achievement.unlocked" class="text-[10px] bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded border border-yellow-500/20 font-mono tracking-wide">
@@ -1566,6 +1590,48 @@
             <div class="text-right">
              <div class="font-semibold text-purple-400">{{ item.totalMinutes }} min</div>
              <div class="text-xs opacity-60">{{ item.sessions }} sessions</div>
+            </div>
+           </div>
+          </div>
+         </div>
+
+         <!-- Achievement Leaderboard -->
+         <div class="glass rounded-2xl p-6 mb-6">
+          <div class="flex items-center justify-between mb-4">
+           <h3 class="text-xl font-semibold flex items-center gap-2"><i class="ph-bold ph-medal text-yellow-400"></i> Achievement Leaderboard</h3>
+          </div>
+          <div v-if="achievementLeaderboard.length === 0" class="text-center opacity-70 py-6">
+           <p>No achievement data yet. Start studying to climb the ranks!</p>
+          </div>
+          <div v-else class="space-y-2">
+           <div v-for="(user, index) in achievementLeaderboard" :key="user._id" class="glass-strong p-4 rounded-xl">
+            <div class="flex items-center justify-between">
+             <div class="flex items-center gap-3 flex-1">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
+                   :style="{ backgroundColor: levelTiers[user.achievementLevel-1].color + '40', color: levelTiers[user.achievementLevel-1].color }">
+               #{{ index + 1 }}
+              </div>
+              <div class="flex-1">
+               <div class="font-semibold">{{ user.firstName }} {{ user.lastName }}</div>
+               <div class="text-xs opacity-70">@{{ user.username }}</div>
+              </div>
+             </div>
+             <div class="text-right flex items-center gap-3">
+              <div class="text-center">
+               <div class="text-2xl font-bold" :style="{ color: levelTiers[user.achievementLevel-1].color }">
+                {{ user.achievementLevel }}/5
+               </div>
+               <div class="text-xs opacity-60">{{ user.achievementLevelName }}</div>
+              </div>
+              <div class="text-center">
+               <div class="text-lg font-semibold text-purple-400">{{ user.achievementPoints }}</div>
+               <div class="text-xs opacity-60">points</div>
+              </div>
+              <div class="text-center">
+               <div class="text-lg font-semibold text-green-400">{{ user.totalAchievementsUnlocked }}</div>
+               <div class="text-xs opacity-60">unlocked</div>
+              </div>
+             </div>
             </div>
            </div>
           </div>
