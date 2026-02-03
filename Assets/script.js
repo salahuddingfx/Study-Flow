@@ -313,12 +313,13 @@ createApp({
             aiLoading: false,
             aiChatHistory: [], // New Chat History Array
             isTouchDevice: false, // New touch detection
+            prefersReducedMotion: false,
+            effectsEnabled: true,
         }; 
     }, 
 
     async mounted() {
         document.body.className = 'theme-dark';
-        this.createParticles();
         
         // Check for reset token in URL FIRST - if found, skip auth
         const hasResetToken = this.checkResetToken();
@@ -333,6 +334,15 @@ createApp({
         
         // Detect Touch Device
         this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        this.prefersReducedMotion = window.matchMedia
+            ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            : false;
+        const isSmallScreen = window.innerWidth < 768;
+        this.effectsEnabled = !(this.isTouchDevice || this.prefersReducedMotion || isSmallScreen);
+
+        if (this.effectsEnabled) {
+            this.createParticles();
+        }
 
         // Display a random motivational quote
         this.currentQuote = this.motivationalQuotes[
@@ -352,12 +362,12 @@ createApp({
         // --- UPDATED CURSOR LOGIC FOR NEW CSS ---
         // Trailing cursor with particle effects - OPTIMIZED FOR SPEED
         let lastMoveTime = 0;
-        const MOVE_THROTTLE = 4; // Faster responsiveness
+        const MOVE_THROTTLE = 16; // Lower frequency for performance
         let ringX = window.innerWidth / 2;
         let ringY = window.innerHeight / 2;
         
         this._mouseMoveHandler = (e) => {
-            if (this.isTouchDevice) return;
+            if (!this.effectsEnabled) return;
             
             const now = Date.now();
             if (now - lastMoveTime < MOVE_THROTTLE) return;
@@ -384,8 +394,8 @@ createApp({
                 }
             });
             
-            // Create particle trail effect randomly - MORE PARTICLES
-            if (Math.random() > 0.5 && this.$refs.particleContainer) { // 50% instead of 30%
+            // Create particle trail effect randomly
+            if (Math.random() > 0.85 && this.$refs.particleContainer) {
                 const particle = document.createElement('div');
                 particle.style.position = 'fixed';
                 particle.style.left = e.clientX + 'px';
@@ -453,8 +463,10 @@ createApp({
             }
         };
         
-        document.addEventListener('mouseover', this._hoverChecker);
-        document.addEventListener('mousemove', this._mouseMoveHandler);
+        if (this.effectsEnabled) {
+            document.addEventListener('mouseover', this._hoverChecker);
+            document.addEventListener('mousemove', this._mouseMoveHandler);
+        }
 
         this.updateDateTime(); 
         this.dateTimeInterval = setInterval(this.updateDateTime, 1000);
@@ -782,13 +794,13 @@ createApp({
 
         createParticles() {
             const container = this.$refs.particleContainer;
-            if (!container) return;
+            if (!container || !this.effectsEnabled) return;
 
             // আগের কোনো কণা থাকলে পরিষ্কার করা
             container.innerHTML = '';
             
             // কতগুলো কণা বা particle চাও (এখানে ৫০টি দেওয়া হলো)
-            const particleCount = 50;
+            const particleCount = window.innerWidth < 1024 ? 16 : 30;
 
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
