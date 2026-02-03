@@ -126,6 +126,37 @@ io.on('connection', (socket) => {
     socket.on('task-updated', handleTaskUpdated);
     socket.on('task-deleted', handleTaskDeleted);
 
+    // 🏆 Achievement Events
+    socket.on('check-achievements', async (userId) => {
+        try {
+            const Achievement = require('./models/Achievement');
+            const User = require('./models/User');
+            const achievements = await Achievement.find({ user: userId, unlocked: true }).sort({ unlockedAt: -1 });
+            const user = await User.findById(userId).select('achievementLevel achievementLevelName achievementPoints totalAchievementsUnlocked');
+            
+            io.to(`user_${userId}`).emit('achievements-updated', {
+                achievements,
+                userStats: user
+            });
+        } catch (error) {
+            console.error('Achievement check error:', error);
+        }
+    });
+
+    socket.on('request-leaderboard', async () => {
+        try {
+            const User = require('./models/User');
+            const leaderboard = await User.find()
+                .select('username firstName lastName achievementLevel achievementLevelName achievementPoints totalAchievementsUnlocked')
+                .sort({ achievementLevel: -1, achievementPoints: -1 })
+                .limit(10);
+            
+            io.emit('leaderboard-updated', leaderboard);
+        } catch (error) {
+            console.error('Leaderboard update error:', error);
+        }
+    });
+
     // 🔴 Study Rooms Logic
     socket.on('join-room', (roomName) => {
         // Leave previous rooms (except default user room)

@@ -1452,6 +1452,37 @@
            <div class="chart-container relative h-64 sm:h-80 w-full">
             <canvas ref="studyTimeChart"></canvas>
            </div>
+          </div>
+          <!-- Quiz Stats Card -->
+          <div class="glass rounded-2xl p-3 sm:p-6">
+            <h3 class="text-xl font-semibold mb-4 flex items-center gap-2"><i class="ph-bold ph-question text-blue-400"></i> Quiz Performance</h3>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="glass-strong p-4 rounded-xl text-center">
+                <div class="text-3xl font-bold text-blue-400">{{ quizStats.averageScore }}%</div>
+                <div class="text-xs opacity-70">Average Score</div>
+              </div>
+              <div class="glass-strong p-4 rounded-xl text-center">
+                <div class="text-3xl font-bold text-purple-400">{{ quizStats.highestScore }}%</div>
+                <div class="text-xs opacity-70">Highest Score</div>
+              </div>
+              <div class="glass-strong p-4 rounded-xl text-center">
+                <div class="text-3xl font-bold text-green-400">{{ quizStats.completedQuizzes }}</div>
+                <div class="text-xs opacity-70">Completed</div>
+              </div>
+              <div class="glass-strong p-4 rounded-xl text-center">
+                <div class="text-3xl font-bold text-yellow-400">{{ quizStats.totalQuizzes }}</div>
+                <div class="text-xs opacity-70">Total Quizzes</div>
+              </div>
+            </div>
+            <div v-if="quizStats.quizzes.length > 0" class="space-y-2">
+              <div v-for="quiz in quizStats.quizzes.slice(0, 5)" :key="quiz._id" class="glass-strong p-3 rounded-lg flex justify-between items-center">
+                <div>
+                  <div class="font-semibold text-sm">{{ quiz.topic }}</div>
+                  <div class="text-xs opacity-60">{{ quiz.score }}% • {{ quiz.questions?.length || 0 }} questions</div>
+                </div>
+                <div class="text-xs opacity-70">{{ new Date(quiz.createdAt).toLocaleDateString() }}</div>
+              </div>
+            </div>
           </div><div class="glass rounded-2xl p-3 sm:p-6">
            <h3 class="text-xl font-semibold mb-4">Subject Distribution</h3>
            <div class="chart-container relative h-64 sm:h-80 w-full">

@@ -386,4 +386,28 @@ router.get('/export/json', protect, async (req, res) => {
     }
 });
 
+// @desc    Get quiz statistics
+// @route   GET /api/analytics/quiz-stats
+// @access  Private
+router.get('/quiz-stats', protect, async (req, res) => {
+    try {
+        const Quiz = require('../models/Quiz');
+        const quizzes = await Quiz.find({ user: req.user.id });
+        
+        const stats = {
+            totalQuizzes: quizzes.length,
+            completedQuizzes: quizzes.filter(q => q.completed).length,
+            averageScore: quizzes.length > 0 
+                ? Math.round(quizzes.reduce((sum, q) => sum + (q.score || 0), 0) / quizzes.length) 
+                : 0,
+            highestScore: quizzes.length > 0 ? Math.max(...quizzes.map(q => q.score || 0)) : 0,
+            quizzes: quizzes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 10)
+        };
+
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

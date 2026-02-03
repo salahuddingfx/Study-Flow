@@ -294,6 +294,128 @@ const DEFAULT_ACHIEVEMENTS = [
         level: 3,
         levelName: "Gold",
         points: 120
+    },
+    // Extended Achievements
+    {
+        title: "Marathon Master",
+        description: "Complete a 5-hour study marathon",
+        icon: "target",
+        category: "study-time",
+        criteria: { type: "total-hours", value: 5, period: "all-time" },
+        rarity: "legendary",
+        level: 5,
+        levelName: "Diamond",
+        points: 600
+    },
+    {
+        title: "Weekly Warrior",
+        description: "Study 50 hours in a week",
+        icon: "flame",
+        category: "consistency",
+        criteria: { type: "total-hours", value: 50, period: "weekly" },
+        rarity: "epic",
+        level: 4,
+        levelName: "Platinum",
+        points: 280
+    },
+    {
+        title: "Goal Breaker",
+        description: "Complete 100 goals",
+        icon: "target",
+        category: "goals",
+        criteria: { type: "goals-completed", value: 100, period: "all-time" },
+        rarity: "legendary",
+        level: 5,
+        levelName: "Diamond",
+        points: 500
+    },
+    {
+        title: "Knowledge Seeker",
+        description: "Study 20 different subjects",
+        icon: "books",
+        category: "subjects",
+        criteria: { type: "subjects-mastered", value: 20, period: "all-time" },
+        rarity: "legendary",
+        level: 5,
+        levelName: "Diamond",
+        points: 450
+    },
+    {
+        title: "Task Terminator",
+        description: "Complete 1000 tasks",
+        icon: "zap",
+        category: "tasks",
+        criteria: { type: "tasks-completed", value: 1000, period: "all-time" },
+        rarity: "legendary",
+        level: 5,
+        levelName: "Diamond",
+        points: 700
+    },
+    {
+        title: "Streak Smasher",
+        description: "Maintain a 365-day study streak",
+        icon: "fire",
+        category: "consistency",
+        criteria: { type: "streak-days", value: 365, period: "all-time" },
+        rarity: "legendary",
+        level: 5,
+        levelName: "Diamond",
+        points: 1000
+    },
+    {
+        title: "Balanced Scholar",
+        description: "Complete goals in 10 different subjects",
+        icon: "globe",
+        category: "goals",
+        criteria: { type: "goals-completed", value: 10, period: "all-time" },
+        rarity: "rare",
+        level: 2,
+        levelName: "Silver",
+        points: 90
+    },
+    {
+        title: "Speed Demon",
+        description: "Complete 5 goals in one day",
+        icon: "lightning-bold",
+        category: "special",
+        criteria: { type: "goals-completed", value: 5, period: "daily" },
+        rarity: "epic",
+        level: 3,
+        levelName: "Gold",
+        points: 140
+    },
+    {
+        title: "Perfectionist",
+        description: "Maintain 100% task completion rate",
+        icon: "check-double",
+        category: "tasks",
+        criteria: { type: "tasks-completed", value: 100, period: "all-time" },
+        rarity: "rare",
+        level: 2,
+        levelName: "Silver",
+        points: 85
+    },
+    {
+        title: "Focus Champion",
+        description: "Complete 10 consecutive sessions",
+        icon: "target",
+        category: "consistency",
+        criteria: { type: "sessions-count", value: 10, period: "all-time" },
+        rarity: "rare",
+        level: 2,
+        levelName: "Silver",
+        points: 70
+    },
+    {
+        title: "Time Master",
+        description: "Total 1000 study hours",
+        icon: "clock",
+        category: "study-time",
+        criteria: { type: "total-hours", value: 1000, period: "all-time" },
+        rarity: "legendary",
+        level: 5,
+        levelName: "Diamond",
+        points: 800
     }
 ];
 

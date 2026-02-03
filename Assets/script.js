@@ -94,6 +94,14 @@ createApp({
             leaderboardPeriod: 'weekly',
             leaderboardResults: [],
             achievementLeaderboard: [],
+            // Quiz Stats
+            quizStats: {
+                totalQuizzes: 0,
+                completedQuizzes: 0,
+                averageScore: 0,
+                highestScore: 0,
+                quizzes: []
+            },
 
             // Credentials Change
             credentialsForm: {
@@ -109,7 +117,7 @@ createApp({
                 points: 0,
                 totalUnlocked: 0
             },
-            totalAchievements: 24,
+            totalAchievements: 35,
             levelTiers: [
                 { level: 1, name: 'Bronze', color: '#CD7F32', range: '0-249' },
                 { level: 2, name: 'Silver', color: '#C0C0C0', range: '250-749' },
@@ -804,6 +812,7 @@ createApp({
                             this.loadLeaderboard();
                             this.loadAchievementStats();
                             this.loadAchievementLeaderboard();
+                            this.loadQuizStats();
                         }, 500);
                     });
                 });
@@ -1066,6 +1075,24 @@ createApp({
                 });
                 // Reload achievements
                 this.loadUserData();
+            });
+
+            this.socket.on('achievements-updated', (data) => {
+                if (data.achievements) {
+                    this.achievements = data.achievements;
+                }
+                if (data.userStats) {
+                    this.userLevel = {
+                        level: data.userStats.achievementLevel,
+                        levelName: data.userStats.achievementLevelName,
+                        points: data.userStats.achievementPoints,
+                        totalUnlocked: data.userStats.totalAchievementsUnlocked
+                    };
+                }
+            });
+
+            this.socket.on('leaderboard-updated', (leaderboard) => {
+                this.achievementLeaderboard = leaderboard;
             });
 
             this.socket.on('update-room-counts', (counts) => {
@@ -1545,6 +1572,15 @@ createApp({
                      await this.apiRequest('/api/achievements/check-progress', {
                          method: 'POST'
                      });
+                     
+                     // Emit to Socket.io for real-time updates
+                     if (this.socket && this.userId) {
+                         this.socket.emit('check-achievements', this.userId);
+                         this.socket.emit('request-leaderboard');
+                     }
+                     
+                     // Refresh achievement stats
+                     await this.loadAchievementStats();
                 } catch (e) {
                     console.error("Failed to save session", e);
                 }
@@ -1695,6 +1731,11 @@ createApp({
                     await this.apiRequest('/api/achievements/check-progress', {
                         method: 'POST'
                     });
+                    
+                    // Emit to Socket.io for real-time updates
+                    if (this.socket && this.userId) {
+                        this.socket.emit('check-achievements', this.userId);
+                    }
                 } catch(e) {
                      console.error(e);
                 }
@@ -1800,6 +1841,11 @@ createApp({
 
                 const achievementsData = await this.apiRequest('/api/achievements');
                 this.achievements = achievementsData || [];
+
+                // Emit to Socket.io for real-time sync
+                if (this.socket && this.userId) {
+                    this.socket.emit('check-achievements', this.userId);
+                }
 
                 await this.loadProfileSettings();
 
@@ -1933,6 +1979,19 @@ createApp({
                 this.achievementLeaderboard = Array.isArray(data) ? data : [];
             } catch (e) {
                 console.warn('Achievement leaderboard load failed', e);
+            }
+        },
+
+        async loadQuizStats() {
+            try {
+                const res = await fetch(`${this.API_BASE_URL}/api/analytics/quiz-stats`, {
+                    headers: { 'Authorization': `Bearer ${this.authToken}` }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                this.quizStats = data;
+            } catch (e) {
+                console.warn('Quiz stats load failed', e);
             }
         },
 
