@@ -16,7 +16,17 @@ const userSchema = mongoose.Schema({
         default: 'user'          // অটোমেটিক 'user' সেট হবে
     },
     resetPasswordToken: String,
-    resetPasswordExpire: Date
+    resetPasswordExpire: Date,
+    // Streaks & summaries
+    streakCurrent: { type: Number, default: 0 },
+    streakLongest: { type: Number, default: 0 },
+    lastStudyDate: Date,
+    weeklySummaryEnabled: { type: Boolean, default: true },
+    lastWeeklySummarySent: Date,
+    // Calendar & public profile
+    calendarToken: String,
+    publicProfileToken: String,
+    publicProfileEnabled: { type: Boolean, default: false }
 }, { timestamps: true });
 
 // Match password method

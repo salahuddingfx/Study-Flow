@@ -116,5 +116,63 @@ router.delete('/:id', protect, async (req, res) => {
     }
 });
 
+// @desc    Sync offline task operations
+// @route   POST /api/tasks/sync
+// @access  Private
+router.post('/sync', protect, async (req, res) => {
+    const { operations = [] } = req.body;
+    const results = [];
+
+    try {
+        for (const op of operations) {
+            if (op.type === 'create') {
+                const title = op.data?.title || op.data?.text;
+                if (!title) {
+                    results.push({ clientId: op.clientId, error: 'Title is required' });
+                    continue;
+                }
+                const task = await Task.create({
+                    user: req.user.id,
+                    title,
+                    description: op.data?.description,
+                    deadline: op.data?.deadline || null,
+                    priority: op.data?.priority || 'medium',
+                    completed: !!op.data?.completed
+                });
+                if (io) io.to(`user_${req.user.id}`).emit('task-created', task);
+                results.push({ clientId: op.clientId, task });
+            } else if (op.type === 'update') {
+                const task = await Task.findById(op.id);
+                if (!task || task.user.toString() !== req.user.id.toString()) {
+                    results.push({ id: op.id, error: 'Task not found' });
+                    continue;
+                }
+                if (op.data?.title) task.title = op.data.title;
+                if (op.data?.description !== undefined) task.description = op.data.description;
+                if (op.data?.deadline !== undefined) task.deadline = op.data.deadline;
+                if (op.data?.priority) task.priority = op.data.priority;
+                if (op.data?.completed !== undefined) task.completed = op.data.completed;
+                const updatedTask = await task.save();
+                if (io) io.to(`user_${req.user.id}`).emit('task-updated', updatedTask);
+                results.push({ id: op.id, task: updatedTask });
+            } else if (op.type === 'delete') {
+                const task = await Task.findById(op.id);
+                if (!task || task.user.toString() !== req.user.id.toString()) {
+                    results.push({ id: op.id, error: 'Task not found' });
+                    continue;
+                }
+                await Task.findByIdAndDelete(op.id);
+                if (io) io.to(`user_${req.user.id}`).emit('task-deleted', op.id);
+                results.push({ id: op.id, deleted: true });
+            }
+        }
+
+        const tasks = await Task.find({ user: req.user.id });
+        res.json({ success: true, results, tasks });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
 module.exports.setIo = setIo;

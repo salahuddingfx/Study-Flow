@@ -6,6 +6,7 @@ const Task = require('../models/Task');
 const Subject = require('../models/Subject');
 const Goal = require('../models/Goal');
 const Achievement = require('../models/Achievement');
+const User = require('../models/User');
 
 // @desc    Get study time trends (daily/weekly/monthly)
 // @route   GET /api/analytics/time-trends
@@ -214,6 +215,58 @@ router.get('/reports/:period', protect, async (req, res) => {
         });
 
         res.json(report);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Public leaderboard
+// @route   GET /api/analytics/leaderboard
+// @access  Public
+router.get('/leaderboard', async (req, res) => {
+    try {
+        const { period = 'weekly', limit = 10 } = req.query;
+        const now = new Date();
+        let startDate = null;
+
+        if (period === 'weekly') {
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() - 7);
+        } else if (period === 'monthly') {
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() - 30);
+        }
+
+        const matchStage = startDate
+            ? { timestamp: { $gte: startDate, $lte: now } }
+            : {};
+
+        const leaderboard = await Session.aggregate([
+            { $match: matchStage },
+            { $group: { _id: '$user', totalMinutes: { $sum: '$duration' }, sessions: { $sum: 1 } } },
+            { $sort: { totalMinutes: -1 } },
+            { $limit: parseInt(limit) }
+        ]);
+
+        const userIds = leaderboard.map(l => l._id);
+        const users = await User.find({ _id: { $in: userIds } }).select('username firstName lastName');
+        const userMap = new Map(users.map(u => [u._id.toString(), u]));
+
+        const results = leaderboard.map((item, index) => {
+            const user = userMap.get(item._id.toString());
+            const fullName = user?.firstName || user?.lastName
+                ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
+                : user?.username || 'User';
+            return {
+                rank: index + 1,
+                username: user?.username || 'user',
+                fullName,
+                totalMinutes: item.totalMinutes,
+                sessions: item.sessions
+            };
+        });
+
+        res.json({ period, results });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

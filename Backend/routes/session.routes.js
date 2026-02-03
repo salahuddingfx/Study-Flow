@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth.middleware');
 const Session = require('../models/Session');
+const User = require('../models/User');
 
 // Get io instance
 let io;
@@ -40,6 +41,34 @@ router.post('/', protect, async (req, res) => {
             duration,
             timestamp: timestamp || Date.now()
         });
+
+        // Update streaks
+        try {
+            const user = await User.findById(req.user.id);
+            if (user) {
+                const sessionDate = new Date(session.timestamp);
+                sessionDate.setHours(0, 0, 0, 0);
+
+                let lastDate = user.lastStudyDate ? new Date(user.lastStudyDate) : null;
+                if (lastDate) {
+                    lastDate.setHours(0, 0, 0, 0);
+                }
+
+                if (!lastDate || sessionDate.getTime() !== lastDate.getTime()) {
+                    const dayDiff = lastDate ? Math.round((sessionDate - lastDate) / (1000 * 60 * 60 * 24)) : null;
+                    if (dayDiff === 1 || !lastDate) {
+                        user.streakCurrent = (user.streakCurrent || 0) + 1;
+                    } else {
+                        user.streakCurrent = 1;
+                    }
+                    user.streakLongest = Math.max(user.streakLongest || 0, user.streakCurrent);
+                    user.lastStudyDate = sessionDate;
+                    await user.save();
+                }
+            }
+        } catch (e) {
+            console.error('Streak update failed:', e.message);
+        }
 
         // Emit real-time event
         if (io) {

@@ -14,6 +14,10 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
+const User = require('./models/User');
+const Session = require('./models/Session');
+const Task = require('./models/Task');
+const sendEmail = require('./utils/sendEmail');
 
 // 1️⃣ Initialize Database
 connectDB();
@@ -326,6 +330,69 @@ server.listen(PORT, async () => {
     await typewriter('    🎯 Ready to serve requests!', colors.bright + colors.green, 40);
     console.log(colors.cyan + '    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' + colors.reset);
     console.log('');
+
+    // Weekly summary scheduler (runs daily)
+    const sendWeeklySummaries = async () => {
+        try {
+            const now = new Date();
+            const startDate = new Date(now);
+            startDate.setDate(now.getDate() - 7);
+
+            const users = await User.find({ weeklySummaryEnabled: { $ne: false } });
+            for (const user of users) {
+                if (user.lastWeeklySummarySent) {
+                    const daysSince = Math.floor((now - new Date(user.lastWeeklySummarySent)) / (1000 * 60 * 60 * 24));
+                    if (daysSince < 7) continue;
+                }
+
+                const sessions = await Session.find({
+                    user: user._id,
+                    timestamp: { $gte: startDate, $lte: now }
+                });
+                const tasks = await Task.find({
+                    user: user._id,
+                    createdAt: { $gte: startDate, $lte: now }
+                });
+
+                const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+                const completedTasks = tasks.filter(t => t.completed).length;
+                const subjectBreakdown = {};
+                sessions.forEach(s => {
+                    const subject = s.subject || 'Unspecified';
+                    subjectBreakdown[subject] = (subjectBreakdown[subject] || 0) + (s.duration || 0);
+                });
+
+                const topSubject = Object.keys(subjectBreakdown).sort((a, b) => subjectBreakdown[b] - subjectBreakdown[a])[0];
+
+                const message = `Your Weekly StudyFlow Summary\n\n` +
+                    `Total study time: ${Math.round(totalMinutes)} minutes\n` +
+                    `Sessions completed: ${sessions.length}\n` +
+                    `Tasks created: ${tasks.length}\n` +
+                    `Tasks completed: ${completedTasks}\n` +
+                    (topSubject ? `Top subject: ${topSubject} (${Math.round(subjectBreakdown[topSubject])} min)\n` : '') +
+                    `Current streak: ${user.streakCurrent || 0} days\n`;
+
+                try {
+                    await sendEmail({
+                        email: user.email,
+                        subject: 'Your Weekly StudyFlow Summary',
+                        message,
+                        url: process.env.FRONTEND_URL || 'http://127.0.0.1:5500'
+                    });
+                    user.lastWeeklySummarySent = now;
+                    await user.save();
+                } catch (e) {
+                    console.error('Weekly summary email failed:', e.message);
+                }
+            }
+        } catch (e) {
+            console.error('Weekly summary scheduler error:', e.message);
+        }
+    };
+
+    // Run once at startup and then daily
+    sendWeeklySummaries();
+    setInterval(sendWeeklySummaries, 24 * 60 * 60 * 1000);
 });
 
 // Graceful shutdown handlers

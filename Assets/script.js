@@ -74,6 +74,22 @@ createApp({
             userId: null,
             exportData: null,
             importFile: null,
+            // Streaks & summaries
+            streakCurrent: 0,
+            streakLongest: 0,
+            weeklySummaryEnabled: true,
+            // Calendar & public profile
+            calendarUrl: '',
+            publicProfileEnabled: false,
+            publicProfileUrl: '',
+            // Offline task sync
+            isOnline: true,
+            taskSyncQueue: [],
+            tasksCacheKey: 'studyflow_tasks_cache',
+            taskQueueKey: 'studyflow_task_queue',
+            // Leaderboard
+            leaderboardPeriod: 'weekly',
+            leaderboardResults: [],
 
             // Credentials Change
             credentialsForm: {
@@ -334,6 +350,12 @@ createApp({
         
         // Detect Touch Device
         this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        this.isOnline = navigator.onLine;
+
+        window.addEventListener('online', this.handleOnline);
+        window.addEventListener('offline', this.handleOffline);
+
+        this.initOfflineTasks();
         this.prefersReducedMotion = window.matchMedia
             ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
             : false;
@@ -756,6 +778,7 @@ createApp({
                     this.$nextTick(() => {
                         setTimeout(() => {
                             this.updateCharts();
+                            this.loadLeaderboard();
                         }, 500);
                     });
                 });
@@ -776,6 +799,10 @@ createApp({
                     }, 500);
                 });
             });
+        },
+
+        leaderboardPeriod() {
+            this.loadLeaderboard();
         },
 
         sessions: {
@@ -1565,6 +1592,13 @@ createApp({
 
                 this.tasks.push(task);
                 this.newTask = '';
+                this.saveTasksCache();
+
+                if (!this.isOnline) {
+                    this.queueTaskOperation({ type: 'create', clientId: task.id, data: task });
+                    this.showInlineMessage('Saved offline. Will sync when online.');
+                    return;
+                }
 
                 try {
                     const savedTask = await this.apiRequest('/api/tasks', {
@@ -1587,6 +1621,17 @@ createApp({
             const task = this.tasks.find(t => t._id === id || t.id === id);
             if (task) {
                 task.completed = !task.completed;
+                this.saveTasksCache();
+
+                if (!this.isOnline) {
+                    if (task._id) {
+                        this.queueTaskOperation({ type: 'update', id: task._id, data: { completed: task.completed } });
+                    } else {
+                        this.updateQueuedCreate(task.id, { completed: task.completed });
+                    }
+                    this.showInlineMessage('Saved offline. Will sync when online.');
+                    return;
+                }
 
                 try {
                     await this.apiRequest(`/api/tasks/${task._id || task.id}`, {
@@ -1609,6 +1654,18 @@ createApp({
             if (!task) return;
 
             this.tasks = this.tasks.filter(t => (t._id || t.id) !== id);
+            this.saveTasksCache();
+
+            if (!this.isOnline) {
+                if (task._id) {
+                    this.queueTaskOperation({ type: 'delete', id: task._id });
+                } else {
+                    this.taskSyncQueue = this.taskSyncQueue.filter(q => !(q.type === 'create' && q.clientId === task.id));
+                    localStorage.setItem(this.taskQueueKey, JSON.stringify(this.taskSyncQueue));
+                }
+                this.showInlineMessage('Saved offline. Will sync when online.');
+                return;
+            }
 
             try {
                 await this.apiRequest(`/api/tasks/${task._id || task.id}`, {
@@ -1681,6 +1738,7 @@ createApp({
 
                 const tasksData = await this.apiRequest('/api/tasks');
                 this.tasks = tasksData || [];
+                this.saveTasksCache();
 
                 const sessionsData = await this.apiRequest('/api/sessions');
                 this.sessions = sessionsData || [];
@@ -1690,6 +1748,8 @@ createApp({
 
                 const achievementsData = await this.apiRequest('/api/achievements');
                 this.achievements = achievementsData || [];
+
+                await this.loadProfileSettings();
 
                 // Public blogs
                 try {
@@ -1709,6 +1769,153 @@ createApp({
                 }
             } catch (error) {
                 console.error("Failed to load user data", error);
+            }
+        },
+
+        initOfflineTasks() {
+            try {
+                const cachedTasks = JSON.parse(localStorage.getItem(this.tasksCacheKey) || '[]');
+                if (!this.isOnline && cachedTasks.length) {
+                    this.tasks = cachedTasks;
+                }
+                const queue = JSON.parse(localStorage.getItem(this.taskQueueKey) || '[]');
+                this.taskSyncQueue = queue;
+            } catch (e) {
+                this.taskSyncQueue = [];
+            }
+        },
+
+        saveTasksCache() {
+            try {
+                localStorage.setItem(this.tasksCacheKey, JSON.stringify(this.tasks));
+            } catch (e) {}
+        },
+
+        queueTaskOperation(op) {
+            this.taskSyncQueue.push(op);
+            try {
+                localStorage.setItem(this.taskQueueKey, JSON.stringify(this.taskSyncQueue));
+            } catch (e) {}
+        },
+
+        updateQueuedCreate(clientId, patch) {
+            const index = this.taskSyncQueue.findIndex(q => q.type === 'create' && q.clientId === clientId);
+            if (index !== -1) {
+                this.taskSyncQueue[index].data = { ...this.taskSyncQueue[index].data, ...patch };
+                try {
+                    localStorage.setItem(this.taskQueueKey, JSON.stringify(this.taskSyncQueue));
+                } catch (e) {}
+            }
+        },
+
+        async flushTaskQueue() {
+            if (!this.isOnline || this.taskSyncQueue.length === 0) return;
+            try {
+                const response = await this.apiRequest('/api/tasks/sync', {
+                    method: 'POST',
+                    body: JSON.stringify({ operations: this.taskSyncQueue })
+                });
+                if (response?.tasks) {
+                    this.tasks = response.tasks;
+                    this.saveTasksCache();
+                }
+                this.taskSyncQueue = [];
+                localStorage.removeItem(this.taskQueueKey);
+            } catch (e) {
+                console.error('Task sync failed', e);
+            }
+        },
+
+        handleOnline() {
+            this.isOnline = true;
+            this.flushTaskQueue();
+        },
+
+        handleOffline() {
+            this.isOnline = false;
+        },
+
+        async loadProfileSettings() {
+            try {
+                const profile = await this.apiRequest('/api/user/profile');
+                this.streakCurrent = profile?.streakCurrent || 0;
+                this.streakLongest = profile?.streakLongest || 0;
+                this.currentStreak = this.streakCurrent;
+
+                const weekly = await this.apiRequest('/api/user/weekly-summary');
+                this.weeklySummaryEnabled = weekly?.weeklySummaryEnabled !== false;
+
+                const calendar = await this.apiRequest('/api/user/calendar-token');
+                this.calendarUrl = calendar?.calendarUrl || '';
+
+                const publicProfile = await this.apiRequest('/api/user/public-profile');
+                this.publicProfileEnabled = !!publicProfile?.publicProfileEnabled;
+                this.publicProfileUrl = publicProfile?.publicProfileUrl || '';
+            } catch (e) {
+                console.error('Profile settings load failed', e);
+            }
+        },
+
+        async loadLeaderboard() {
+            try {
+                const res = await fetch(`${this.API_BASE_URL}/api/analytics/leaderboard?period=${this.leaderboardPeriod}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                this.leaderboardResults = data?.results || [];
+            } catch (e) {
+                console.warn('Leaderboard load failed', e);
+            }
+        },
+
+        async toggleWeeklySummary() {
+            try {
+                const res = await this.apiRequest('/api/user/weekly-summary', {
+                    method: 'PUT',
+                    body: JSON.stringify({ weeklySummaryEnabled: this.weeklySummaryEnabled })
+                });
+                this.weeklySummaryEnabled = !!res?.weeklySummaryEnabled;
+            } catch (e) {
+                this.showInlineMessage('Failed to update weekly summary setting');
+            }
+        },
+
+        async regenerateCalendarToken() {
+            try {
+                const res = await this.apiRequest('/api/user/calendar-token/regenerate', { method: 'POST' });
+                this.calendarUrl = res?.calendarUrl || '';
+                this.showInlineMessage('New calendar link generated');
+            } catch (e) {
+                this.showInlineMessage('Failed to regenerate calendar link');
+            }
+        },
+
+        async enablePublicProfile() {
+            try {
+                const res = await this.apiRequest('/api/user/public-profile/enable', { method: 'POST' });
+                this.publicProfileEnabled = true;
+                this.publicProfileUrl = res?.publicProfileUrl || '';
+                this.showInlineMessage('Public profile enabled');
+            } catch (e) {
+                this.showInlineMessage('Failed to enable public profile');
+            }
+        },
+
+        async disablePublicProfile() {
+            try {
+                await this.apiRequest('/api/user/public-profile/disable', { method: 'POST' });
+                this.publicProfileEnabled = false;
+                this.showInlineMessage('Public profile disabled');
+            } catch (e) {
+                this.showInlineMessage('Failed to disable public profile');
+            }
+        },
+
+        async copyText(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                this.showInlineMessage('Copied to clipboard');
+            } catch (e) {
+                this.showInlineMessage('Copy failed');
             }
         },
 

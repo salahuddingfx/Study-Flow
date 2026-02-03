@@ -1,6 +1,8 @@
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 const { protect } = require('../middleware/auth.middleware');
+const User = require('../models/User');
 const {
     getUserProfile,
     updateUserProfile,
@@ -30,6 +32,207 @@ router.get('/profile', protect, getUserProfile);
 // @route   PUT /api/user/profile
 // @access  Private
 router.put('/profile', protect, updateUserProfile);
+
+// @desc    Get weekly summary settings
+// @route   GET /api/user/weekly-summary
+// @access  Private
+router.get('/weekly-summary', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('weeklySummaryEnabled');
+        res.json({ weeklySummaryEnabled: user?.weeklySummaryEnabled !== false });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Update weekly summary settings
+// @route   PUT /api/user/weekly-summary
+// @access  Private
+router.put('/weekly-summary', protect, async (req, res) => {
+    try {
+        const { weeklySummaryEnabled } = req.body;
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        user.weeklySummaryEnabled = !!weeklySummaryEnabled;
+        await user.save();
+        res.json({ success: true, weeklySummaryEnabled: user.weeklySummaryEnabled });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Get calendar token
+// @route   GET /api/user/calendar-token
+// @access  Private
+router.get('/calendar-token', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user.calendarToken) {
+            user.calendarToken = crypto.randomBytes(16).toString('hex');
+            await user.save();
+        }
+        const baseUrl = process.env.BACKEND_URL || process.env.FRONTEND_URL || 'http://127.0.0.1:5500';
+        res.json({ calendarToken: user.calendarToken, calendarUrl: `${baseUrl}/api/user/calendar/${user.calendarToken}.ics` });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Regenerate calendar token
+// @route   POST /api/user/calendar-token/regenerate
+// @access  Private
+router.post('/calendar-token/regenerate', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        user.calendarToken = crypto.randomBytes(16).toString('hex');
+        await user.save();
+        const baseUrl = process.env.BACKEND_URL || process.env.FRONTEND_URL || 'http://127.0.0.1:5500';
+        res.json({ calendarToken: user.calendarToken, calendarUrl: `${baseUrl}/api/user/calendar/${user.calendarToken}.ics` });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Public calendar feed (ICS)
+// @route   GET /api/user/calendar/:token.ics
+// @access  Public
+router.get('/calendar/:token.ics', async (req, res) => {
+    try {
+        const user = await User.findOne({ calendarToken: req.params.token });
+        if (!user) return res.status(404).send('Not found');
+
+        const sessions = await Session.find({ user: user._id }).sort({ timestamp: -1 }).limit(200);
+        const tasks = await Task.find({ user: user._id, deadline: { $ne: null } }).sort({ deadline: -1 }).limit(200);
+
+        const formatDate = (d) => {
+            const date = new Date(d);
+            const iso = date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            return iso;
+        };
+
+        let ics = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//StudyFlow//EN\nCALSCALE:GREGORIAN\n';
+        sessions.forEach((s) => {
+            const start = formatDate(s.timestamp);
+            const end = formatDate(new Date(new Date(s.timestamp).getTime() + (s.duration || 0) * 60000));
+            ics += 'BEGIN:VEVENT\n';
+            ics += `UID:${s._id}@studyflow\n`;
+            ics += `DTSTART:${start}\n`;
+            ics += `DTEND:${end}\n`;
+            ics += `SUMMARY:Study Session${s.subject ? ' - ' + s.subject : ''}\n`;
+            ics += 'END:VEVENT\n';
+        });
+        tasks.forEach((t) => {
+            const due = formatDate(t.deadline);
+            ics += 'BEGIN:VEVENT\n';
+            ics += `UID:${t._id}@studyflow-task\n`;
+            ics += `DTSTART:${due}\n`;
+            ics += `DTEND:${due}\n`;
+            ics += `SUMMARY:Task Due - ${t.title || 'Task'}\n`;
+            ics += 'END:VEVENT\n';
+        });
+        ics += 'END:VCALENDAR';
+
+        res.set('Content-Type', 'text/calendar');
+        res.send(ics);
+    } catch (error) {
+        res.status(500).send('Server error');
+    }
+});
+
+// @desc    Get public profile settings
+// @route   GET /api/user/public-profile
+// @access  Private
+router.get('/public-profile', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user.publicProfileToken) {
+            user.publicProfileToken = crypto.randomBytes(16).toString('hex');
+            await user.save();
+        }
+        const baseUrl = process.env.BACKEND_URL || process.env.FRONTEND_URL || 'http://127.0.0.1:5500';
+        res.json({
+            publicProfileEnabled: user.publicProfileEnabled,
+            publicProfileToken: user.publicProfileToken,
+            publicProfileUrl: `${baseUrl}/api/user/public/${user.publicProfileToken}`
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Enable public profile
+// @route   POST /api/user/public-profile/enable
+// @access  Private
+router.post('/public-profile/enable', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user.publicProfileToken) {
+            user.publicProfileToken = crypto.randomBytes(16).toString('hex');
+        }
+        user.publicProfileEnabled = true;
+        await user.save();
+        const baseUrl = process.env.BACKEND_URL || process.env.FRONTEND_URL || 'http://127.0.0.1:5500';
+        res.json({
+            publicProfileEnabled: true,
+            publicProfileToken: user.publicProfileToken,
+            publicProfileUrl: `${baseUrl}/api/user/public/${user.publicProfileToken}`
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Disable public profile
+// @route   POST /api/user/public-profile/disable
+// @access  Private
+router.post('/public-profile/disable', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        user.publicProfileEnabled = false;
+        await user.save();
+        res.json({ publicProfileEnabled: false });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Public profile stats
+// @route   GET /api/user/public/:token
+// @access  Public
+router.get('/public/:token', async (req, res) => {
+    try {
+        const user = await User.findOne({ publicProfileToken: req.params.token, publicProfileEnabled: true });
+        if (!user) return res.status(404).json({ message: 'Not found' });
+
+        const sessions = await Session.find({ user: user._id });
+        const tasks = await Task.find({ user: user._id });
+
+        const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+        const completedTasks = tasks.filter(t => t.completed).length;
+        const studyDays = new Set(sessions.map(s => s.timestamp.toISOString().split('T')[0]));
+        const fullName = user.firstName || user.lastName
+            ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
+            : user.username;
+
+        res.json({
+            username: user.username,
+            fullName,
+            totalMinutes,
+            totalSessions: sessions.length,
+            completedTasks,
+            studyDaysCount: studyDays.size,
+            streakCurrent: user.streakCurrent || 0,
+            streakLongest: user.streakLongest || 0
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 // @desc    Change password
 // @route   PUT /api/user/change-password
