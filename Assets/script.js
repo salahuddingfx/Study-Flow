@@ -3006,8 +3006,9 @@ createApp({
                     this.adminSessionsChart.destroy();
                 }
 
-                const labels = this.adminSessionsSummary.perUser.map(u => u.username);
-                const data = this.adminSessionsSummary.perUser.map(u => u.totalMinutes);
+                const perUser = this.adminSessionsSummary?.perUser || [];
+                const labels = perUser.map(u => u?.username || 'Unknown');
+                const data = perUser.map(u => u?.totalMinutes || 0);
 
                 this.adminSessionsChart = new Chart(ctx, {
                     type: 'bar',
