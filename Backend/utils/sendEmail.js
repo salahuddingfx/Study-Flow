@@ -1,14 +1,40 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
+    // Verify environment variables
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+        console.error('❌ Email configuration missing:', {
+            EMAIL_USER: process.env.EMAIL_USER ? '✓ Set' : '✗ Missing',
+            EMAIL_PASSWORD: process.env.EMAIL_PASSWORD ? '✓ Set' : '✗ Missing'
+        });
+        throw new Error('Email service not configured. Missing EMAIL_USER or EMAIL_PASSWORD');
+    }
+
+    console.log('📧 Initializing email transporter...');
+    console.log('   Service:', process.env.EMAIL_SERVICE || 'gmail');
+    console.log('   From:', process.env.FROM_EMAIL || process.env.EMAIL_USER);
+
     // Reusable transporter object using the default SMTP transport
     const transporter = nodemailer.createTransport({
         service: process.env.EMAIL_SERVICE || 'gmail',
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASSWORD
-        }
+        },
+        // Add timeout settings for Render
+        connectionTimeout: 5000,
+        socketTimeout: 5000
     });
+
+    // Verify connection
+    try {
+        console.log('🔐 Verifying SMTP connection...');
+        await transporter.verify();
+        console.log('✓ SMTP connection verified');
+    } catch (error) {
+        console.error('❌ SMTP verification failed:', error.message);
+        throw new Error(`Email service verification failed: ${error.message}`);
+    }
 
     // Build reset URL based on environment
     const resetUrl = options.url || `${process.env.FRONTEND_URL || 'http://127.0.0.1:5500'}`;
@@ -38,9 +64,15 @@ const sendEmail = async (options) => {
         `
     };
 
-    const info = await transporter.sendMail(message);
-
-    console.log('Message sent: %s', info.messageId);
+    try {
+        console.log('📤 Sending email to:', options.email);
+        const info = await transporter.sendMail(message);
+        console.log('✓ Email sent successfully:', info.messageId);
+        return info;
+    } catch (error) {
+        console.error('❌ Email sending failed:', error.message);
+        throw new Error(`Failed to send email: ${error.message}`);
+    }
 };
 
 module.exports = sendEmail;

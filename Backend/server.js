@@ -22,6 +22,9 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
+// Trust proxy for production (Render, Heroku, etc)
+app.set('trust proxy', 1);
+
 // 3️⃣ Security & Performance Middleware
 app.use(compression());
 app.use(helmet({
