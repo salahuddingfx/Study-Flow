@@ -11,19 +11,24 @@ const sendEmail = async (options) => {
     }
 
     console.log('📧 Initializing email transporter...');
-    console.log('   Service:', process.env.EMAIL_SERVICE || 'gmail');
+    console.log('   Host:', process.env.EMAIL_HOST || 'smtp-relay.brevo.com');
+    console.log('   Port:', process.env.EMAIL_PORT || '587');
     console.log('   From:', process.env.FROM_EMAIL || process.env.EMAIL_USER);
 
     // Reusable transporter object using the default SMTP transport
     const transporter = nodemailer.createTransport({
-        service: process.env.EMAIL_SERVICE || 'gmail',
+        host: process.env.EMAIL_HOST || 'smtp-relay.brevo.com',
+        port: parseInt(process.env.EMAIL_PORT || '587'),
+        secure: false,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASSWORD
         },
-        // Add timeout settings for Render
-        connectionTimeout: 5000,
-        socketTimeout: 5000
+        connectionTimeout: 10000,
+        socketTimeout: 10000,
+        tls: {
+            rejectUnauthorized: false
+        }
     });
 
     // Verify connection
