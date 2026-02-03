@@ -1009,9 +1009,11 @@ createApp({
                 localStorage.setItem('jwt', data.token);
                 this.authToken = data.token;
 
-                this.currentUser = data.user.username;
-                this.userEmail = data.user.email;
-                this.userFullName = data.user.firstName ? `${data.user.firstName} ${data.user.lastName || ''}`.trim() : data.user.username;
+                this.currentUser = data.user?.username || '';
+                this.userEmail = data.user?.email || '';
+                this.userFullName = (data.user?.firstName && data.user?.lastName) 
+                    ? `${data.user.firstName} ${data.user.lastName}`.trim() 
+                    : (data.user?.username || 'User');
                 this.isAuthenticated = true;
                 
                 this.showLoginSuccess = true;
