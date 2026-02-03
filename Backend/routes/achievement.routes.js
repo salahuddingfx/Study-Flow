@@ -14,8 +14,18 @@ const setIo = (socketIo) => {
 };
 module.exports.setIo = setIo;
 
-// Predefined achievements
+// Level progression configuration
+const LEVEL_CONFIG = {
+    1: { name: 'Bronze', color: '#CD7F32', minPoints: 0, maxPoints: 249 },
+    2: { name: 'Silver', color: '#C0C0C0', minPoints: 250, maxPoints: 749 },
+    3: { name: 'Gold', color: '#FFD700', minPoints: 750, maxPoints: 1499 },
+    4: { name: 'Platinum', color: '#E5E4E2', minPoints: 1500, maxPoints: 2999 },
+    5: { name: 'Diamond', color: '#B9F2FF', minPoints: 3000, maxPoints: Infinity }
+};
+
+// Predefined achievements with levels
 const DEFAULT_ACHIEVEMENTS = [
+    // Study Time - Levels 1-5
     {
         title: "First Steps",
         description: "Complete your first study session",
@@ -23,6 +33,8 @@ const DEFAULT_ACHIEVEMENTS = [
         category: "study-time",
         criteria: { type: "sessions-count", value: 1, period: "all-time" },
         rarity: "common",
+        level: 1,
+        levelName: "Bronze",
         points: 10
     },
     {
@@ -32,6 +44,8 @@ const DEFAULT_ACHIEVEMENTS = [
         category: "study-time",
         criteria: { type: "total-hours", value: 1, period: "all-time" },
         rarity: "common",
+        level: 1,
+        levelName: "Bronze",
         points: 15
     },
     {
@@ -41,6 +55,8 @@ const DEFAULT_ACHIEVEMENTS = [
         category: "study-time",
         criteria: { type: "total-hours", value: 10, period: "all-time" },
         rarity: "rare",
+        level: 2,
+        levelName: "Silver",
         points: 50
     },
     {
@@ -50,8 +66,33 @@ const DEFAULT_ACHIEVEMENTS = [
         category: "study-time",
         criteria: { type: "total-hours", value: 50, period: "all-time" },
         rarity: "epic",
+        level: 3,
+        levelName: "Gold",
         points: 150
     },
+    {
+        title: "Legendary Scholar",
+        description: "Study for 200 hours total",
+        icon: "crown",
+        category: "study-time",
+        criteria: { type: "total-hours", value: 200, period: "all-time" },
+        rarity: "legendary",
+        level: 4,
+        levelName: "Platinum",
+        points: 300
+    },
+    {
+        title: "Study Immortal",
+        description: "Study for 500 hours total",
+        icon: "infinity",
+        category: "study-time",
+        criteria: { type: "total-hours", value: 500, period: "all-time" },
+        rarity: "legendary",
+        level: 5,
+        levelName: "Diamond",
+        points: 500
+    },
+    // Consistency - Levels 1-5
     {
         title: "Consistency King",
         description: "Maintain a 7-day study streak",
@@ -59,7 +100,20 @@ const DEFAULT_ACHIEVEMENTS = [
         category: "consistency",
         criteria: { type: "streak-days", value: 7, period: "all-time" },
         rarity: "rare",
+        level: 2,
+        levelName: "Silver",
         points: 75
+    },
+    {
+        title: "Streak Master",
+        description: "Maintain a 30-day study streak",
+        icon: "fire",
+        category: "consistency",
+        criteria: { type: "streak-days", value: 30, period: "all-time" },
+        rarity: "epic",
+        level: 4,
+        levelName: "Platinum",
+        points: 250
     },
     {
         title: "Perfect Week",
@@ -68,8 +122,22 @@ const DEFAULT_ACHIEVEMENTS = [
         category: "consistency",
         criteria: { type: "perfect-week", value: 7, period: "weekly" },
         rarity: "epic",
+        level: 3,
+        levelName: "Gold",
         points: 100
     },
+    {
+        title: "Streak Legend",
+        description: "Maintain a 100-day study streak",
+        icon: "trophy",
+        category: "consistency",
+        criteria: { type: "streak-days", value: 100, period: "all-time" },
+        rarity: "legendary",
+        level: 5,
+        levelName: "Diamond",
+        points: 400
+    },
+    // Goals - Levels 1-5
     {
         title: "Goal Crusher",
         description: "Complete your first goal",
@@ -77,6 +145,8 @@ const DEFAULT_ACHIEVEMENTS = [
         category: "goals",
         criteria: { type: "goals-completed", value: 1, period: "all-time" },
         rarity: "common",
+        level: 1,
+        levelName: "Bronze",
         points: 20
     },
     {
@@ -86,8 +156,33 @@ const DEFAULT_ACHIEVEMENTS = [
         category: "goals",
         criteria: { type: "goals-completed", value: 10, period: "all-time" },
         rarity: "rare",
+        level: 2,
+        levelName: "Silver",
         points: 100
     },
+    {
+        title: "Goal Legend",
+        description: "Complete 50 goals",
+        icon: "medal",
+        category: "goals",
+        criteria: { type: "goals-completed", value: 50, period: "all-time" },
+        rarity: "epic",
+        level: 4,
+        levelName: "Platinum",
+        points: 200
+    },
+    {
+        title: "Goal Supremacy",
+        description: "Complete 100 goals",
+        icon: "crown",
+        category: "goals",
+        criteria: { type: "goals-completed", value: 100, period: "all-time" },
+        rarity: "legendary",
+        level: 5,
+        levelName: "Diamond",
+        points: 350
+    },
+    // Subjects - Levels 1-4
     {
         title: "Subject Explorer",
         description: "Create your first subject",
@@ -95,8 +190,33 @@ const DEFAULT_ACHIEVEMENTS = [
         category: "subjects",
         criteria: { type: "subjects-mastered", value: 1, period: "all-time" },
         rarity: "common",
+        level: 1,
+        levelName: "Bronze",
         points: 10
     },
+    {
+        title: "Multi-Learner",
+        description: "Study 5 different subjects",
+        icon: "books",
+        category: "subjects",
+        criteria: { type: "subjects-mastered", value: 5, period: "all-time" },
+        rarity: "rare",
+        level: 2,
+        levelName: "Silver",
+        points: 75
+    },
+    {
+        title: "Universal Scholar",
+        description: "Study 10 different subjects",
+        icon: "globe",
+        category: "subjects",
+        criteria: { type: "subjects-mastered", value: 10, period: "all-time" },
+        rarity: "epic",
+        level: 4,
+        levelName: "Platinum",
+        points: 180
+    },
+    // Tasks - Levels 1-5
     {
         title: "Task Manager",
         description: "Complete your first task",
@@ -104,6 +224,8 @@ const DEFAULT_ACHIEVEMENTS = [
         category: "tasks",
         criteria: { type: "tasks-completed", value: 1, period: "all-time" },
         rarity: "common",
+        level: 1,
+        levelName: "Bronze",
         points: 15
     },
     {
@@ -113,7 +235,65 @@ const DEFAULT_ACHIEVEMENTS = [
         category: "tasks",
         criteria: { type: "tasks-completed", value: 50, period: "all-time" },
         rarity: "rare",
+        level: 2,
+        levelName: "Silver",
         points: 80
+    },
+    {
+        title: "Task Dominator",
+        description: "Complete 200 tasks",
+        icon: "zap",
+        category: "tasks",
+        criteria: { type: "tasks-completed", value: 200, period: "all-time" },
+        rarity: "epic",
+        level: 4,
+        levelName: "Platinum",
+        points: 200
+    },
+    {
+        title: "Task God",
+        description: "Complete 500 tasks",
+        icon: "lightning-bold",
+        category: "tasks",
+        criteria: { type: "tasks-completed", value: 500, period: "all-time" },
+        rarity: "legendary",
+        level: 5,
+        levelName: "Diamond",
+        points: 400
+    },
+    // Special achievements
+    {
+        title: "Early Bird",
+        description: "Study before 8 AM",
+        icon: "sunrise",
+        category: "special",
+        criteria: { type: "sessions-count", value: 5, period: "all-time" },
+        rarity: "rare",
+        level: 2,
+        levelName: "Silver",
+        points: 60
+    },
+    {
+        title: "Night Owl",
+        description: "Study after 10 PM",
+        icon: "moon",
+        category: "special",
+        criteria: { type: "sessions-count", value: 5, period: "all-time" },
+        rarity: "rare",
+        level: 2,
+        levelName: "Silver",
+        points: 60
+    },
+    {
+        title: "Super Focus",
+        description: "Complete a 2-hour study session",
+        icon: "lightning",
+        category: "special",
+        criteria: { type: "sessions-count", value: 1, period: "all-time" },
+        rarity: "epic",
+        level: 3,
+        levelName: "Gold",
+        points: 120
     }
 ];
 
@@ -240,6 +420,36 @@ switch (achievement.criteria.type) {
             await achievement.save();
         }
 
+        // Update user level and points if new achievements were unlocked
+        if (unlockedAchievements.length > 0) {
+            const User = require('../models/User');
+            const user = await User.findById(req.user.id);
+            const totalPoints = unlockedAchievements.reduce((sum, a) => sum + a.points, 0);
+            
+            user.achievementPoints += totalPoints;
+            user.totalAchievementsUnlocked += unlockedAchievements.length;
+
+            // Update level based on points
+            if (user.achievementPoints >= 3000) {
+                user.achievementLevel = 5;
+                user.achievementLevelName = 'Diamond';
+            } else if (user.achievementPoints >= 1500) {
+                user.achievementLevel = 4;
+                user.achievementLevelName = 'Platinum';
+            } else if (user.achievementPoints >= 750) {
+                user.achievementLevel = 3;
+                user.achievementLevelName = 'Gold';
+            } else if (user.achievementPoints >= 250) {
+                user.achievementLevel = 2;
+                user.achievementLevelName = 'Silver';
+            } else {
+                user.achievementLevel = 1;
+                user.achievementLevelName = 'Bronze';
+            }
+
+            await user.save();
+        }
+
         // Emit real-time events for unlocked achievements
         if (io && unlockedAchievements.length > 0) {
             io.to(`user_${req.user.id}`).emit('achievements-unlocked', unlockedAchievements);
@@ -261,13 +471,20 @@ switch (achievement.criteria.type) {
 router.get('/stats', protect, async (req, res) => {
     try {
         const achievements = await Achievement.find({ user: req.user.id });
+        const user = await require('../models/User').findById(req.user.id);
 
         const stats = {
             total: achievements.length,
             unlocked: achievements.filter(a => a.unlocked).length,
             totalPoints: achievements.filter(a => a.unlocked).reduce((sum, a) => sum + a.points, 0),
             byCategory: {},
-            byRarity: {}
+            byRarity: {},
+            userLevel: {
+                level: user.achievementLevel,
+                levelName: user.achievementLevelName,
+                points: user.achievementPoints,
+                totalUnlocked: user.totalAchievementsUnlocked
+            }
         };
 
         achievements.forEach(achievement => {
@@ -285,6 +502,57 @@ router.get('/stats', protect, async (req, res) => {
         });
 
         res.json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Get leaderboard by achievement level
+// @route   GET /api/achievements/leaderboard
+// @access  Public
+router.get('/leaderboard', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        const level = req.query.level; // Optional: filter by specific level
+
+        let query = {};
+        if (level) {
+            query.achievementLevel = level;
+        }
+
+        const User = require('../models/User');
+        const leaderboard = await User.find(query)
+            .select('username firstName lastName profileImage achievementLevel achievementLevelName achievementPoints totalAchievementsUnlocked')
+            .sort({ achievementLevel: -1, achievementPoints: -1 })
+            .limit(limit);
+
+        res.json(leaderboard);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Get achievements by level
+// @route   GET /api/achievements/by-level/:level
+// @access  Private
+router.get('/by-level/:level', protect, async (req, res) => {
+    try {
+        const level = parseInt(req.params.level);
+        if (level < 1 || level > 5) {
+            return res.status(400).json({ message: 'Level must be between 1 and 5' });
+        }
+
+        const achievements = await Achievement.find({ 
+            user: req.user.id,
+            level: level 
+        });
+
+        res.json({
+            level,
+            levelName: LEVEL_CONFIG[level].name,
+            color: LEVEL_CONFIG[level].color,
+            achievements
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

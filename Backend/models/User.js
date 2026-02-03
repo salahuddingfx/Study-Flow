@@ -27,6 +27,15 @@ const userSchema = mongoose.Schema({
     lastWeeklySummarySent: Date,
     monthlySummaryEnabled: { type: Boolean, default: true },
     lastMonthlySummarySent: Date,
+    // Achievement Level System
+    achievementPoints: { type: Number, default: 0 },
+    achievementLevel: { type: Number, default: 1, min: 1, max: 5 },
+    achievementLevelName: { 
+        type: String, 
+        enum: ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond'],
+        default: 'Bronze'
+    },
+    totalAchievementsUnlocked: { type: Number, default: 0 },
     // Calendar & public profile
     calendarToken: String,
     publicProfileToken: String,

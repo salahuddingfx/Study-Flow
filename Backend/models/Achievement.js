@@ -58,6 +58,17 @@ const achievementSchema = mongoose.Schema({
     points: {
         type: Number,
         default: 10
+    },
+    level: {
+        type: Number,
+        default: 1,
+        min: 1,
+        max: 5
+    },
+    levelName: {
+        type: String,
+        enum: ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond'],
+        default: 'Bronze'
     }
 }, {
     timestamps: true
