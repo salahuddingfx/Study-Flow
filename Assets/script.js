@@ -1300,6 +1300,7 @@ createApp({
                 
                 // Redirect after 2 seconds
                 setTimeout(() => {
+                    window.history.replaceState({}, document.title, window.location.pathname);
                     this.authMode = 'login';
                     this.isAuthenticated = false;
                     localStorage.removeItem('jwt');
@@ -1309,57 +1310,6 @@ createApp({
                 this.showInlineMessage('❌ ' + (error.message || 'Password reset failed'));
             } finally {
                 this.resetPasswordLoading = false;
-                const response = await this.apiRequest(`/api/user/reset-password/${this.resetToken}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        newPassword: this.resetPasswordForm.newPassword
-                    })
-                });
-                
-                this.showInlineMessage('Password reset successful! Redirecting to login...');
-                
-                // Clear URL and redirect to login
-                setTimeout(() => {
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    this.authMode = 'login';
-                    this.resetToken = null;
-                    this.resetPasswordForm = { newPassword: '', confirmPassword: '' };
-                }, 2000);
-            } catch (error) {
-                this.showInlineMessage('Password reset failed: ' + error.message);
-            }
-        },
-
-        async handleResetPassword() {
-            if (this.resetPasswordForm.newPassword !== this.resetPasswordForm.confirmPassword) {
-                this.showInlineMessage('Passwords do not match!');
-                return;
-            }
-            
-            if (this.resetPasswordForm.newPassword.length < 6) {
-                this.showInlineMessage('Password must be at least 6 characters!');
-                return;
-            }
-
-            try {
-                const response = await this.apiRequest(`/api/user/reset-password/${this.resetToken}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        newPassword: this.resetPasswordForm.newPassword
-                    })
-                });
-                
-                this.showInlineMessage('Password reset successful! Redirecting to login...');
-                
-                // Clear URL and redirect to login
-                setTimeout(() => {
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    this.authMode = 'login';
-                    this.resetToken = null;
-                    this.resetPasswordForm = { newPassword: '', confirmPassword: '' };
-                }, 2000);
-            } catch (error) {
-                this.showInlineMessage('Password reset failed: ' + error.message);
             }
         },
 
