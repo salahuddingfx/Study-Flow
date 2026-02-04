@@ -24,7 +24,7 @@ PORT=5000
 NODE_ENV=production
 
 # Database
-MONGO_URI=mongodb+srv://your-user:password@cluster.mongodb.net/?appName=StudyFlow
+MONGO_URI=you_mongo_uri here
 
 # Security
 JWT_SECRET=your-very-long-secret-key-min-32-chars

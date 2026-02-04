@@ -35,7 +35,7 @@
 ```
 Owner: salahuddin
 Repo Name: StudyFlow
-URL: https://github.com/salahuddin/StudyFlow
+URL: https://github.com/salahuddin/Study-Flow
 Description: Focus, Learn, Achieve
 Visibility: Public
 ```
@@ -71,7 +71,7 @@ git config user.email "your_email@gmail.com"
 
 ### **3. Add GitHub Remote**
 ```powershell
-git remote add origin https://github.com/salahuddin/StudyFlow.git
+git remote add origin https://github.com/salahuddin/Study-Flow.git
 ```
 
 ### **4. Add Files (respects .gitignore)**
