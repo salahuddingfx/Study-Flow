@@ -663,6 +663,11 @@ html:not(.hasTouch) select {
     max-width: 100%;
 }
 
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
 /* Prevent horizontal overflow globally */
 html, body {
     max-width: 100%;

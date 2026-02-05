@@ -2271,7 +2271,13 @@ createApp({
             
             if (!this.achievementLeaderboard || this.achievementLeaderboard.length === 0) return;
             
-            if (typeof Chart === 'undefined') return;
+            if (!this.ensureChartJsLoaded()) return;
+
+            const chartRect = canvas.getBoundingClientRect();
+            if (chartRect.width === 0 || chartRect.height === 0) {
+                setTimeout(() => this.renderLeaderboardChart(), 200);
+                return;
+            }
 
             const ctx = canvas.getContext('2d');
             
@@ -2354,6 +2360,33 @@ createApp({
                     }
                 }
             });
+        },
+
+        ensureChartJsLoaded() {
+            if (typeof Chart !== 'undefined') return true;
+
+            if (window.__studyflowChartJsLoading) return false;
+            window.__studyflowChartJsLoading = true;
+
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
+            script.async = true;
+            script.onload = () => {
+                window.__studyflowChartJsLoading = false;
+                if (this.currentView === 'analytics') {
+                    this.$nextTick(() => {
+                        this.updateCharts();
+                        this.renderLeaderboardChart();
+                    });
+                }
+            };
+            script.onerror = () => {
+                window.__studyflowChartJsLoading = false;
+                console.error('Chart.js failed to load from fallback CDN.');
+            };
+            document.head.appendChild(script);
+
+            return false;
         },
 
         async loadQuizStats() {
@@ -2751,9 +2784,15 @@ createApp({
             }
 
             // Check if Library is loaded
-            if (typeof Chart === 'undefined') {
-                console.warn('Chart.js not loaded yet. Retrying in 500ms...');
+            if (!this.ensureChartJsLoaded()) {
                 setTimeout(() => this.updateCharts(), 500);
+                return;
+            }
+
+            const studyRect = this.$refs.studyTimeChart.getBoundingClientRect();
+            const subjectRect = this.$refs.subjectChart.getBoundingClientRect();
+            if (studyRect.width === 0 || studyRect.height === 0 || subjectRect.width === 0 || subjectRect.height === 0) {
+                setTimeout(() => this.updateCharts(), 200);
                 return;
             }
 
