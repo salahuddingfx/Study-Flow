@@ -91,3 +91,7 @@ build/
 # PDF and Analysis files (local documentation)
 *.pdf
 PROJECT_ANALYSIS_AND_IMPROVEMENTS.md
+# Local Test Scripts
+Backend/test-*.js
+Backend/test.csv
+test-reset-link.html

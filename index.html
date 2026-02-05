@@ -745,27 +745,32 @@
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
      <div class="glass p-4 rounded-xl text-center">
       <i class="ph-bold ph-users text-3xl text-purple-400 mb-2"></i>
-      <div class="text-2xl font-bold">{{ adminStats.totalUsers }}</div>
+      <div v-if="adminLoaded.analytics" class="text-2xl font-bold">{{ adminStats.totalUsers }}</div>
+      <div v-else class="skeleton skeleton-lg w-16 mx-auto"></div>
       <div class="text-xs opacity-60">Total Users</div>
      </div>
      <div class="glass p-4 rounded-xl text-center">
       <i class="ph-bold ph-article text-3xl text-blue-400 mb-2"></i>
-      <div class="text-2xl font-bold">{{ adminStats.totalBlogs }}</div>
+      <div v-if="adminLoaded.analytics" class="text-2xl font-bold">{{ adminStats.totalBlogs }}</div>
+      <div v-else class="skeleton skeleton-lg w-16 mx-auto"></div>
       <div class="text-xs opacity-60">Blog Posts</div>
      </div>
      <div class="glass p-4 rounded-xl text-center">
       <i class="ph-bold ph-music-notes text-3xl text-green-400 mb-2"></i>
-      <div class="text-2xl font-bold">{{ adminStats.totalSongs }}</div>
+      <div v-if="adminLoaded.analytics" class="text-2xl font-bold">{{ adminStats.totalSongs }}</div>
+      <div v-else class="skeleton skeleton-lg w-16 mx-auto"></div>
       <div class="text-xs opacity-60">Songs</div>
      </div>
      <div class="glass p-4 rounded-xl text-center">
       <i class="ph-bold ph-clock text-3xl text-orange-400 mb-2"></i>
-      <div class="text-2xl font-bold">{{ adminStats.totalSessions }}</div>
+      <div v-if="adminLoaded.analytics" class="text-2xl font-bold">{{ adminStats.totalSessions }}</div>
+      <div v-else class="skeleton skeleton-lg w-16 mx-auto"></div>
       <div class="text-xs opacity-60">Sessions</div>
      </div>
      <div class="glass p-4 rounded-xl text-center">
       <i class="ph-bold ph-gauge text-3xl text-pink-400 mb-2"></i>
-        <div class="text-2xl font-bold">{{ adminStats.totalMinutes }}</div>
+        <div v-if="adminLoaded.analytics" class="text-2xl font-bold">{{ adminStats.totalMinutes }}</div>
+        <div v-else class="skeleton skeleton-lg w-16 mx-auto"></div>
       <div class="text-xs opacity-60">Total Minutes</div>
      </div>
     </div>
@@ -773,9 +778,14 @@
     <div class="glass rounded-2xl p-4 mb-6 h-64">
      <div class="flex items-center justify-between mb-3">
       <h4 class="text-lg font-semibold">All Users Study Time</h4>
-      <span class="text-xs opacity-60">Minutes by user</span>
+      <div class="flex items-center gap-2">
+       <span class="text-xs opacity-60">Minutes by user</span>
+       <button @click="exportAdminAnalyticsCSV" class="btn-secondary px-3 py-1 rounded-lg text-xs">Export CSV</button>
+       <button @click="exportAdminAnalyticsPDF" class="btn-secondary px-3 py-1 rounded-lg text-xs">Export PDF</button>
+      </div>
      </div>
-     <canvas ref="adminSessionsChart" class="w-full h-full"></canvas>
+     <div v-if="!adminLoaded.analytics" class="skeleton rounded-xl w-full h-[200px]"></div>
+     <canvas v-else ref="adminSessionsChart" class="w-full h-full"></canvas>
     </div>
 
      <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -788,28 +798,65 @@
       <button @click="adminActiveTab = 'songs'" :class="adminActiveTab === 'songs' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-6 py-2 rounded-xl font-medium whitespace-nowrap">
        <i class="ph-bold ph-music-notes"></i> Songs
       </button>
+      <button @click="adminActiveTab = 'audit'" :class="adminActiveTab === 'audit' ? 'bg-purple-600 text-white' : 'btn-secondary'" class="px-6 py-2 rounded-xl font-medium whitespace-nowrap">
+       <i class="ph-bold ph-clipboard-text"></i> Audit Log
+      </button>
      </div>
 
      <div v-if="adminActiveTab === 'users'" class="animate-fadeIn">
       <h4 class="text-xl font-bold mb-4 text-neon">User Management</h4>
+       <div class="glass rounded-xl p-4 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+         <input v-model="adminUserSearch" @input="adminApplyUserFilters" type="text" placeholder="Search by name, username, or email" class="w-full px-4 py-2 rounded-xl glass-strong">
+        <select v-model="adminUserRoleFilter" @change="adminApplyUserFilters" class="w-full px-4 py-2 rounded-xl glass-strong">
+          <option value="all">All Roles</option>
+          <option value="admin">Admin</option>
+         <option value="subadmin">Sub Admin</option>
+          <option value="user">User</option>
+         </select>
+        <div class="flex items-center gap-2">
+         <button @click="bulkSetRole('subadmin')" class="btn-secondary px-3 py-2 rounded-xl text-sm">Bulk Promote (Sub)</button>
+         <button @click="bulkSetRole('user')" class="btn-secondary px-3 py-2 rounded-xl text-sm">Bulk Demote</button>
+          <button @click="bulkDeleteUsers" class="btn-secondary px-3 py-2 rounded-xl text-sm text-red-300">Bulk Delete</button>
+         </div>
+        </div>
+       </div>
       <div class="glass rounded-xl p-6 max-h-96 overflow-y-auto custom-scrollbar">
-       <div v-if="allUsers.length === 0" class="text-center py-8 opacity-70">
+         <div class="flex items-center justify-between mb-3">
+          <label class="flex items-center gap-2 text-sm opacity-80">
+           <input type="checkbox" :checked="adminAllVisibleSelected" @change="toggleSelectAllUsers">
+           Select all on page
+          </label>
+          <div class="text-xs opacity-60">Selected: {{ adminSelectedUserIds.length }}</div>
+         </div>
+         <div v-if="!adminLoaded.users" class="space-y-3">
+          <div class="skeleton skeleton-xl rounded-xl"></div>
+          <div class="skeleton skeleton-xl rounded-xl"></div>
+          <div class="skeleton skeleton-xl rounded-xl"></div>
+         </div>
+         <div v-else-if="allUsers.length === 0" class="text-center py-8 opacity-70">
         <i class="ph-bold ph-users text-5xl mb-3"></i>
         <p>No users found</p>
        </div>
        <div v-else class="space-y-3">
         <div v-for="user in allUsers" :key="user._id" class="glass-strong p-4 rounded-xl flex items-center justify-between">
          <div class="flex items-center gap-3">
+          <input type="checkbox" :checked="adminSelectedUserIds.includes(user._id)" @change="toggleSelectUser(user._id)">
           <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg font-bold">
            {{ user.username.charAt(0).toUpperCase() }}
           </div>
           <div>
            <div class="font-semibold">{{ user.firstName }} {{ user.lastName }}</div>
            <div class="text-sm opacity-70">@{{ user.username }} • {{ user.email }}</div>
-           <div class="text-xs opacity-50">{{ user.role === 'admin' ? '👑 Admin' : '👤 User' }}</div>
+           <div class="text-xs opacity-50">
+            {{ user.role === 'admin' ? '👑 Admin' : (user.role === 'subadmin' ? '🛡️ Sub Admin' : '👤 User') }}
+           </div>
           </div>
          </div>
-         <div v-if="user.role !== 'admin'" class="flex gap-2">
+         <div v-if="user.role === 'user'" class="flex gap-2">
+           <button @click="promoteUser(user._id)" class="text-purple-300 hover:text-purple-200 p-2 rounded-lg hover:bg-purple-500/10" title="Promote to Sub Admin">
+            <i class="ph-bold ph-shield-check text-xl"></i>
+           </button>
             <button @click="adminChangePassword(user._id)" class="text-yellow-400 hover:text-yellow-300 p-2 rounded-lg hover:bg-yellow-500/10" title="Change Password">
              <i class="ph-bold ph-key text-xl"></i>
             </button>
@@ -817,8 +864,18 @@
              <i class="ph-bold ph-trash text-xl"></i>
             </button>
          </div>
+         <div v-else class="flex gap-2">
+          <button @click="demoteUser(user._id)" class="text-orange-300 hover:text-orange-200 p-2 rounded-lg hover:bg-orange-500/10" title="Demote to User">
+           <i class="ph-bold ph-arrow-down text-xl"></i>
+          </button>
+         </div>
         </div>
        </div>
+      </div>
+      <div class="flex items-center justify-between mt-4">
+       <button @click="adminChangePage(-1)" class="btn-secondary px-3 py-2 rounded-lg" :disabled="adminUserPage <= 1">Prev</button>
+       <div class="text-sm opacity-70">Page {{ adminUserPage }} of {{ adminUsersTotalPages }}</div>
+       <button @click="adminChangePage(1)" class="btn-secondary px-3 py-2 rounded-lg" :disabled="adminUserPage >= adminUsersTotalPages">Next</button>
       </div>
      </div>
 
@@ -843,7 +900,12 @@
       </div>
 
       <div class="glass rounded-xl p-6 max-h-96 overflow-y-auto">
-       <div v-if="adminBlogs.length === 0" class="text-center py-8 opacity-70">
+         <div v-if="!adminLoaded.blogs" class="space-y-3">
+          <div class="skeleton skeleton-xl rounded-xl"></div>
+          <div class="skeleton skeleton-xl rounded-xl"></div>
+          <div class="skeleton skeleton-xl rounded-xl"></div>
+         </div>
+         <div v-else-if="adminBlogs.length === 0" class="text-center py-8 opacity-70">
         <i class="ph-bold ph-article text-5xl mb-3"></i>
         <p>No blogs yet</p>
        </div>
@@ -885,7 +947,12 @@
       </div>
 
       <div class="glass rounded-xl p-6 max-h-96 overflow-y-auto">
-       <div v-if="adminSongs.length === 0" class="text-center py-8 opacity-70">
+        <div v-if="!adminLoaded.songs" class="space-y-3">
+         <div class="skeleton skeleton-xl rounded-xl"></div>
+         <div class="skeleton skeleton-xl rounded-xl"></div>
+         <div class="skeleton skeleton-xl rounded-xl"></div>
+        </div>
+        <div v-else-if="adminSongs.length === 0" class="text-center py-8 opacity-70">
         <i class="ph-bold ph-music-notes text-5xl mb-3"></i>
         <p>No songs yet</p>
        </div>
@@ -1265,6 +1332,38 @@
       </div>
      </div>
     </div>
+
+      <div v-if="adminActiveTab === 'audit'" class="animate-fadeIn">
+       <h4 class="text-xl font-bold mb-4">Audit Log</h4>
+       <div class="glass rounded-xl p-6 max-h-96 overflow-y-auto custom-scrollbar">
+        <div v-if="adminAuditLoading" class="space-y-3">
+         <div class="skeleton skeleton-xl rounded-xl"></div>
+         <div class="skeleton skeleton-xl rounded-xl"></div>
+         <div class="skeleton skeleton-xl rounded-xl"></div>
+        </div>
+        <div v-else-if="adminAuditLogs.length === 0" class="text-center py-8 opacity-70">
+         <i class="ph-bold ph-clipboard-text text-5xl mb-3"></i>
+         <p>No audit logs yet</p>
+        </div>
+        <div v-else class="space-y-3">
+         <div v-for="log in adminAuditLogs" :key="log._id" class="glass-strong p-4 rounded-xl">
+          <div class="flex items-center justify-between">
+        <div>
+         <div class="font-semibold">{{ log.action }}</div>
+         <div class="text-xs opacity-70">By {{ log.actorUsername }} • {{ formatDate(log.createdAt) }}</div>
+         <div class="text-xs opacity-50" v-if="log.targetUsername">Target: {{ log.targetUsername }}</div>
+        </div>
+        <div class="text-xs opacity-60" v-if="log.metadata && log.metadata.role">Role: {{ log.metadata.role }}</div>
+          </div>
+         </div>
+        </div>
+       </div>
+       <div class="flex items-center justify-between mt-4">
+        <button @click="adminAuditPage > 1 ? (adminAuditPage--, loadAdminAuditLogs(true)) : null" class="btn-secondary px-3 py-2 rounded-lg" :disabled="adminAuditPage <= 1">Prev</button>
+        <div class="text-sm opacity-70">Page {{ adminAuditPage }} of {{ adminAuditTotalPages }}</div>
+        <button @click="adminAuditPage < adminAuditTotalPages ? (adminAuditPage++, loadAdminAuditLogs(true)) : null" class="btn-secondary px-3 py-2 rounded-lg" :disabled="adminAuditPage >= adminAuditTotalPages">Next</button>
+       </div>
+      </div>
    </div>
 
    <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-6">
@@ -1934,6 +2033,10 @@
 
             <!-- Input Area -->
             <div class="p-4 border-t border-white/10 bg-black/20 backdrop-blur-md">
+              <div class="flex items-center gap-2 mb-3">
+                <button @click="generateStudyPlan" class="btn-secondary px-3 py-2 rounded-lg text-xs">Study Plan</button>
+                <button @click="getWeeklySummary" class="btn-secondary px-3 py-2 rounded-lg text-xs">Weekly Summary</button>
+              </div>
                 <div class="relative">
                     <input 
                         v-model="aiPrompt" 

@@ -12,6 +12,20 @@ const Quiz = require('../models/Quiz');
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
 // Use user's preferred model (optimized for quota)
 const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+// Public-facing developer info (avoid exposing multiple contacts)
+const PUBLIC_DEV_NAME = process.env.PUBLIC_DEV_NAME || 'Salah Uddin Kader';
+const PUBLIC_DEV_CONTACT = process.env.PUBLIC_DEV_CONTACT || 'salauddinkaderappy@gmail.com';
+const PUBLIC_DEV_CONTACT_URL = process.env.PUBLIC_DEV_CONTACT_URL || '';
+// Optional JSON array of contacts: [{"label":"Email","value":"sala..."}, {"label":"GitHub","value":"https://..."}]
+let PUBLIC_DEV_CONTACTS = [];
+try {
+    PUBLIC_DEV_CONTACTS = process.env.PUBLIC_DEV_CONTACTS
+        ? JSON.parse(process.env.PUBLIC_DEV_CONTACTS)
+        : [];
+} catch (err) {
+    console.warn('Invalid PUBLIC_DEV_CONTACTS JSON. Falling back to single contact.');
+    PUBLIC_DEV_CONTACTS = [];
+}
 
 // AI Route now protected to access user data
 router.post('/ask', protect, async (req, res) => {
@@ -23,6 +37,33 @@ router.post('/ask', protect, async (req, res) => {
         const { prompt } = req.body;
         const userId = req.user.id;
         const userName = req.user.firstName ? `${req.user.firstName} ${req.user.lastName}` : req.user.username;
+        const normalizedPrompt = (prompt || '').toLowerCase();
+
+        // Fast path: developer or contact info questions (avoid hallucinations or listing multiple contacts)
+        const isDeveloperQuestion = /\b(developer|developed|creator|owner|founder|author|who made|who created|who built|made this|built this)\b|\b(ke ban|banay|banano|banai|developer ke|kader|salah)\b/.test(normalizedPrompt);
+        const isContactQuestion = /\b(contact|email|mail|phone|whatsapp|facebook|linkedin|github)\b|\b(contact info|যোগাযোগ|ইমেইল|ফোন)\b/.test(normalizedPrompt);
+
+        if (isDeveloperQuestion || isContactQuestion) {
+            let contactLine = '';
+            if (Array.isArray(PUBLIC_DEV_CONTACTS) && PUBLIC_DEV_CONTACTS.length > 0) {
+                const formatted = PUBLIC_DEV_CONTACTS
+                    .filter(c => c && c.label && c.value)
+                    .map(c => `${c.label}: ${c.value}`)
+                    .join(' | ');
+                contactLine = `Contact: ${formatted}`;
+            } else if (PUBLIC_DEV_CONTACT_URL) {
+                contactLine = `Contact: ${PUBLIC_DEV_CONTACT_URL}`;
+            } else {
+                contactLine = `Contact: ${PUBLIC_DEV_CONTACT}`;
+            }
+            const answer = `${timeGreeting}, ${userName}! StudyFlow was developed by ${PUBLIC_DEV_NAME}. ${contactLine}`;
+            return res.json({
+                answer,
+                model: 'static',
+                timestamp: new Date().toISOString(),
+                actionPerformed: null
+            });
+        }
         // Get current time in Bangladesh timezone
         const now = new Date();
         const today = now.toLocaleString('en-US', { 
@@ -37,6 +78,12 @@ router.post('/ask', protect, async (req, res) => {
         });
         const dayOfWeek = now.toLocaleString('en-US', { weekday: 'long', timeZone: 'Asia/Dhaka' });
         const currentHour = parseInt(now.toLocaleString('en-US', { hour: '2-digit', hour12: false, timeZone: 'Asia/Dhaka' }));
+        // Time-based greeting
+        let timeGreeting = 'Hello';
+        if (currentHour >= 5 && currentHour < 12) timeGreeting = 'Good morning';
+        else if (currentHour >= 12 && currentHour < 17) timeGreeting = 'Good afternoon';
+        else if (currentHour >= 17 && currentHour < 21) timeGreeting = 'Good evening';
+        else timeGreeting = 'Good night';
         // Fetch user data for context
         const [subjects, tasks, sessions, goals] = await Promise.all([
             Subject.find({ user: userId }),
@@ -58,13 +105,6 @@ router.post('/ask', protect, async (req, res) => {
 
         const model = genAI.getGenerativeModel({ model: DEFAULT_MODEL });
         
-        // Time-based greeting
-        let timeGreeting = 'Hello';
-        if (currentHour >= 5 && currentHour < 12) timeGreeting = 'Good morning';
-        else if (currentHour >= 12 && currentHour < 17) timeGreeting = 'Good afternoon';
-        else if (currentHour >= 17 && currentHour < 21) timeGreeting = 'Good evening';
-        else timeGreeting = 'Good night';
-
         // Enhanced prompt with context
         const fullPrompt = `
             You are "StudyFlow AI", a friendly and smart personal study assistant for ${userName}.
@@ -109,7 +149,11 @@ router.post('/ask', protect, async (req, res) => {
                • add_subject: {name: string, category?: string, color?: string}
                • set_goal: {title: string, target: number, unit: string, type: "daily"|"weekly"|"monthly"}
                
-            7. SMART RESPONSES:
+                7. ATTRIBUTION & CONTACT RULES (CRITICAL):
+                    - StudyFlow was developed by ${PUBLIC_DEV_NAME}. NEVER claim Google or any other company as the developer.
+                    - If asked for developer contact info, use ONLY the configured contacts.
+                    - Do NOT invent or guess contacts.
+                8. SMART RESPONSES:
                - Questions/chat → Reply normally (NO JSON)
                - Action requests → Reply + JSON
                - Motivational advice → Be inspiring
@@ -226,6 +270,113 @@ router.post('/ask', protect, async (req, res) => {
             ? 'Invalid API key. Check GEMINI_API_KEY.'
             : 'AI processing failed';
         res.status(500).json({ message });
+    }
+});
+
+// AI Study Plan Generator
+router.post('/study-plan', protect, async (req, res) => {
+    try {
+        if (!genAI) {
+            return res.json({ plan: 'AI service is not available right now.' });
+        }
+
+        const { focusArea = '', timeframe = '7 days', dailyHours = 2 } = req.body || {};
+        const userId = req.user.id;
+        const userName = req.user.firstName ? `${req.user.firstName} ${req.user.lastName}` : req.user.username;
+
+        const [subjects, tasks, goals] = await Promise.all([
+            Subject.find({ user: userId }),
+            Task.find({ user: userId, completed: false }).limit(10),
+            Goal.find({ user: userId, current: { $lt: 100 } }).limit(5)
+        ]);
+
+        const planPrompt = `
+You are StudyFlow AI. Create a concise, actionable study plan.
+
+User: ${userName}
+Timeframe: ${timeframe}
+Daily Hours: ${dailyHours}
+Focus Area: ${focusArea || 'General study improvement'}
+
+Current Subjects: ${subjects.map(s => s.name).join(', ') || 'None'}
+Pending Tasks: ${tasks.map(t => t.title).join(', ') || 'None'}
+Active Goals: ${goals.map(g => `${g.title} (${g.target} ${g.unit})`).join(', ') || 'None'}
+
+Rules:
+- Provide a day-by-day plan for the timeframe.
+- Keep it under 10 bullets total if possible.
+- Include short breaks and revision time.
+- Output plain text only.
+        `;
+
+        const model = genAI.getGenerativeModel({ model: DEFAULT_MODEL });
+        const result = await model.generateContent(planPrompt);
+        const response = await result.response;
+        const text = response.text();
+
+        res.json({ plan: text, timestamp: new Date().toISOString() });
+    } catch (error) {
+        console.error('AI Study Plan Error:', error);
+        res.status(500).json({ message: 'Failed to generate study plan' });
+    }
+});
+
+// AI Weekly Summary
+router.get('/weekly-summary', protect, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userName = req.user.firstName ? `${req.user.firstName} ${req.user.lastName}` : req.user.username;
+
+        const now = new Date();
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+        const [sessions, completedTasks] = await Promise.all([
+            Session.find({ user: userId, createdAt: { $gte: weekAgo } }),
+            Task.find({ user: userId, completed: true, updatedAt: { $gte: weekAgo } })
+        ]);
+
+        const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+        const totalSessions = sessions.length;
+        const subjects = {};
+        sessions.forEach(s => {
+            const subject = s.subject || 'Unspecified';
+            subjects[subject] = (subjects[subject] || 0) + (s.duration || 0);
+        });
+
+        if (!genAI) {
+            return res.json({
+                summary: `Weekly summary for ${userName}: ${totalSessions} sessions, ${totalMinutes} minutes, ${completedTasks.length} tasks completed.`,
+                stats: { totalMinutes, totalSessions, completedTasks: completedTasks.length, subjects }
+            });
+        }
+
+        const summaryPrompt = `
+You are StudyFlow AI. Write a short, motivational weekly summary (2-4 sentences).
+
+User: ${userName}
+Total Sessions: ${totalSessions}
+Total Minutes: ${totalMinutes}
+Completed Tasks: ${completedTasks.length}
+Top Subjects: ${Object.entries(subjects).map(([k, v]) => `${k}: ${v} mins`).join(', ') || 'None'}
+
+Rules:
+- Encourage consistency.
+- Mention one improvement tip.
+- Output plain text only.
+        `;
+
+        const model = genAI.getGenerativeModel({ model: DEFAULT_MODEL });
+        const result = await model.generateContent(summaryPrompt);
+        const response = await result.response;
+        const text = response.text();
+
+        res.json({
+            summary: text,
+            stats: { totalMinutes, totalSessions, completedTasks: completedTasks.length, subjects }
+        });
+    } catch (error) {
+        console.error('AI Weekly Summary Error:', error);
+        res.status(500).json({ message: 'Failed to generate weekly summary' });
     }
 });
 

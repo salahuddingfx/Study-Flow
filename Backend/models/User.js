@@ -12,8 +12,8 @@ const userSchema = mongoose.Schema({
     // 👇 নতুন রোল ফিল্ড যোগ করা হয়েছে
     role: {
         type: String,
-        enum: ['user', 'admin'], // শুধু user বা admin হতে পারবে
-        default: 'user'          // অটোমেটিক 'user' সেট হবে
+        enum: ['user', 'subadmin', 'admin'], // user, subadmin, admin
+        default: 'user'
     },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
@@ -39,7 +39,8 @@ const userSchema = mongoose.Schema({
     // Calendar & public profile
     calendarToken: String,
     publicProfileToken: String,
-    publicProfileEnabled: { type: Boolean, default: false }
+    publicProfileEnabled: { type: Boolean, default: false },
+    lastLoginAt: Date
 }, { timestamps: true });
 
 // Match password method

@@ -3,6 +3,7 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const sendEmail = require('../utils/sendEmail');
+const AuditLog = require('../models/AuditLog');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -27,15 +28,53 @@ const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        const isSuperAdminMatch =
+            process.env.SUPER_ADMIN_USERNAME &&
+            process.env.SUPER_ADMIN_EMAIL &&
+            username === process.env.SUPER_ADMIN_USERNAME &&
+            email === process.env.SUPER_ADMIN_EMAIL;
+
         const user = await User.create({
             username,
             email,
             password: hashedPassword,
             firstName,
-            lastName
+            lastName,
+            role: isSuperAdminMatch ? 'admin' : 'user'
         });
 
+        try {
+            await AuditLog.create({
+                actor: user._id,
+                actorUsername: user.username,
+                action: 'register',
+                targetUser: user._id,
+                targetUsername: user.username,
+                metadata: { role: user.role },
+                ip: req.ip,
+                userAgent: req.get('user-agent')
+            });
+        } catch (err) {
+            console.error('AuditLog error:', err.message);
+        }
+
         if (user) {
+            // Notify Admin about new user registration
+            const adminEmail = process.env.SUPER_ADMIN_EMAIL || process.env.FROM_EMAIL;
+            if (adminEmail) {
+                try {
+                    await sendEmail({
+                        email: adminEmail,
+                        subject: 'New User Registered - StudyFlow',
+                        message: `A new user has registered:\nUsername: ${user.username}\nEmail: ${user.email}\nName: ${user.firstName} ${user.lastName}`,
+                        template: 'info',
+                        heading: 'New Registration'
+                    });
+                } catch (err) {
+                    console.error('Admin registration email failed:', err.message);
+                }
+            }
+
             res.status(201).json({
                 _id: user.id,
                 username: user.username,
@@ -62,6 +101,37 @@ const loginUser = async (req, res) => {
         const user = await User.findOne({ username });
 
         if (user && (await bcrypt.compare(password, user.password))) {
+            const isSuperAdminMatch =
+                process.env.SUPER_ADMIN_USERNAME &&
+                process.env.SUPER_ADMIN_EMAIL &&
+                user.username === process.env.SUPER_ADMIN_USERNAME &&
+                user.email === process.env.SUPER_ADMIN_EMAIL;
+
+            if (isSuperAdminMatch && user.role !== 'admin') {
+                user.role = 'admin';
+            }
+
+            const isFirstLogin = !user.lastLoginAt;
+            user.lastLoginAt = new Date();
+            await user.save();
+
+            try {
+                await AuditLog.create({
+                    actor: user._id,
+                    actorUsername: user.username,
+                    action: 'login',
+                    targetUser: user._id,
+                    targetUsername: user.username,
+                    metadata: { role: user.role, firstLogin: isFirstLogin },
+                    ip: req.ip,
+                    userAgent: req.get('user-agent')
+                });
+            } catch (err) {
+                console.error('AuditLog error:', err.message);
+            }
+
+            // Removed "First Login" email notification as it has been moved to Registration
+
             res.json({
                 _id: user.id,
                 username: user.username,

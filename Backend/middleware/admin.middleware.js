@@ -9,7 +9,7 @@ const admin = async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const user = await User.findById(decoded.id).select('-password');
             
-            if (user && user.role === 'admin') {
+            if (user && (user.role === 'admin' || user.role === 'subadmin')) {
                 req.user = user;
                 next();
             } else {

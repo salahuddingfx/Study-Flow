@@ -272,6 +272,13 @@ createApp({
             // Admin Panel
             showAdminPanel: false,
             isAdmin: false,
+            adminActiveTab: 'users',
+            adminUserSearch: '',
+            adminUserRoleFilter: 'all',
+            adminUserPage: 1,
+            adminUserPageSize: 10,
+            adminUsersTotal: 0,
+            adminSelectedUserIds: [],
             allUsers: [],
             adminStats: {
                 totalUsers: 0,
@@ -288,8 +295,20 @@ createApp({
             },
             adminSessionsChart: null,
             adminLoading: false,
+            adminLoaded: {
+                analytics: false,
+                users: false,
+                blogs: false,
+                songs: false,
+                audit: false
+            },
             adminBlogs: [],
             adminSongs: [],
+            adminAuditLogs: [],
+            adminAuditPage: 1,
+            adminAuditPageSize: 10,
+            adminAuditTotal: 0,
+            adminAuditLoading: false,
             newBlog: {
                 title: '',
                 content: '',
@@ -697,6 +716,18 @@ createApp({
             return this.tasks.filter(t => t.completed).length;
         },
 
+        adminUsersTotalPages() {
+            return Math.max(Math.ceil(this.adminUsersTotal / this.adminUserPageSize), 1);
+        },
+
+        adminAuditTotalPages() {
+            return Math.max(Math.ceil(this.adminAuditTotal / this.adminAuditPageSize), 1);
+        },
+
+        adminAllVisibleSelected() {
+            return this.allUsers.length > 0 && this.allUsers.every(u => this.adminSelectedUserIds.includes(u._id));
+        },
+
         subjectStats() {
             const stats = {};
             this.sessions.forEach(session => {
@@ -931,6 +962,10 @@ createApp({
                 headers['Authorization'] = `Bearer ${this.authToken}`;
             }
 
+            const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+            const altBase5001 = `http://${location.hostname}:5001`;
+            const altBase5000 = `http://${location.hostname}:5000`;
+
             try {
                 const response = await fetch(url, {
                     ...options,
@@ -945,6 +980,49 @@ createApp({
 
                 return data;
             } catch (error) {
+                // Local fallback: if 5000 is down, retry on 5001
+                if (isLocal && this.API_BASE_URL.includes(':5000')) {
+                    try {
+                        const retryResponse = await fetch(`${altBase5001}${endpoint}`, {
+                            ...options,
+                            headers
+                        });
+
+                        const retryData = await retryResponse.json();
+
+                        if (!retryResponse.ok) {
+                            throw new Error(retryData.message || 'API request failed');
+                        }
+
+                        this.API_BASE_URL = altBase5001;
+                        return retryData;
+                    } catch (retryError) {
+                        console.error('API Error:', retryError);
+                        throw retryError;
+                    }
+                }
+
+                if (isLocal && this.API_BASE_URL.includes(':5001')) {
+                    try {
+                        const retryResponse = await fetch(`${altBase5000}${endpoint}`, {
+                            ...options,
+                            headers
+                        });
+
+                        const retryData = await retryResponse.json();
+
+                        if (!retryResponse.ok) {
+                            throw new Error(retryData.message || 'API request failed');
+                        }
+
+                        this.API_BASE_URL = altBase5000;
+                        return retryData;
+                    } catch (retryError) {
+                        console.error('API Error:', retryError);
+                        throw retryError;
+                    }
+                }
+
                 console.error('API Error:', error);
                 throw error;
             }
@@ -3189,63 +3267,129 @@ createApp({
 
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
-                
-                // 1. Header
-                doc.setFontSize(22);
-                doc.setTextColor(139, 92, 246); // Purple
-                doc.text(`StudyFlow Report`, 20, 20);
-                
-                // 2. User Info
-                doc.setFontSize(12);
-                doc.setTextColor(0, 0, 0);
-                doc.text(`User: ${this.currentUser}`, 20, 30);
-                doc.text(`Email: ${this.userEmail}`, 20, 36);
-                doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 42);
-                
-                // Divider
-                doc.setDrawColor(200, 200, 200);
-                doc.line(20, 48, 190, 48);
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
 
-                // 3. Statistics
-                doc.setFontSize(16);
-                doc.setTextColor(100, 100, 100);
-                doc.text('Statistics', 20, 60);
+                // Helper to add border
+                const addBorder = () => {
+                    doc.setDrawColor(139, 92, 246); // Purple
+                    doc.setLineWidth(1);
+                    doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
+                };
+
+                // 1. Setup & Header
+                addBorder();
                 
+                // Header Background
+                doc.setFillColor(245, 245, 250);
+                doc.rect(6, 6, pageWidth - 12, 30, 'F');
+
+                // Title
+                doc.setFontSize(24);
+                doc.setTextColor(139, 92, 246);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`StudyFlow Report`, 20, 25);
+
+                // Date
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.setFont('helvetica', 'normal');
+                doc.text(new Date().toLocaleDateString(), pageWidth - 20, 25, { align: 'right' });
+
+                // 2. User Box
+                doc.setDrawColor(220, 220, 220);
+                doc.setFillColor(255, 255, 255);
+                doc.roundedRect(20, 45, pageWidth - 40, 25, 3, 3, 'S');
+
                 doc.setFontSize(12);
                 doc.setTextColor(0, 0, 0);
-                doc.text(`• Total Focus Time: ${Math.floor(this.totalFocusTime / 60)}h ${this.totalFocusTime % 60}m`, 25, 70);
-                doc.text(`• Total Sessions: ${this.totalSessions}`, 25, 78);
-                doc.text(`• Completed Tasks: ${this.completedTasksCount}`, 25, 86);
-                doc.text(`• Current Streak: ${this.currentStreak} days`, 25, 94);
                 
-                // 4. Pending Tasks List
+                doc.text(`User:`, 25, 55);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${this.currentUser}`, 50, 55);
+                
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Email:`, 25, 63);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${this.userEmail}`, 50, 63);
+
+                // 3. Statistics Grid
+                doc.setFont('helvetica', 'bold');
                 doc.setFontSize(16);
-                doc.setTextColor(100, 100, 100);
-                doc.text('Pending Tasks', 20, 110);
+                doc.setTextColor(139, 92, 246);
+                doc.text('Statistics', 20, 90);
+
+                const statsY = 100;
+                doc.setTextColor(50, 50, 50);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
                 
-                let y = 120;
+                // Labels
+                doc.text('FOCUS TIME', 25, statsY);
+                doc.text('TOTAL SESSIONS', 75, statsY);
+                doc.text('TASKS DONE', 125, statsY);
+                doc.text('STREAK', 175, statsY);
+
+                // Values
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.setFont('helvetica', 'normal');
+                
+                doc.text(`${Math.floor(this.totalFocusTime / 60)}h ${this.totalFocusTime % 60}m`, 25, statsY + 8);
+                doc.text(`${this.totalSessions}`, 75, statsY + 8);
+                doc.text(`${this.completedTasksCount}`, 125, statsY + 8);
+                doc.text(`${this.currentStreak} d`, 175, statsY + 8);
+
+                // Divider
+                doc.setDrawColor(230, 230, 230);
+                doc.setLineWidth(0.5);
+                doc.line(20, statsY + 20, pageWidth - 20, statsY + 20);
+
+                // 4. Pending Tasks
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.setTextColor(139, 92, 246);
+                doc.text('Pending Tasks', 20, statsY + 35);
+
+                let y = statsY + 45;
                 const pendingTasks = this.tasks.filter(t => !t.completed);
                 
                 if (pendingTasks.length > 0) {
                     doc.setFontSize(11);
                     doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'normal');
                     
                     pendingTasks.forEach((task, index) => {
-                        // Add new page if list is too long
-                        if (y > 270) { 
-                            doc.addPage(); 
-                            y = 20; 
+                        if (y > pageHeight - 30) {
+                            doc.addPage();
+                            addBorder();
+                            y = 20;
                         }
-                        doc.text(`${index + 1}. ${task.text}`, 25, y);
-                        y += 8;
+                        
+                        // Bullet
+                        doc.setFillColor(139, 92, 246);
+                        doc.circle(25, y - 1.5, 1, 'F');
+                        
+                        doc.text(`${task.text}`, 30, y);
+                        y += 10;
                     });
                 } else {
                     doc.setFontSize(11);
                     doc.setTextColor(150, 150, 150);
+                    doc.setFont('helvetica', 'italic');
                     doc.text('No pending tasks! Great job!', 25, y);
                 }
 
-                // 5. Save PDF
+                // 5. Footer (Page Numbers)
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(`Page ${i} of ${pageCount} • Generated by StudyFlow`, pageWidth / 2, pageHeight - 7, { align: 'center' });
+                }
+
+                // Save
                 doc.save(`StudyFlow_Report_${this.currentUser}.pdf`);
                 this.showInlineMessage('Report downloaded as PDF! 📄');
                 
@@ -3341,17 +3485,8 @@ createApp({
         
         async checkAdminStatus() {
             try {
-                const response = await fetch(`${this.API_BASE_URL}/api/auth/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${this.authToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const userData = await response.json();
-                    this.isAdmin = userData.role === 'admin';
-                }
+                const userData = await this.apiRequest('/api/auth/me', { method: 'GET' });
+                this.isAdmin = userData.role === 'admin';
             } catch (error) {
                 console.error('Admin check failed:', error);
             }
@@ -3360,67 +3495,310 @@ createApp({
         async refreshAdminData() {
             if (this.adminLoading) return;
             
-            this.adminLoading = true;
+            this.adminLoaded = {
+                analytics: false,
+                users: false,
+                blogs: false,
+                songs: false,
+                audit: false
+            };
             try {
-                await this.loadAdminData();
+                await this.loadAdminData(true);
                 this.showInlineMessage('Admin data refreshed successfully!');
             } catch (error) {
                 console.error('Failed to refresh admin data:', error);
                 this.showInlineMessage('Failed to refresh admin data. Please try again.');
+            }
+        },
+
+        async loadAdminData(force = false) {
+            if (!this.isAdmin || this.adminLoading) return;
+
+            this.adminLoading = true;
+            try {
+                await Promise.allSettled([
+                    this.loadAdminAnalytics(force),
+                    this.ensureAdminTabData(this.adminActiveTab, force)
+                ]);
+            } catch (error) {
+                console.error('Failed to load admin data:', error);
             } finally {
                 this.adminLoading = false;
             }
         },
 
-        async loadAdminData() {
-            if (!this.isAdmin) return;
+        async loadAdminAnalytics(force = false) {
+            if (this.adminLoaded.analytics && !force) return;
 
             try {
-                // Load all users
-                const usersResponse = await fetch(`${this.API_BASE_URL}/api/admin/users`, {
+                const analytics = await this.apiRequest('/api/admin/analytics', { method: 'GET' });
+                this.adminStats.totalUsers = analytics.totalUsers;
+                this.adminStats.totalSessions = analytics.totalSessions;
+                this.adminSessionsSummary = analytics;
+                this.adminStats.totalMinutes = analytics.totalMinutes || 0;
+                this.adminLoaded.analytics = true;
+                this.$nextTick(() => this.renderAdminSessionsChart());
+            } catch (error) {
+                console.error('Failed to load admin analytics:', error);
+            }
+        },
+
+        async loadAdminUsers(force = false) {
+            if (this.adminLoaded.users && !force) return;
+
+            try {
+                const params = new URLSearchParams({
+                    page: this.adminUserPage,
+                    pageSize: this.adminUserPageSize,
+                    search: this.adminUserSearch || '',
+                    role: this.adminUserRoleFilter === 'all' ? '' : this.adminUserRoleFilter
+                });
+                const payload = await this.apiRequest(`/api/admin/users?${params.toString()}`, { method: 'GET' });
+                this.allUsers = payload.users || [];
+                this.adminUsersTotal = payload.total || this.allUsers.length;
+                this.adminLoaded.users = true;
+                this.adminSelectedUserIds = this.adminSelectedUserIds.filter(id => this.allUsers.some(u => u._id === id));
+            } catch (error) {
+                console.error('Failed to load admin users:', error);
+            }
+        },
+
+        async loadAdminBlogs(force = false) {
+            if (this.adminLoaded.blogs && !force) return;
+
+            try {
+                const blogs = await this.apiRequest('/api/blogs', { method: 'GET' });
+                this.adminBlogs = blogs || [];
+                this.adminStats.totalBlogs = this.adminBlogs.length;
+                this.adminLoaded.blogs = true;
+            } catch (error) {
+                console.error('Failed to load admin blogs:', error);
+            }
+        },
+
+        async loadAdminSongs(force = false) {
+            if (this.adminLoaded.songs && !force) return;
+
+            try {
+                const songs = await this.apiRequest('/api/songs', { method: 'GET' });
+                this.adminSongs = songs || [];
+                this.adminStats.totalSongs = this.adminSongs.length;
+                this.adminLoaded.songs = true;
+            } catch (error) {
+                console.error('Failed to load admin songs:', error);
+            }
+        },
+
+        async ensureAdminTabData(tab, force = false) {
+            if (!this.isAdmin) return;
+
+            if (tab === 'users') return this.loadAdminUsers(force);
+            if (tab === 'blogs') return this.loadAdminBlogs(force);
+            if (tab === 'songs') return this.loadAdminSongs(force);
+            if (tab === 'audit') return this.loadAdminAuditLogs(force);
+        },
+
+        async loadAdminAuditLogs(force = false) {
+            if (this.adminAuditLoading || (this.adminLoaded.audit && !force)) return;
+
+            this.adminAuditLoading = true;
+            try {
+                const params = new URLSearchParams({
+                    page: this.adminAuditPage,
+                    pageSize: this.adminAuditPageSize
+                });
+                const payload = await this.apiRequest(`/api/admin/audit?${params.toString()}`, { method: 'GET' });
+                this.adminAuditLogs = payload.logs || [];
+                this.adminAuditTotal = payload.total || this.adminAuditLogs.length;
+                this.adminLoaded.audit = true;
+            } catch (error) {
+                console.error('Failed to load admin audit logs:', error);
+            } finally {
+                this.adminAuditLoading = false;
+            }
+        },
+
+        async adminApplyUserFilters() {
+            this.adminUserPage = 1;
+            this.adminLoaded.users = false;
+            await this.loadAdminUsers(true);
+        },
+
+        async adminChangePage(delta) {
+            const next = this.adminUserPage + delta;
+            if (next < 1 || next > this.adminUsersTotalPages) return;
+            this.adminUserPage = next;
+            this.adminLoaded.users = false;
+            await this.loadAdminUsers(true);
+        },
+
+        toggleSelectAllUsers() {
+            if (this.adminAllVisibleSelected) {
+                this.adminSelectedUserIds = [];
+            } else {
+                this.adminSelectedUserIds = this.allUsers.map(u => u._id);
+            }
+        },
+
+        toggleSelectUser(userId) {
+            if (this.adminSelectedUserIds.includes(userId)) {
+                this.adminSelectedUserIds = this.adminSelectedUserIds.filter(id => id !== userId);
+            } else {
+                this.adminSelectedUserIds.push(userId);
+            }
+        },
+
+        async bulkDeleteUsers() {
+            if (this.adminSelectedUserIds.length === 0) return;
+            if (!confirm(`Delete ${this.adminSelectedUserIds.length} users? This is permanent.`)) return;
+
+            try {
+                const response = await fetch(`${this.API_BASE_URL}/api/admin/users/bulk`, {
+                    method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${this.authToken}`,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({ action: 'delete', userIds: this.adminSelectedUserIds })
                 });
-                
-                if (usersResponse.ok) {
-                    this.allUsers = await usersResponse.json();
-                    this.adminStats.totalUsers = this.allUsers.length;
-                }
 
-                // Load blogs
-                const blogsResponse = await fetch(`${this.API_BASE_URL}/api/blogs`);
-                if (blogsResponse.ok) {
-                    this.adminBlogs = await blogsResponse.json();
-                    this.adminStats.totalBlogs = this.adminBlogs.length;
-                }
-
-                // Load songs
-                const songsResponse = await fetch(`${this.API_BASE_URL}/api/songs`);
-                if (songsResponse.ok) {
-                    this.adminSongs = await songsResponse.json();
-                    this.adminStats.totalSongs = this.adminSongs.length;
-                }
-
-                // Load analytics summary
-                const analyticsRes = await fetch(`${this.API_BASE_URL}/api/admin/analytics`, {
-                    headers: {
-                        'Authorization': `Bearer ${this.authToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (analyticsRes.ok) {
-                    const analytics = await analyticsRes.json();
-                    this.adminStats.totalUsers = analytics.totalUsers;
-                    this.adminStats.totalSessions = analytics.totalSessions;
-                    this.adminSessionsSummary = analytics;
-                    this.adminStats.totalMinutes = analytics.totalMinutes || 0;
-                    this.renderAdminSessionsChart();
+                if (response.ok) {
+                    this.showInlineMessage('Users deleted successfully');
+                    this.adminSelectedUserIds = [];
+                    this.adminLoaded.users = false;
+                    await this.loadAdminUsers(true);
+                } else {
+                    const err = await response.json();
+                    this.showInlineMessage(err.message || 'Bulk delete failed');
                 }
             } catch (error) {
-                console.error('Failed to load admin data:', error);
+                console.error('Bulk delete failed:', error);
+                this.showInlineMessage('Bulk delete failed');
             }
+        },
+
+        async bulkSetRole(role) {
+            if (this.adminSelectedUserIds.length === 0) return;
+            if (!confirm(`Set role "${role}" for ${this.adminSelectedUserIds.length} users?`)) return;
+
+            try {
+                const response = await fetch(`${this.API_BASE_URL}/api/admin/users/bulk`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'set_role', role, userIds: this.adminSelectedUserIds })
+                });
+
+                if (response.ok) {
+                    this.showInlineMessage('Roles updated successfully');
+                    this.adminSelectedUserIds = [];
+                    this.adminLoaded.users = false;
+                    await this.loadAdminUsers(true);
+                } else {
+                    const err = await response.json();
+                    this.showInlineMessage(err.message || 'Bulk role update failed');
+                }
+            } catch (error) {
+                console.error('Bulk role update failed:', error);
+                this.showInlineMessage('Bulk role update failed');
+            }
+        },
+
+        async promoteUser(userId) {
+            try {
+                const response = await fetch(`${this.API_BASE_URL}/api/admin/users/${userId}/promote`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    this.showInlineMessage('User promoted to sub admin');
+                    this.adminLoaded.users = false;
+                    await this.loadAdminUsers(true);
+                } else {
+                    const err = await response.json();
+                    this.showInlineMessage(err.message || 'Promote failed');
+                }
+            } catch (error) {
+                console.error('Promote failed:', error);
+                this.showInlineMessage('Promote failed');
+            }
+        },
+
+        async demoteUser(userId) {
+            try {
+                const response = await fetch(`${this.API_BASE_URL}/api/admin/users/${userId}/demote`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${this.authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    this.showInlineMessage('Admin demoted to user');
+                    this.adminLoaded.users = false;
+                    await this.loadAdminUsers(true);
+                } else {
+                    const err = await response.json();
+                    this.showInlineMessage(err.message || 'Demote failed');
+                }
+            } catch (error) {
+                console.error('Demote failed:', error);
+                this.showInlineMessage('Demote failed');
+            }
+        },
+
+        exportAdminAnalyticsCSV() {
+            const rows = [['Username', 'Total Minutes', 'Total Sessions']];
+            (this.adminSessionsSummary?.perUser || []).forEach(u => {
+                rows.push([u.username, u.totalMinutes || 0, u.totalSessions || 0]);
+            });
+
+            const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'admin-analytics.csv';
+            link.click();
+            URL.revokeObjectURL(url);
+        },
+
+        exportAdminAnalyticsPDF() {
+            const perUser = this.adminSessionsSummary?.perUser || [];
+            const html = `
+                <html><head><title>Admin Analytics</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    h1 { margin-bottom: 8px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background: #f3f4f6; }
+                </style></head><body>
+                <h1>Admin Analytics</h1>
+                <p>Total Users: ${this.adminStats.totalUsers}</p>
+                <p>Total Sessions: ${this.adminStats.totalSessions}</p>
+                <p>Total Minutes: ${this.adminStats.totalMinutes}</p>
+                <table>
+                    <thead><tr><th>Username</th><th>Total Minutes</th><th>Total Sessions</th></tr></thead>
+                    <tbody>
+                        ${perUser.map(u => `<tr><td>${u.username}</td><td>${u.totalMinutes || 0}</td><td>${u.totalSessions || 0}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+                </body></html>
+            `;
+            const win = window.open('', '_blank');
+            if (!win) return;
+            win.document.write(html);
+            win.document.close();
+            win.focus();
+            win.print();
         },
 
         async deleteUser(userId) {
@@ -3683,6 +4061,68 @@ createApp({
             }
         },
 
+        async generateStudyPlan() {
+            if (this.aiLoading) return;
+
+            const focusArea = prompt('Focus area (optional):', '') || '';
+            const timeframe = prompt('Timeframe (e.g., 7 days):', '7 days') || '7 days';
+            const dailyHours = parseFloat(prompt('Daily hours (e.g., 2):', '2') || '2');
+
+            this.aiLoading = true;
+            this.aiChatHistory.push({ role: 'assistant', content: 'Generating a study plan...', isTyping: true });
+
+            try {
+                const data = await this.apiRequest('/api/ai/study-plan', {
+                    method: 'POST',
+                    body: JSON.stringify({ focusArea, timeframe, dailyHours })
+                });
+
+                this.aiChatHistory = this.aiChatHistory.filter(msg => !msg.isTyping);
+                this.aiChatHistory.push({
+                    role: 'assistant',
+                    content: data.plan || 'Plan generated, but no content returned.',
+                    timestamp: new Date().toISOString()
+                });
+            } catch (error) {
+                this.aiChatHistory = this.aiChatHistory.filter(msg => !msg.isTyping);
+                this.aiChatHistory.push({
+                    role: 'assistant',
+                    content: 'Sorry, failed to generate study plan.',
+                    timestamp: new Date().toISOString(),
+                    isError: true
+                });
+            } finally {
+                this.aiLoading = false;
+            }
+        },
+
+        async getWeeklySummary() {
+            if (this.aiLoading) return;
+
+            this.aiLoading = true;
+            this.aiChatHistory.push({ role: 'assistant', content: 'Preparing your weekly summary...', isTyping: true });
+
+            try {
+                const data = await this.apiRequest('/api/ai/weekly-summary', { method: 'GET' });
+                this.aiChatHistory = this.aiChatHistory.filter(msg => !msg.isTyping);
+                this.aiChatHistory.push({
+                    role: 'assistant',
+                    content: data.summary || 'Summary generated, but no content returned.',
+                    timestamp: new Date().toISOString()
+                });
+            } catch (error) {
+                this.aiChatHistory = this.aiChatHistory.filter(msg => !msg.isTyping);
+                this.aiChatHistory.push({
+                    role: 'assistant',
+                    content: 'Sorry, failed to load weekly summary.',
+                    timestamp: new Date().toISOString(),
+                    isError: true
+                });
+            } finally {
+                this.aiLoading = false;
+            }
+        },
+
         renderAdminSessionsChart() {
             try {
                 const ctx = this.$refs.adminSessionsChart?.getContext('2d');
@@ -3726,8 +4166,14 @@ createApp({
                 this.showInlineMessage('You do not have admin privileges');
                 return;
             }
-            await this.loadAdminData();
             this.showAdminPanel = true;
+            this.loadAdminData();
+        }
+    },
+
+    watch: {
+        adminActiveTab(newTab) {
+            this.ensureAdminTabData(newTab);
         }
     }
 }).mount('#app');
