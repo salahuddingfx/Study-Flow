@@ -3,6 +3,20 @@
 /* @vue/component */
 /* jshint ignore:start */
 
+// Detect Node.js environment (User sanity check)
+if (typeof window === 'undefined') {
+    console.error("❌ ERROR: This script file ('script.js') is the Frontend logic.");
+    console.error("   It runs inside your BROWSER (Chrome/Edge), linked from index.html.");
+    console.error("   Do NOT run it with 'node script.js' in the terminal.");
+    process.exit(1);
+}
+
+// Critical Dependency Check
+if (typeof Vue === 'undefined') {
+    document.body.innerHTML = '<div style="color:white;text-align:center;padding:50px;"><h1>Error: Vue.js failed to load.</h1><p>Please check your internet connection and try again.</p></div>';
+    throw new Error("Vue is not defined. Script aborted.");
+}
+
 const { createApp } = Vue;
 
 createApp({
@@ -12,6 +26,10 @@ createApp({
             API_BASE_URL: (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
                 ? 'http://localhost:5000'
                 : (location.hostname.endsWith('netlify.app') ? '' : 'https://study-flow-nfym.onrender.com'),
+
+            // Language Support
+            currentLang: localStorage.getItem('studyflow_lang') || 'en',
+            translations: (typeof window.translations !== 'undefined') ? window.translations : {},
 
             // Loading Text for Real Effect
             loadingText: 'Initializing...', 
@@ -36,6 +54,7 @@ createApp({
             showAdvancedTimer: false,
             showMusicModal: false,
             showAchievementModal: false,
+            showLanguageModal: false,
 
             // Auth
             isAuthenticated: false,
@@ -886,6 +905,25 @@ createApp({
     },
 
     methods: {
+        // Translation Helper
+        t(key) {
+            if (this.translations && this.translations[this.currentLang] && this.translations[this.currentLang][key]) {
+                return this.translations[this.currentLang][key];
+            }
+            return (this.translations['en'] && this.translations['en'][key]) || key;
+        },
+
+        setLanguage(lang) {
+            this.currentLang = lang;
+            localStorage.setItem('studyflow_lang', this.currentLang);
+            this.showLanguageModal = false;
+        },
+
+        toggleLanguage() {
+            this.currentLang = this.currentLang === 'en' ? 'bn' : 'en';
+            localStorage.setItem('studyflow_lang', this.currentLang);
+            // Optional: force update if needed, but Vue reactivity should handle it
+        },
 
         async loadAchievementStats() {
             try {
@@ -2185,40 +2223,62 @@ createApp({
 
         async loadLeaderboard() {
             try {
-                const res = await fetch(`${this.API_BASE_URL}/api/analytics/leaderboard?period=${this.leaderboardPeriod}`);
-                if (!res.ok) return;
+                // Ensure auth token is present
+                const res = await fetch(`${this.API_BASE_URL}/api/analytics/leaderboard?period=${this.leaderboardPeriod}`, {
+                     headers: { 'Authorization': `Bearer ${this.authToken}` } 
+                });
+                
+                if (!res.ok) {
+                    throw new Error(`Leaderboard fetch failed: ${res.status}`);
+                }
                 const data = await res.json();
                 this.leaderboardResults = data?.results || [];
             } catch (e) {
-                console.warn('Leaderboard load failed', e);
+                console.warn('Leaderboard load failed, using empty state:', e);
+                this.leaderboardResults = []; 
             }
         },
 
         async loadAchievementLeaderboard() {
             try {
-                const res = await fetch(`${this.API_BASE_URL}/api/achievements/leaderboard?limit=10`);
-                if (!res.ok) return;
+                if (this.currentView !== 'analytics') return;
+                
+                const res = await fetch(`${this.API_BASE_URL}/api/achievements/leaderboard?limit=10`, {
+                    headers: { 'Authorization': `Bearer ${this.authToken}` }
+                });
+                
+                if (!res.ok) {
+                     throw new Error(`Achievement LB fetch failed: ${res.status}`);
+                }
                 const data = await res.json();
-                this.achievementLeaderboard = Array.isArray(data) ? data : [];
+                this.achievementLeaderboard = Array.isArray(data) ? data : (data.leaderboard || []);
                 
                 // Render chart after data loads
                 this.$nextTick(() => {
                     this.renderLeaderboardChart();
                 });
             } catch (e) {
-                console.warn('Achievement leaderboard load failed', e);
+                console.warn('Achievement leaderboard load failed:', e);
+                this.achievementLeaderboard = [];
             }
         },
 
         renderLeaderboardChart() {
-            const canvas = this.$refs.leaderboardChart;
-            if (!canvas || this.achievementLeaderboard.length === 0) return;
+            if (this.currentView !== 'analytics') return; 
             
+            const canvas = this.$refs.leaderboardChart;
+            if (!canvas) return; // Silent fail if element missing (e.g. tabs switched)
+            
+            if (!this.achievementLeaderboard || this.achievementLeaderboard.length === 0) return;
+            
+            if (typeof Chart === 'undefined') return;
+
             const ctx = canvas.getContext('2d');
             
             // Destroy existing chart
             if (this.leaderboardChart) {
                 this.leaderboardChart.destroy();
+                this.leaderboardChart = null;
             }
             
             // Prepare data
@@ -2265,16 +2325,9 @@ createApp({
                             titleColor: '#fff',
                             bodyColor: '#fff',
                             callbacks: {
-                                label: function(context) {
-                                    const index = context.dataIndex;
-                                    const user = this.achievementLeaderboard[index];
-                                    const levelName = user?.achievementLevelName || 'Bronze';
-                                    return [
-                                        `Points: ${context.parsed.y}`,
-                                        `Level: ${levelName}`,
-                                        `Unlocked: ${user?.totalAchievementsUnlocked || 0}/38`
-                                    ];
-                                }.bind(this)
+                                label: (context) => {
+                                    return `Points: ${context.parsed.y}`;
+                                }
                             }
                         }
                     },
@@ -2688,166 +2741,163 @@ createApp({
 
         updateCharts() {
             if (this.updatingCharts) {
-                console.log('Already updating charts, skipping');
                 return;
             }
-            this.updatingCharts = true;
+
+            // Check if DOM elements exist
             if (!this.$refs.studyTimeChart || !this.$refs.subjectChart) {
+                // Not in analytics view or DOM not ready
                 return;
             }
 
+            // Check if Library is loaded
             if (typeof Chart === 'undefined') {
+                console.warn('Chart.js not loaded yet. Retrying in 500ms...');
+                setTimeout(() => this.updateCharts(), 500);
                 return;
             }
 
-            if (this.studyTimeChart) {
-                this.studyTimeChart.destroy();
-            }
-            if (this.subjectChart) {
-                this.subjectChart.destroy();
-            }
-
-            const now = new Date();
-            let startDate, daysToShow, chartTitle;
-
-            if (this.analyticsView === 'daily') {
-                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()); 
-                daysToShow = 1;
-                chartTitle = 'Today\'s Focus Time';
-            } else if (this.analyticsView === 'weekly') {
-                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                daysToShow = 7;
-                chartTitle = 'Weekly Focus Time';
-            } else if (this.analyticsView === 'monthly') {
-                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                daysToShow = 30;
-                chartTitle = 'Monthly Focus Time';
-            }
-
-            const filteredSessions = this.sessions.filter(s =>
-                new Date(s.timestamp) >= startDate
-            );
-
-            const ctx1 = this.$refs.studyTimeChart.getContext('2d');
-
-            const labels = [];
-            const data = [];
-            const sessionsMap = {};
-
-            filteredSessions.forEach(s => {
-                const date = new Date(s.timestamp).toLocaleDateString();
-                sessionsMap[date] = (sessionsMap[date] || 0) + s.duration;
-            });
-
-            for (let i = daysToShow - 1; i >= 0; i--) {
-                const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-                const dateStr = date.toLocaleDateString();
-                labels.push(this.analyticsView === 'daily' ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : dateStr);
-                data.push(sessionsMap[dateStr] || 0);
-            }
+            this.updatingCharts = true;
 
             try {
+                // --- Chart 1: Study Time Trend ---
+                if (this.studyTimeChart) {
+                    this.studyTimeChart.destroy();
+                    this.studyTimeChart = null; // Explicit nullify
+                }
+
+                const now = new Date();
+                let startDate, daysToShow, chartTitle;
+
+                if (this.analyticsView === 'daily') {
+                    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()); 
+                    daysToShow = 1;
+                    chartTitle = 'Today\'s Focus Time';
+                } else if (this.analyticsView === 'weekly') {
+                    startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    daysToShow = 7;
+                    chartTitle = 'Weekly Focus Time';
+                } else if (this.analyticsView === 'monthly') {
+                    startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    daysToShow = 30;
+                    chartTitle = 'Monthly Focus Time';
+                }
+
+                const filteredSessions = (this.sessions || []).filter(s =>
+                    new Date(s.timestamp) >= startDate
+                );
+
+                const ctx1 = this.$refs.studyTimeChart.getContext('2d');
+                const labels = [];
+                const data = [];
+                const sessionsMap = {};
+
+                filteredSessions.forEach(s => {
+                    const date = new Date(s.timestamp).toLocaleDateString();
+                    sessionsMap[date] = (sessionsMap[date] || 0) + s.duration;
+                });
+
+                for (let i = daysToShow - 1; i >= 0; i--) {
+                    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                    const dateStr = date.toLocaleDateString();
+                    labels.push(this.analyticsView === 'daily' ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : dateStr);
+                    data.push(sessionsMap[dateStr] || 0);
+                }
+
                 this.studyTimeChart = new Chart(ctx1, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Minutes Focused',
-                        data: data,
-                        borderColor: '#8b5cf6',
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        title: {
-                            display: true,
-                            text: chartTitle,
-                            color: '#9ca3af',
-                            font: { size: 14 }
-                        }
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Minutes Focused',
+                            data: data,
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255,255,255,0.1)' },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
                             title: {
                                 display: true,
-                                text: 'Minutes',
-                                color: '#9ca3af'
-                            }
-                        },
-                        x: {
-                            grid: { display: false },
-                            title: {
-                                display: true,
-                                text: this.analyticsView === 'daily' ? 'Time' : 'Date',
-                                color: '#9ca3af'
-                            }
-                        }
-                    }
-                }
-            });
-            } catch (e) {
-                console.error('Error creating study time chart:', e);
-            }
-
-            const ctx2 = this.$refs.subjectChart.getContext('2d');
-
-            const subjectStats = {};
-            filteredSessions.forEach(s => {
-                const subject = s.subject || 'Unspecified';
-                if (!subjectStats[subject]) {
-                    subjectStats[subject] = { time: 0, sessions: 0 };
-                }
-                subjectStats[subject].time += s.duration;
-                subjectStats[subject].sessions += 1;
-            });
-
-            const subjectLabels = Object.keys(subjectStats);
-            const subjectData = subjectLabels.map(s => subjectStats[s].time);
-
-            try {
-                this.subjectChart = new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: subjectLabels.length ? subjectLabels : ['No Data'],
-                    datasets: [{
-                        data: subjectData.length ? subjectData : [1],
-                        backgroundColor: ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: window.innerWidth < 640 ? 'bottom' : 'right',
-                            labels: { 
+                                text: chartTitle,
                                 color: '#9ca3af',
-                                boxWidth: 12,
-                                padding: 15
+                                font: { size: 14 }
                             }
                         },
-                        title: {
-                            display: true,
-                            text: 'Subject Distribution',
-                            color: '#9ca3af',
-                            font: { size: 14 }
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                title: { display: true, text: 'Minutes', color: '#9ca3af' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                title: { display: true, text: this.analyticsView === 'daily' ? 'Time' : 'Date', color: '#9ca3af' }
+                            }
                         }
                     }
+                });
+
+                // --- Chart 2: Subject Distribution ---
+                if (this.subjectChart) {
+                    this.subjectChart.destroy();
+                    this.subjectChart = null; // Explicit nullify
                 }
-            });
-            } catch (e) {
-                console.error('Error creating subject chart:', e);
+
+                const ctx2 = this.$refs.subjectChart.getContext('2d');
+                const subjectStats = {};
+                
+                filteredSessions.forEach(s => {
+                    const subject = s.subject || 'Unspecified';
+                    if (!subjectStats[subject]) {
+                        subjectStats[subject] = { time: 0, sessions: 0 };
+                    }
+                    subjectStats[subject].time += s.duration;
+                    subjectStats[subject].sessions += 1;
+                });
+
+                const subjectLabels = Object.keys(subjectStats);
+                const subjectData = subjectLabels.map(s => subjectStats[s].time);
+
+                this.subjectChart = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: subjectLabels.length ? subjectLabels : ['No Data'],
+                        datasets: [{
+                            data: subjectData.length ? subjectData : [1],
+                            backgroundColor: ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: window.innerWidth < 640 ? 'bottom' : 'right',
+                                labels: { color: '#9ca3af', boxWidth: 12, padding: 15 }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Subject Distribution',
+                                color: '#9ca3af',
+                                font: { size: 14 }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("🔥 Error updating charts:", error);
+            } finally {
+                // Ensure the lock is ALWAYS released
+                this.updatingCharts = false;
             }
-            this.updatingCharts = false;
         },
 
         handleProfileImageUpload(event) {

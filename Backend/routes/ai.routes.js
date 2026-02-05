@@ -39,8 +39,29 @@ router.post('/ask', protect, async (req, res) => {
         const userName = req.user.firstName ? `${req.user.firstName} ${req.user.lastName}` : req.user.username;
         const normalizedPrompt = (prompt || '').toLowerCase();
 
+        // Get current time in Bangladesh timezone
+        const now = new Date();
+        const today = now.toLocaleString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Asia/Dhaka'
+        });
+        const dayOfWeek = now.toLocaleString('en-US', { weekday: 'long', timeZone: 'Asia/Dhaka' });
+        const currentHour = parseInt(now.toLocaleString('en-US', { hour: '2-digit', hour12: false, timeZone: 'Asia/Dhaka' }));
+        // Time-based greeting
+        let timeGreeting = 'Hello';
+        if (currentHour >= 5 && currentHour < 12) timeGreeting = 'Good morning';
+        else if (currentHour >= 12 && currentHour < 17) timeGreeting = 'Good afternoon';
+        else if (currentHour >= 17 && currentHour < 21) timeGreeting = 'Good evening';
+        else timeGreeting = 'Good night';
+
         // Fast path: developer or contact info questions (avoid hallucinations or listing multiple contacts)
-        const isDeveloperQuestion = /\b(developer|developed|creator|owner|founder|author|who made|who created|who built|made this|built this)\b|\b(ke ban|banay|banano|banai|developer ke|kader|salah)\b/.test(normalizedPrompt);
+        const isDeveloperQuestion = /\b(developers?|developed|creator|owner|founder|author|who made|who created|who built|made this|built this)\b|\b(ke ban|banay|banano|banai|developer ke|kader|salah)\b/.test(normalizedPrompt);
         const isContactQuestion = /\b(contact|email|mail|phone|whatsapp|facebook|linkedin|github)\b|\b(contact info|যোগাযোগ|ইমেইল|ফোন)\b/.test(normalizedPrompt);
 
         if (isDeveloperQuestion || isContactQuestion) {
@@ -64,26 +85,6 @@ router.post('/ask', protect, async (req, res) => {
                 actionPerformed: null
             });
         }
-        // Get current time in Bangladesh timezone
-        const now = new Date();
-        const today = now.toLocaleString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-            timeZone: 'Asia/Dhaka'
-        });
-        const dayOfWeek = now.toLocaleString('en-US', { weekday: 'long', timeZone: 'Asia/Dhaka' });
-        const currentHour = parseInt(now.toLocaleString('en-US', { hour: '2-digit', hour12: false, timeZone: 'Asia/Dhaka' }));
-        // Time-based greeting
-        let timeGreeting = 'Hello';
-        if (currentHour >= 5 && currentHour < 12) timeGreeting = 'Good morning';
-        else if (currentHour >= 12 && currentHour < 17) timeGreeting = 'Good afternoon';
-        else if (currentHour >= 17 && currentHour < 21) timeGreeting = 'Good evening';
-        else timeGreeting = 'Good night';
         // Fetch user data for context
         const [subjects, tasks, sessions, goals] = await Promise.all([
             Subject.find({ user: userId }),
@@ -103,6 +104,17 @@ router.post('/ask', protect, async (req, res) => {
             - Active Goals: ${goals.map(g => `${g.title} (Target: ${g.target} ${g.unit})`).join(', ') || 'None'}
         `;
 
+        // Prepare developer contact info for the prompt
+        let devContactInfo = '';
+        if (Array.isArray(PUBLIC_DEV_CONTACTS) && PUBLIC_DEV_CONTACTS.length > 0) {
+            devContactInfo = PUBLIC_DEV_CONTACTS
+                .filter(c => c && c.label && c.value)
+                .map(c => `${c.label}: ${c.value}`)
+                .join(', ');
+        } else {
+             devContactInfo = PUBLIC_DEV_CONTACT || 'salauddinkaderappy@gmail.com';
+        }
+
         const model = genAI.getGenerativeModel({ model: DEFAULT_MODEL });
         
         // Enhanced prompt with context
@@ -114,7 +126,7 @@ router.post('/ask', protect, async (req, res) => {
             User's Question: "${prompt}"
 
             Instructions:
-            1. ALWAYS start with a time-appropriate greeting: "${timeGreeting}, ${userName}!" for the first interaction
+            1. ALWAYS start with a time-appropriate greeting (adapt language to user): "${timeGreeting}, ${userName}!"
             2. Use the study data to give HIGHLY PERSONALIZED advice
             3. Be ENCOURAGING, CONCISE (2-3 sentences max unless detailed explanation needed), and ACTIONABLE
             4. The current date/time is: ${today} (Bangladesh time, Asia/Dhaka timezone)
@@ -151,20 +163,27 @@ router.post('/ask', protect, async (req, res) => {
                
                 7. ATTRIBUTION & CONTACT RULES (CRITICAL):
                     - StudyFlow was developed by ${PUBLIC_DEV_NAME}. NEVER claim Google or any other company as the developer.
-                    - If asked for developer contact info, use ONLY the configured contacts.
+                    - Developer Contact Info: ${devContactInfo}
+                    - If asked for developer contact info, use ONLY the above information.
                     - Do NOT invent or guess contacts.
                 8. SMART RESPONSES:
                - Questions/chat → Reply normally (NO JSON)
                - Action requests → Reply + JSON
                - Motivational advice → Be inspiring
                - Study tips → Be practical and specific
+               
+                9. LANGUAGE & COMMUNICATION:
+                   - Detect the language of the User's Question (Bengali or English).
+                   - Respond in the SAME language as the query (English -> English, Bengali -> Bengali).
+                   - If the user uses "Banglish" (Bengali in English script), reply in standard Bengali or friendly Banglish.
+                   - If explicitly asked to translate, perform the translation.
         `;
 
         // Optimized Model Selection Based on Quota
         // Priority: Models with remaining daily quota
         const candidates = [
-            'gemini-2.5-flash-lite', // 10 RPM, 20 RPD limit
-            'gemini-2.5-flash'       // 5 RPM, 20 RPD limit
+            'gemini-2.5-flash-lite', // 10 RPM (Highest Quota)
+            'gemini-2.5-flash',      // 5 RPM
         ];
         
         let text = null;

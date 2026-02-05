@@ -71,11 +71,13 @@
   <!-- Core Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.15/vue.global.prod.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@phosphor-icons/web" defer crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" defer></script>
   <script src="https://www.youtube.com/iframe_api" defer></script>
+  <!-- Translations -->
+  <script src="Assets/translations.js"></script>
   <!-- Structured Data for SEO -->
   <script type="application/ld+json">
   {
@@ -108,6 +110,22 @@
   <style>
     @view-transition { navigation: auto; }  
   </style>
+  <!-- Error Handler for Blank Screen Issues -->
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      console.error("Global Error:", msg, url, line, error);
+      // If Vue fails to mount, v-cloak might hide everything. specific fallback:
+      setTimeout(() => {
+          const app = document.getElementById('app');
+          if (app && getComputedStyle(app).display === 'none') {
+             // Force show
+             app.style.display = 'block';
+             alert("StudyFlow encountered an error starting up:\n" + msg + "\n\nPlease check console for details.");
+          }
+      }, 2000);
+      return false; 
+    };
+  </script>
  </head>
  <body class="theme-dark">
   <div id="app" v-cloak><div :class="{ 'hidden': isTouchDevice }" class="custom-cursor" ref="cursor"></div>
@@ -292,7 +310,43 @@
        </div>
       </div>
       
-      <button @click="showAchievementModal = false" class="w-full btn-primary px-6 py-3 rounded-xl font-semibold text-white"> Close </button>
+      <button @click="showAchievementModal = false" class="w-full btn-primary px-6 py-3 rounded-xl font-semibold text-white"> {{ t('close') }} </button>
+     </div>
+    </div>
+   </div>
+
+   <!-- Language Modal -->
+   <div v-if="showLanguageModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" @click="showLanguageModal = false">
+    <div class="glass-strong rounded-3xl p-1 max-w-sm w-full animate-slideUp overflow-hidden transform scale-100 transition-all" @click.stop>
+     <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 p-6">
+      <div class="flex justify-between items-center mb-6">
+       <h2 class="text-2xl font-bold gradient-text">{{ t('switch_lang') }}</h2>
+       <button @click="showLanguageModal = false" class="text-white/60 hover:text-white transition-colors"><i class="ph-bold ph-x text-2xl"></i></button>
+      </div>
+      
+      <div class="space-y-3">
+       <button @click="setLanguage('en')" 
+         class="w-full p-4 rounded-xl flex items-center justify-between transition-all group border border-transparent"
+         :class="currentLang === 'en' ? 'bg-purple-600 border-purple-400' : 'glass hover:bg-white/5'">
+        <div class="flex items-center gap-3">
+         <span class="text-2xl">🇺🇸</span>
+         <span class="font-semibold text-lg">English</span>
+        </div>
+        <i v-if="currentLang === 'en'" class="ph-bold ph-check-circle text-2xl text-white"></i>
+       </button>
+       
+       <button @click="setLanguage('bn')" 
+         class="w-full p-4 rounded-xl flex items-center justify-between transition-all group border border-transparent"
+         :class="currentLang === 'bn' ? 'bg-purple-600 border-purple-400' : 'glass hover:bg-white/5'">
+        <div class="flex items-center gap-3">
+         <span class="text-2xl">🇧🇩</span>
+         <span class="font-semibold text-lg">বাংলা</span>
+        </div>
+        <i v-if="currentLang === 'bn'" class="ph-bold ph-check-circle text-2xl text-white"></i>
+       </button>
+      </div>
+      
+      <p class="text-center text-xs opacity-50 mt-6">Select your preferred language interface.</p>
      </div>
     </div>
    </div>
@@ -1150,18 +1204,20 @@
         <span class="text-xs opacity-60">{{ isOnline ? 'Online' : 'Offline' }}</span>
        </div>
       </div>
-      <nav class="flex-1 space-y-2"><button @click="currentView = 'home'" :class="currentView === 'home' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-house text-xl"></i> Home </button> <button @click="currentView = 'timer'" :class="currentView === 'timer' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> Focus Timer </button> <button @click="currentView = 'tasks'" :class="currentView === 'tasks' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-check-square text-xl"></i> Daily Tasks </button>
-      <button @click="currentView = 'calendar'" :class="currentView === 'calendar' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-calendar text-xl"></i> Schedule </button> <button @click="currentView = 'quiz'" :class="currentView === 'quiz' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-brain text-xl"></i> AI Quiz </button>
-      <button @click="currentView = 'goals'" :class="currentView === 'goals' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-target text-xl"></i> Goals </button>
+      <nav class="flex-1 space-y-2"><button @click="currentView = 'home'" :class="currentView === 'home' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-house text-xl"></i> {{ t('nav_home') }} </button> <button @click="currentView = 'timer'" :class="currentView === 'timer' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> {{ t('nav_timer') }} </button> <button @click="currentView = 'tasks'" :class="currentView === 'tasks' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-check-square text-xl"></i> {{ t('nav_tasks') }} </button>
+      <button @click="currentView = 'calendar'" :class="currentView === 'calendar' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-calendar text-xl"></i> {{ t('nav_schedule') }} </button> <button @click="currentView = 'quiz'" :class="currentView === 'quiz' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-brain text-xl"></i> {{ t('nav_quiz') }} </button>
+      <button @click="currentView = 'goals'" :class="currentView === 'goals' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-target text-xl"></i> {{ t('nav_goals') }} </button>
       <button @click="currentView = 'analytics'" :class="currentView === 'analytics' ? 'bg-purple-600' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium relative overflow-hidden group">
          <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1s_infinite]"></span>
-         <i class="ph-bold ph-chart-bar text-xl"></i> Analytics 
+         <i class="ph-bold ph-chart-bar text-xl"></i> {{ t('nav_analytics') }} 
       </button>
       <button @click="currentView = 'blog'" :class="currentView === 'blog' ? 'bg-purple-600' : 'hover:bg-white/10'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium relative overflow-hidden group">
          <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1s_infinite]"></span>
-         <i class="ph-bold ph-article text-xl"></i> Blog 
+         <i class="ph-bold ph-article text-xl"></i> {{ t('nav_blog') }} 
       </button>
-       <div class="pt-4 border-t border-gray-700"><button @click="showThemeModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-palette text-xl"></i> Themes </button> <button @click="showNotificationSettings = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-bell text-xl"></i> Notifications </button> <button @click="showAdvancedTimer = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-timer text-xl"></i> Timer Settings </button> <button @click="showMusicModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-music-notes text-xl"></i> Music <span v-if="isPlaying" class="ml-auto"> <i class="ph-fill ph-speaker-high text-green-400 animate-pulse"></i> </span> </button> <button @click="showDataModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-database text-xl"></i> Data Management </button> <button v-if="isAdmin" @click="openAdminPanel" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10 text-yellow-400"> <i class="ph-bold ph-shield-star text-xl"></i> Admin Panel </button> <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400 hover:bg-red-500/10 transition-all"> <i class="ph-bold ph-sign-out text-xl"></i> Logout </button>
+       <div class="pt-4 border-t border-gray-700">
+       <button @click="showLanguageModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10 text-cyan-300"> <i class="ph-bold ph-translate text-xl"></i> {{ t('switch_lang') }} ({{ currentLang === 'en' ? 'EN' : 'BN' }}) </button>
+       <button @click="showThemeModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-palette text-xl"></i> {{ t('nav_themes') }} </button> <button @click="showNotificationSettings = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-bell text-xl"></i> {{ t('nav_notifications') }} </button> <button @click="showAdvancedTimer = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-timer text-xl"></i> {{ t('nav_timer_settings') }} </button> <button @click="showMusicModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-music-notes text-xl"></i> {{ t('nav_music') }} <span v-if="isPlaying" class="ml-auto"> <i class="ph-fill ph-speaker-high text-green-400 animate-pulse"></i> </span> </button> <button @click="showDataModal = true" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10"> <i class="ph-bold ph-database text-xl"></i> {{ t('nav_data') }} </button> <button v-if="isAdmin" @click="openAdminPanel" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/10 text-yellow-400"> <i class="ph-bold ph-shield-star text-xl"></i> {{ t('nav_admin') }} </button> <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400 hover:bg-red-500/10 transition-all"> <i class="ph-bold ph-sign-out text-xl"></i> {{ t('nav_logout') }} </button>
        </div>
       </nav>
      </aside><main class="flex-1 flex flex-col"><header class="lg:hidden glass-strong border-b border-gray-700 p-4 flex items-center justify-between"><button @click="mobileMenuOpen = !mobileMenuOpen" class="text-2xl text-purple-400"> <i :class="mobileMenuOpen ? 'ph-bold ph-x' : 'ph-bold ph-list'" class="text-3xl"></i> </button> <button @click="reloadApp" class="text-xl font-bold gradient-text hover:opacity-80 transition-opacity"> StudyFlow </button>
@@ -1175,91 +1231,93 @@
          <i class="ph-bold ph-x text-xl"></i>
         </button>
        </div>
-       <nav class="space-y-2 flex-1"><button @click="currentView = 'home'; mobileMenuOpen = false" :class="currentView === 'home' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-house text-xl"></i> Home </button> <button @click="currentView = 'timer'; mobileMenuOpen = false" :class="currentView === 'timer' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> Focus Timer </button> <button @click="currentView = 'tasks'; mobileMenuOpen = false" :class="currentView === 'tasks' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-check-square text-xl"></i> Daily Tasks </button>
-       <button @click="currentView = 'calendar'; mobileMenuOpen = false" :class="currentView === 'calendar' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-calendar text-xl"></i> Schedule </button> <button @click="currentView = 'quiz'; mobileMenuOpen = false" :class="currentView === 'quiz' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-brain text-xl"></i> AI Quiz </button>
-        <button @click="currentView = 'goals'; mobileMenuOpen = false" :class="currentView === 'goals' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-target text-xl"></i> Goals </button> 
-        <button @click="currentView = 'analytics'; mobileMenuOpen = false" :class="currentView === 'analytics' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-chart-bar text-xl"></i> Analytics </button>
-        <button @click="currentView = 'blog'; mobileMenuOpen = false" :class="currentView === 'blog' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-article text-xl"></i> Blog </button>
-        <div class="pt-4 mt-2 border-t border-gray-700 space-y-2"><button @click="showThemeModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-palette text-xl"></i> Themes </button> <button @click="showNotificationSettings = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-bell text-xl"></i> Notifications </button> <button @click="showAdvancedTimer = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-timer text-xl"></i> Timer Settings </button> <button @click="showMusicModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-music-notes text-xl"></i> Music <span v-if="isPlaying" class="ml-auto"> <i class="ph-fill ph-speaker-high text-green-400 animate-pulse"></i> </span> </button>
-        <button @click="showDataModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-database text-xl"></i> Data Management </button>
-        <button v-if="isAdmin" @click="openAdminPanel(); mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-yellow-400 hover:bg-white/5"> <i class="ph-bold ph-shield-star text-xl"></i> Admin Panel </button>
-        </div><button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400 hover:bg-red-500/10 mt-4"> <i class="ph-bold ph-sign-out text-xl"></i> Logout </button>
+       <nav class="space-y-2 flex-1"><button @click="currentView = 'home'; mobileMenuOpen = false" :class="currentView === 'home' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-house text-xl"></i> {{ t('nav_home') }} </button> <button @click="currentView = 'timer'; mobileMenuOpen = false" :class="currentView === 'timer' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-timer text-xl"></i> {{ t('nav_timer') }} </button> <button @click="currentView = 'tasks'; mobileMenuOpen = false" :class="currentView === 'tasks' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-check-square text-xl"></i> {{ t('nav_tasks') }} </button>
+       <button @click="currentView = 'calendar'; mobileMenuOpen = false" :class="currentView === 'calendar' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-calendar text-xl"></i> {{ t('nav_schedule') }} </button> <button @click="currentView = 'quiz'; mobileMenuOpen = false" :class="currentView === 'quiz' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-brain text-xl"></i> {{ t('nav_quiz') }} </button>
+        <button @click="currentView = 'goals'; mobileMenuOpen = false" :class="currentView === 'goals' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-target text-xl"></i> {{ t('nav_goals') }} </button> 
+        <button @click="currentView = 'analytics'; mobileMenuOpen = false" :class="currentView === 'analytics' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-chart-bar text-xl"></i> {{ t('nav_analytics') }} </button>
+        <button @click="currentView = 'blog'; mobileMenuOpen = false" :class="currentView === 'blog' ? 'bg-purple-600 text-white' : ''" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i class="ph-bold ph-article text-xl"></i> {{ t('nav_blog') }} </button>
+        <div class="pt-4 mt-2 border-t border-gray-700 space-y-2">
+        <button @click="showLanguageModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5 text-cyan-300"> <i class="ph-bold ph-translate text-xl"></i> {{ t('switch_lang') }} ({{ currentLang === 'en' ? 'EN' : 'BN' }}) </button>
+        <button @click="showThemeModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-palette text-xl"></i> {{ t('nav_themes') }} </button> <button @click="showNotificationSettings = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-bell text-xl"></i> {{ t('nav_notifications') }} </button> <button @click="showAdvancedTimer = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-timer text-xl"></i> {{ t('nav_timer_settings') }} </button> <button @click="showMusicModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-music-notes text-xl"></i> {{ t('nav_music') }} <span v-if="isPlaying" class="ml-auto"> <i class="ph-fill ph-speaker-high text-green-400 animate-pulse"></i> </span> </button>
+        <button @click="showDataModal = true; mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white/5"> <i class="ph-bold ph-database text-xl"></i> {{ t('nav_data') }} </button>
+        <button v-if="isAdmin" @click="openAdminPanel(); mobileMenuOpen = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-yellow-400 hover:bg-white/5"> <i class="ph-bold ph-shield-star text-xl"></i> {{ t('nav_admin') }} </button>
+        </div><button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-400 hover:bg-red-500/10 mt-4"> <i class="ph-bold ph-sign-out text-xl"></i> {{ t('nav_logout') }} </button>
        </nav>
       </div><div class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8 pb-24"><div v-if="currentView === 'home'" class="max-w-6xl mx-auto animate-fadeIn"><div class="text-center mb-12">
          <div class="mb-6"><i class="ph-bold ph-brain text-7xl text-purple-400 animate-pulse"></i>
          </div>
-         <h1 class="text-5xl md:text-6xl font-bold gradient-text mb-4">Welcome to StudyFlow</h1>
-         <p class="text-xl md:text-2xl opacity-80 mb-8">Your Ultimate Focus &amp; Productivity Companion</p>
-         <div class="flex flex-wrap justify-center gap-4"><button @click="currentView = 'timer'" class="btn-primary px-8 py-4 rounded-xl font-semibold text-lg flex items-center gap-2"> <i class="ph-bold ph-play text-xl"></i> Start Focusing </button> <button @click="currentView = 'analytics'" class="btn-secondary px-8 py-4 rounded-xl font-semibold text-lg flex items-center gap-2"> <i class="ph-bold ph-chart-bar text-xl"></i> View Stats </button>
+         <h1 class="text-5xl md:text-6xl font-bold gradient-text mb-4">{{ t('welcome_title') }}</h1>
+         <p class="text-xl md:text-2xl opacity-80 mb-8">{{ t('welcome_subtitle') }}</p>
+         <div class="flex flex-wrap justify-center gap-4"><button @click="currentView = 'timer'" class="btn-primary px-8 py-4 rounded-xl font-semibold text-lg flex items-center gap-2"> <i class="ph-bold ph-play text-xl"></i> {{ t('start_focusing') }} </button> <button @click="currentView = 'analytics'" class="btn-secondary px-8 py-4 rounded-xl font-semibold text-lg flex items-center gap-2"> <i class="ph-bold ph-chart-bar text-xl"></i> {{ t('view_stats') }} </button>
          </div>
         </div><div class="mb-12">
-         <h2 class="text-3xl font-bold mb-8 text-center">Powerful Features</h2>
+         <h2 class="text-3xl font-bold mb-8 text-center">{{ t('powerful_features') }}</h2>
          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"><div class="glass rounded-2xl p-6 card-hover">
            <div class="w-14 h-14 rounded-xl bg-purple-600/20 flex items-center justify-center mb-4"><i class="ph-bold ph-timer text-3xl text-purple-400"></i>
            </div>
-           <h3 class="text-xl font-bold mb-2">Pomodoro Timer</h3>
-           <p class="opacity-70">Stay focused with customizable work sessions and breaks. Choose from preset durations or create your own custom timers.</p>
+           <h3 class="text-xl font-bold mb-2">{{ t('pomodoro_timer') }}</h3>
+           <p class="opacity-70">{{ t('pomodoro_timer_desc') }}</p>
           </div><div class="glass rounded-2xl p-6 card-hover">
            <div class="w-14 h-14 rounded-xl bg-green-600/20 flex items-center justify-center mb-4"><i class="ph-bold ph-check-square text-3xl text-green-400"></i>
            </div>
-           <h3 class="text-xl font-bold mb-2">Task Management</h3>
-           <p class="opacity-70">Organize your daily tasks efficiently. Track completion and stay on top of your to-do list with ease.</p>
+           <h3 class="text-xl font-bold mb-2">{{ t('task_mgmt') }}</h3>
+           <p class="opacity-70">{{ t('task_mgmt_desc') }}</p>
           </div><div class="glass rounded-2xl p-6 card-hover">
            <div class="w-14 h-14 rounded-xl bg-blue-600/20 flex items-center justify-center mb-4"><i class="ph-bold ph-chart-bar text-3xl text-blue-400"></i>
            </div>
-           <h3 class="text-xl font-bold mb-2">Study Analytics</h3>
-           <p class="opacity-70">Track your progress with detailed statistics. See how much time you've spent on each subject and monitor your productivity.</p>
+           <h3 class="text-xl font-bold mb-2">{{ t('study_analytics') }}</h3>
+           <p class="opacity-70">{{ t('study_analytics_desc') }}</p>
           </div><div class="glass rounded-2xl p-6 card-hover">
            <div class="w-14 h-14 rounded-xl bg-pink-600/20 flex items-center justify-center mb-4"><i class="ph-bold ph-palette text-3xl text-pink-400"></i>
            </div>
-           <h3 class="text-xl font-bold mb-2">Beautiful Themes</h3>
-           <p class="opacity-70">Personalize your experience with 10 stunning themes. From dark mode to vibrant gradients, find your perfect aesthetic.</p>
+           <h3 class="text-xl font-bold mb-2">{{ t('beautiful_themes') }}</h3>
+           <p class="opacity-70">{{ t('beautiful_themes_desc') }}</p>
           </div><div class="glass rounded-2xl p-6 card-hover">
            <div class="w-14 h-14 rounded-xl bg-yellow-600/20 flex items-center justify-center mb-4"><i class="ph-bold ph-music-notes text-3xl text-yellow-400"></i>
            </div>
-           <h3 class="text-xl font-bold mb-2">Focus Music</h3>
-           <p class="opacity-70">Create custom playlists to enhance your concentration. Add your favorite study music and control playback seamlessly.</p>
+           <h3 class="text-xl font-bold mb-2">{{ t('focus_music') }}</h3>
+           <p class="opacity-70">{{ t('focus_music_desc') }}</p>
           </div><div class="glass rounded-2xl p-6 card-hover">
            <div class="w-14 h-14 rounded-xl bg-red-600/20 flex items-center justify-center mb-4"><i class="ph-bold ph-bell text-3xl text-red-400"></i>
            </div>
-           <h3 class="text-xl font-bold mb-2">Smart Alarms</h3>
-           <p class="opacity-70">Choose from multiple alarm sounds and enable 50-second warnings. Never miss the end of your focus session.</p>
+           <h3 class="text-xl font-bold mb-2">{{ t('smart_alarms') }}</h3>
+           <p class="opacity-70">{{ t('smart_alarms_desc') }}</p>
           </div>
          </div>
         </div><div class="mb-12">
-         <h2 class="text-3xl font-bold mb-8 text-center">How It Works</h2>
+         <h2 class="text-3xl font-bold mb-8 text-center">{{ t('how_it_works') }}</h2>
          <div class="grid md:grid-cols-3 gap-6">
           <div class="text-center">
            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-3xl font-bold mx-auto mb-4">
             1
            </div>
-           <h3 class="text-xl font-bold mb-2">Set Your Goal</h3>
-           <p class="opacity-70">Choose a subject and task you want to focus on. Select your preferred timer duration.</p>
+           <h3 class="text-xl font-bold mb-2">{{ t('step_1_title') }}</h3>
+           <p class="opacity-70">{{ t('step_1_desc') }}</p>
           </div>
           <div class="text-center">
            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-3xl font-bold mx-auto mb-4">
             2
            </div>
-           <h3 class="text-xl font-bold mb-2">Stay Focused</h3>
-           <p class="opacity-70">Work without distractions during your focus session. The timer keeps you on track.</p>
+           <h3 class="text-xl font-bold mb-2">{{ t('step_2_title') }}</h3>
+           <p class="opacity-70">{{ t('step_2_desc') }}</p>
           </div>
           <div class="text-center">
            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-3xl font-bold mx-auto mb-4">
             3
            </div>
-           <h3 class="text-xl font-bold mb-2">Track Progress</h3>
-           <p class="opacity-70">Review your analytics and celebrate your achievements. Watch your productivity grow!</p>
+           <h3 class="text-xl font-bold mb-2">{{ t('step_3_title') }}</h3>
+           <p class="opacity-70">{{ t('step_3_desc') }}</p>
           </div>
          </div>
         </div><div v-if="totalSessions > 0" class="mb-12">
-         <h2 class="text-3xl font-bold mb-8 text-center">Your Progress Today</h2>
+         <h2 class="text-3xl font-bold mb-8 text-center">{{ t('progress_today') }}</h2>
          <div class="grid md:grid-cols-4 gap-6">
           <div class="glass rounded-2xl p-6 text-center card-hover"><i class="ph-bold ph-clock text-5xl text-purple-400 mb-3"></i>
            <div class="text-4xl font-bold mb-2">
             {{ totalFocusTime }}
            </div>
            <div class="opacity-70">
-            Minutes Focused
+            {{ t('mins_focused') }}
            </div>
           </div>
           <div class="glass rounded-2xl p-6 text-center card-hover"><i class="ph-bold ph-fire text-5xl text-orange-400 mb-3"></i>
@@ -1267,7 +1325,7 @@
             {{ totalSessions }}
            </div>
            <div class="opacity-70">
-            Sessions Completed
+            {{ t('sessions_completed') }}
            </div>
           </div>
           <div class="glass rounded-2xl p-6 text-center card-hover"><i class="ph-bold ph-check-circle text-5xl text-green-400 mb-3"></i>
@@ -1275,7 +1333,7 @@
             {{ completedTasksCount }}
            </div>
            <div class="opacity-70">
-            Tasks Completed
+            {{ t('tasks_completed') }}
            </div>
           </div>
           <div class="glass rounded-2xl p-6 text-center card-hover"><i class="ph-bold ph-book text-5xl text-blue-400 mb-3"></i>
@@ -1283,13 +1341,13 @@
             {{ subjects.length }}
            </div>
            <div class="opacity-70">
-            Subjects Added
+            {{ t('subjects_added') }}
            </div>
           </div>
          </div>
         </div><div class="glass rounded-3xl p-8 md:p-12 text-center">
-         <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Boost Your Productivity?</h2>
-         <p class="text-lg opacity-80 mb-8">Join thousands of students and professionals who trust StudyFlow for their focus needs.</p><button @click="currentView = 'timer'" class="btn-primary px-10 py-4 rounded-xl font-semibold text-lg flex items-center gap-2 mx-auto"> <i class="ph-bold ph-rocket-launch text-xl"></i> Get Started Now </button>
+         <h2 class="text-3xl md:text-4xl font-bold mb-4">{{ t('ready_boost') }}</h2>
+         <p class="text-lg opacity-80 mb-8">{{ t('boost_desc') }}</p><button @click="currentView = 'timer'" class="btn-primary px-10 py-4 rounded-xl font-semibold text-lg flex items-center gap-2 mx-auto"> <i class="ph-bold ph-rocket-launch text-xl"></i> {{ t('get_started') }} </button>
         </div>
        </div><div v-if="currentView === 'timer'" class="max-w-4xl mx-auto animate-fadeIn">
   <h2 class="text-2xl sm:text-3xl font-bold mb-6 text-center md:text-left">Focus Timer</h2>
@@ -1708,7 +1766,7 @@
           <div v-if="leaderboardResults.length === 0" class="text-center opacity-70 py-6">
            No leaderboard data yet.
           </div>
-          <div v-else class="space-y-2">
+          <div v-else class="space-y-4">
            <div v-for="item in leaderboardResults" :key="item.rank" class="glass-strong p-3 rounded-xl flex items-center justify-between">
             <div class="flex items-center gap-3">
              <div class="w-8 h-8 rounded-full bg-purple-600/20 flex items-center justify-center text-sm font-bold">#{{ item.rank }}</div>
@@ -1733,7 +1791,7 @@
           <div v-if="achievementLeaderboard.length === 0" class="text-center opacity-70 py-6">
            <p>No achievement data yet. Start studying to climb the ranks!</p>
           </div>
-          <div v-else>
+          <div v-else class="space-y-4">
            <!-- Leaderboard Chart -->
            <div class="mb-6">
             <div class="chart-container relative h-80 w-full">
@@ -2217,30 +2275,30 @@
           <div class="flex items-center gap-2 mb-4"><i class="ph-bold ph-brain text-2xl text-purple-400"></i>
            <h3 class="text-lg font-bold">StudyFlow</h3>
           </div>
-          <p class="text-sm opacity-70 mb-4">Your ultimate focus and productivity companion. Build to help students and professionals achieve their goals.</p>
+          <p class="text-sm opacity-70 mb-4">{{ t('welcome_subtitle') }} - {{ t('boost_desc') }}</p>
           <div class="flex gap-3"><a href="https://github.com/salahuddingfx/Study-Flow" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i class="ph-bold ph-github-logo text-xl"></i> </a> <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i class="ph-bold ph-twitter-logo text-xl"></i> </a> <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i class="ph-bold ph-linkedin-logo text-xl"></i> </a>
           </div>
          </div><div>
-          <h3 class="text-lg font-bold mb-4">Features</h3>
+          <h3 class="text-lg font-bold mb-4">{{ t('features') }}</h3>
           <ul class="space-y-2 text-sm opacity-70">
-           <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> Pomodoro Timer</li>
-           <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> Task Management</li>
-           <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> Study Analytics</li>
-           <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> Custom Themes</li>
-           <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> Focus Music</li>
+           <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> {{ t('pomodoro_timer') }}</li>
+           <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> {{ t('task_mgmt') }}</li>
+           <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> {{ t('study_analytics') }}</li>
+           <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> {{ t('beautiful_themes') }}</li>
+           <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> {{ t('focus_music') }}</li>
           </ul>
          </div><div>
-          <h3 class="text-lg font-bold mb-4">Quick Links</h3>
+          <h3 class="text-lg font-bold mb-4">{{ t('quick_links') }}</h3>
           <ul class="space-y-2 text-sm">
-           <li><button @click="currentView = 'home'" class="opacity-70 hover:opacity-100 hover:text-purple-400"> Home </button></li>
-           <li><button @click="currentView = 'timer'" class="opacity-70 hover:opacity-100 hover:text-purple-400"> Focus Timer </button></li>
-           <li><button @click="currentView = 'tasks'" class="opacity-70 hover:opacity-100 hover:text-purple-400"> Tasks </button></li>
-           <li><button @click="currentView = 'analytics'" class="opacity-70 hover:opacity-100 hover:text-purple-400"> Analytics </button></li>
+           <li><button @click="currentView = 'home'" class="opacity-70 hover:opacity-100 hover:text-purple-400"> {{ t('nav_home') }} </button></li>
+           <li><button @click="currentView = 'timer'" class="opacity-70 hover:opacity-100 hover:text-purple-400"> {{ t('nav_timer') }} </button></li>
+           <li><button @click="currentView = 'tasks'" class="opacity-70 hover:opacity-100 hover:text-purple-400"> {{ t('nav_tasks') }} </button></li>
+           <li><button @click="currentView = 'analytics'" class="opacity-70 hover:opacity-100 hover:text-purple-400"> {{ t('nav_analytics') }} </button></li>
            <li><button @click="showAchievementModal = true" class="opacity-70 hover:opacity-100 hover:text-purple-400 flex items-center gap-1"><i class="ph-bold ph-trophy"></i> Achievements </button></li>
-           <li><button @click="showDeveloperModal = true" class="opacity-70 hover:opacity-100 hover:text-purple-400"> About Developer </button></li>
+           <li><button @click="showDeveloperModal = true" class="opacity-70 hover:opacity-100 hover:text-purple-400"> {{ t('about_dev') }} </button></li>
           </ul>
          </div><div>
-          <h3 class="text-lg font-bold mb-4">Get in Touch</h3>
+          <h3 class="text-lg font-bold mb-4">{{ t('get_in_touch') }}</h3>
           <ul class="space-y-3 text-sm opacity-70">
            <li class="flex items-center gap-2"><i class="ph-bold ph-envelope text-purple-400"></i> <a href="mailto:hello@studyflow.app" class="hover:text-purple-400">hello@studyflow.app</a></li>
            <li class="flex items-center gap-2"><i class="ph-bold ph-globe text-purple-400"></i> <a href="https://studyflow.salahuddin.codes" target="_blank" rel="noopener noreferrer" class="hover:text-purple-400">StudyFlow</a></li>
@@ -2249,11 +2307,11 @@
          </div>
         </div><div class="pt-6 border-t border-gray-700">
          <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm opacity-70">
-          <div class="flex items-center gap-2"><i class="ph-bold ph-copyright text-purple-400"></i> <span>{{ new Date().getFullYear() }} StudyFlow. All rights reserved.</span>
+          <div class="flex items-center gap-2"><i class="ph-bold ph-copyright text-purple-400"></i> <span>{{ new Date().getFullYear() }} StudyFlow. {{ t('rights_reserved') }}</span>
           </div>
-          <div class="flex items-center gap-2"><i class="ph-bold ph-code text-purple-400"></i> <span>Crafted with</span> <i class="ph-fill ph-heart text-red-400"></i> <span>by</span> <button @click="showDeveloperModal = true" class="font-semibold text-purple-400 hover:text-purple-300">Salah Uddin Kader</button>
+          <div class="flex items-center gap-2"><i class="ph-bold ph-code text-purple-400"></i> <span>{{ t('crafted_with') }}</span> <i class="ph-fill ph-heart text-red-400"></i> <span>{{ t('by') }}</span> <button @click="showDeveloperModal = true" class="font-semibold text-purple-400 hover:text-purple-300">Salah Uddin Kader</button>
           </div>
-          <div class="flex items-center gap-4"><span>Made with Vue.js &amp; Tailwind CSS</span>
+          <div class="flex items-center gap-4"><span>{{ t('made_with') }}</span>
           </div>
          </div>
         </div>
