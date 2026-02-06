@@ -1,6 +1,6 @@
-const CACHE_NAME = 'studyflow-v7-production';
-const RUNTIME_CACHE = 'studyflow-runtime-v7';
-const CDN_CACHE = 'studyflow-cdn-v7';
+const CACHE_NAME = 'studyflow-v8-production';
+const RUNTIME_CACHE = 'studyflow-runtime-v8';
+const CDN_CACHE = 'studyflow-cdn-v8';
 
 // Static assets to cache immediately
 const urlsToCache = [
@@ -10,7 +10,8 @@ const urlsToCache = [
   './Assets/script.js',
   './Assets/critical.css',
   './manifest.json',
-  './Assets/brain-duotone.png'
+  './Assets/brain-duotone.png',
+  './Assets/chart.umd.min.js'
 ];
 
 // CDN resources to cache (with longer TTL)
@@ -40,6 +41,9 @@ self.addEventListener('install', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // Skip unsupported schemes (e.g., chrome-extension://)
+  if (!url.protocol.startsWith('http')) return;
 
   // Skip non-GET requests
   if (request.method !== 'GET') return;

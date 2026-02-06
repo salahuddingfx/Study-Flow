@@ -71,7 +71,7 @@
   <!-- Core Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.15/vue.global.prod.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@phosphor-icons/web" defer crossorigin="anonymous"></script>
-  <script src="Assets/chart.umd.min.js" onerror="(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';document.head.appendChild(s);}())"></script>
+  <script src="Assets/chart.umd.min.js?v=8" onerror="(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';document.head.appendChild(s);}())"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" defer></script>
@@ -1607,7 +1607,9 @@
         </div><div class="grid md:grid-cols-2 gap-4 sm:gap-6 mb-6"><div class="glass rounded-2xl p-3 sm:p-6">
            <h3 class="text-xl font-semibold mb-4">Study Time Trend</h3>
            <div class="chart-container relative h-64 sm:h-80 w-full">
-            <canvas ref="studyTimeChart"></canvas>
+            <canvas v-show="chartJsReady && analyticsHasSessions" ref="studyTimeChart"></canvas>
+            <div v-if="!chartJsReady" class="chart-empty">Chart library not loaded.</div>
+            <div v-else-if="!analyticsHasSessions" class="chart-empty">No study sessions yet.</div>
            </div>
           </div>
           <!-- Quiz Stats Card -->
@@ -1643,7 +1645,9 @@
           </div><div class="glass rounded-2xl p-3 sm:p-6">
            <h3 class="text-xl font-semibold mb-4">Subject Distribution</h3>
            <div class="chart-container relative h-64 sm:h-80 w-full">
-            <canvas ref="subjectChart"></canvas>
+            <canvas v-show="chartJsReady && analyticsHasSubjects" ref="subjectChart"></canvas>
+            <div v-if="!chartJsReady" class="chart-empty">Chart library not loaded.</div>
+            <div v-else-if="!analyticsHasSubjects" class="chart-empty">No subject data yet.</div>
            </div>
           </div>
          </div><div class="glass rounded-2xl p-3 sm:p-6 mb-6">

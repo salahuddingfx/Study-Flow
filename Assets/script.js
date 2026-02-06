@@ -283,6 +283,9 @@ createApp({
             leaderboardChart: null,
             updatingCharts: false,
             chartKey: 0,
+            chartJsReady: false,
+            analyticsHasSessions: false,
+            analyticsHasSubjects: false,
 
             // Online/Offline status
             isOnline: navigator.onLine,
@@ -404,6 +407,11 @@ createApp({
     }, 
 
     async mounted() {
+        // Attempt to detect Chart.js early
+        if (typeof Chart !== 'undefined') {
+            this.chartJsReady = true;
+        }
+
         document.body.className = 'theme-dark';
         
         // Check for reset token in URL FIRST - if found, skip auth
@@ -2373,6 +2381,7 @@ createApp({
             script.async = true;
             script.onload = () => {
                 window.__studyflowChartJsLoading = false;
+                this.chartJsReady = true;
                 if (this.currentView === 'analytics') {
                     this.$nextTick(() => {
                         this.updateCharts();
@@ -2382,6 +2391,7 @@ createApp({
             };
             script.onerror = () => {
                 window.__studyflowChartJsLoading = false;
+                this.chartJsReady = false;
                 console.error('Chart.js failed to load from fallback CDN.');
             };
             document.head.appendChild(script);
@@ -2772,75 +2782,177 @@ createApp({
             this.currentQuote = this.motivationalQuotes[randomIndex];
         },
 
-        updateCharts() {
+// Assets/script.js এর updateCharts ফাংশনটি এভাবে আপডেট করুন:
+
+updateCharts() {
+            console.log('updateCharts called');
             if (this.updatingCharts) {
-                return;
+                console.log('updatingCharts is true, returning');
+    }
+
+    // ১. আগে ডাটা ক্যালকুলেট করুন (যাতে v-show true হতে পারে)
+    const now = new Date();
+    let startDate, daysToShow, chartTitle;
+
+    if (this.analyticsView === 'daily') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        daysToShow = 24;
+        chartTitle = 'Today\'s Focus Time';
+    } else if (this.analyticsView === 'weekly') {
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        daysToShow = 7;
+        chartTitle = 'Weekly Focus Time';
+    } else if (this.analyticsView === 'monthly') {
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        daysToShow = 30;
+        chartTitle = 'Monthly Focus Time';
+    }
+
+    const filteredSessions = (this.sessions || []).filter(s => {
+        const sessionDate = new Date(s.timestamp);
+        return sessionDate >= startDate && sessionDate <= now;
+    });
+
+    console.log('filteredSessions length:', filteredSessions.length);
+    console.log('sessions:', this.sessions);
+
+    // এই লাইনটি অত্যন্ত গুরুত্বপূর্ণ - এটি আগে আপডেট না করলে ক্যানভাস hidden থাকবে
+    // We explicitly set this to TRUE to always try to render the chart, 
+    // even if empty (it will show empty axis)
+    this.analyticsHasSessions = true; // filteredSessions.length > 0;
+
+    // Subject Data ক্যালকুলেশন
+    const subjectStats = {};
+    filteredSessions.forEach(s => {
+        const subject = s.subject || 'Unspecified';
+        if (!subjectStats[subject]) {
+            subjectStats[subject] = { time: 0, sessions: 0 };
+        }
+        subjectStats[subject].time += s.duration;
+        subjectStats[subject].sessions += 1;
+    });
+    const subjectLabels = Object.keys(subjectStats);
+    this.analyticsHasSubjects = subjectLabels.length > 0;
+
+    // ২. এবার DOM আপডেটের জন্য অপেক্ষা করুন এবং তারপর চার্ট আঁকুন
+    this.$nextTick(() => {
+        console.log('$nextTick in updateCharts');
+        // Check if DOM elements exist
+        if (!this.$refs.studyTimeChart || !this.$refs.subjectChart) {
+            console.log('DOM refs not found:', this.$refs.studyTimeChart, this.$refs.subjectChart);
+            return;
+        }
+
+        // Check if Library is loaded
+        console.log('Chart defined:', typeof Chart !== 'undefined');
+        if (!this.ensureChartJsLoaded()) {
+            console.log('Chart.js not loaded, retrying');
+            this.chartJsReady = typeof Chart !== 'undefined';
+            setTimeout(() => this.updateCharts(), 500);
+            return;
+        }
+
+        this.chartJsReady = true;
+
+        // এখন সাইজ চেক করুন (ডাটা থাকার কারণে এখন এটি visible হওয়ার কথা)
+        const studyRect = this.$refs.studyTimeChart.getBoundingClientRect();
+        
+        // যদি এখনও সাইজ ০ হয় এবং ডাটা থাকে, তাহলে একটু অপেক্ষা করে রিট্রাই করুন
+        if (this.analyticsHasSessions && (studyRect.width === 0 || studyRect.height === 0)) {
+            setTimeout(() => this.updateCharts(), 200);
+            return;
+        }
+
+        this.updatingCharts = true;
+
+        try {
+            // --- Chart 1: Study Time Trend ---
+            if (this.studyTimeChart) {
+                this.studyTimeChart.destroy();
+                this.studyTimeChart = null;
             }
 
-            // Check if DOM elements exist
-            if (!this.$refs.studyTimeChart || !this.$refs.subjectChart) {
-                // Not in analytics view or DOM not ready
-                return;
-            }
-
-            // Check if Library is loaded
-            if (!this.ensureChartJsLoaded()) {
-                setTimeout(() => this.updateCharts(), 500);
-                return;
-            }
-
-            const studyRect = this.$refs.studyTimeChart.getBoundingClientRect();
-            const subjectRect = this.$refs.subjectChart.getBoundingClientRect();
-            if (studyRect.width === 0 || studyRect.height === 0 || subjectRect.width === 0 || subjectRect.height === 0) {
-                setTimeout(() => this.updateCharts(), 200);
-                return;
-            }
-
-            this.updatingCharts = true;
-
-            try {
-                // --- Chart 1: Study Time Trend ---
-                if (this.studyTimeChart) {
-                    this.studyTimeChart.destroy();
-                    this.studyTimeChart = null; // Explicit nullify
-                }
-
-                const now = new Date();
-                let startDate, daysToShow, chartTitle;
-
-                if (this.analyticsView === 'daily') {
-                    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()); 
-                    daysToShow = 1;
-                    chartTitle = 'Today\'s Focus Time';
-                } else if (this.analyticsView === 'weekly') {
-                    startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                    daysToShow = 7;
-                    chartTitle = 'Weekly Focus Time';
-                } else if (this.analyticsView === 'monthly') {
-                    startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                    daysToShow = 30;
-                    chartTitle = 'Monthly Focus Time';
-                }
-
-                const filteredSessions = (this.sessions || []).filter(s =>
-                    new Date(s.timestamp) >= startDate
-                );
-
+            // Always render chart, data or no data
+            if (true) { 
                 const ctx1 = this.$refs.studyTimeChart.getContext('2d');
-                const labels = [];
-                const data = [];
-                const sessionsMap = {};
+                let labels = [];
+                let data = [];
 
-                filteredSessions.forEach(s => {
-                    const date = new Date(s.timestamp).toLocaleDateString();
-                    sessionsMap[date] = (sessionsMap[date] || 0) + s.duration;
-                });
+                if (this.analyticsHasSessions && filteredSessions.length > 0) {
+                     if (this.analyticsView === 'daily') {
+                        const hourlyTotals = new Array(24).fill(0);
+                        filteredSessions.forEach(s => {
+                            const date = new Date(s.timestamp);
+                            const hour = date.getHours();
+                            hourlyTotals[hour] += s.duration;
+                        });
+                        for (let hour = 0; hour < 24; hour++) {
+                            labels.push(`${String(hour).padStart(2, '0')}:00`);
+                            data.push(hourlyTotals[hour]);
+                        }
+                    } else if (this.analyticsView === 'weekly') {
+                        const dailyTotals = {};
+                        for (let i = 0; i < 7; i++) {
+                            const d = new Date(startDate);
+                            d.setDate(startDate.getDate() + i);
+                            const dateStr = d.toLocaleDateString();
+                            dailyTotals[dateStr] = 0;
+                            labels.push(d.toLocaleDateString(undefined, { weekday: 'short' }));
+                        }
+                        filteredSessions.forEach(s => {
+                            const dateStr = new Date(s.timestamp).toLocaleDateString();
+                            if (dailyTotals[dateStr] !== undefined) {
+                                dailyTotals[dateStr] += s.duration;
+                            }
+                        });
+                        data = Object.values(dailyTotals);
+                    } else if (this.analyticsView === 'monthly') {
+                        const dailyTotals = {};
+                        // Create last 30 days buckets
+                        for (let i = 0; i <= 30; i++) {
+                            const d = new Date(startDate);
+                            d.setDate(startDate.getDate() + i);
+                            if (d > now) break;
+                            const dateStr = d.toLocaleDateString();
+                            dailyTotals[dateStr] = 0;
+                            labels.push(d.getDate());
+                        }
 
-                for (let i = daysToShow - 1; i >= 0; i--) {
-                    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-                    const dateStr = date.toLocaleDateString();
-                    labels.push(this.analyticsView === 'daily' ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : dateStr);
-                    data.push(sessionsMap[dateStr] || 0);
+                        filteredSessions.forEach(s => {
+                            const dateStr = new Date(s.timestamp).toLocaleDateString();
+                             // Try to match key
+                             if (dailyTotals[dateStr] !== undefined) {
+                                dailyTotals[dateStr] += s.duration;
+                            } else {
+                                // If exact locale string match fails (unlikely if same machine), 
+                                // we can try more robust matching, but usually this is fine.
+                            }
+                        });
+                        // Ensure we push data in correct order matching labels
+                        // The loop above pushed labels, let's collect data in same order
+                         data = [];
+                         for (let i = 0; i <= 30; i++) {
+                            const d = new Date(startDate);
+                            d.setDate(startDate.getDate() + i);
+                            if (d > now) break;
+                            const dateStr = d.toLocaleDateString();
+                            data.push(dailyTotals[dateStr] || 0);
+                        }
+                    }
+                } else {
+                    // Empty State Defaults
+                     if (this.analyticsView === 'daily') {
+                        labels = ['00:00', '06:00', '12:00', '18:00', '23:59'];
+                        data = [0, 0, 0, 0, 0];
+                     }
+                     else if (this.analyticsView === 'weekly') {
+                        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                        data = [0, 0, 0, 0, 0, 0, 0];
+                     }
+                     else {
+                        labels = Array.from({length: 30}, (_, i) => i + 1);
+                        data = new Array(30).fill(0);
+                     }
                 }
 
                 this.studyTimeChart = new Chart(ctx1, {
@@ -2881,35 +2993,37 @@ createApp({
                         }
                     }
                 });
+            }
 
-                // --- Chart 2: Subject Distribution ---
-                if (this.subjectChart) {
-                    this.subjectChart.destroy();
-                    this.subjectChart = null; // Explicit nullify
-                }
+            // --- Chart 2: Subject Distribution ---
+            if (this.subjectChart) {
+                this.subjectChart.destroy();
+                this.subjectChart = null;
+            }
 
+            // Always render donut chart too or empty state if needed
+            if (true) {
                 const ctx2 = this.$refs.subjectChart.getContext('2d');
-                const subjectStats = {};
-                
-                filteredSessions.forEach(s => {
-                    const subject = s.subject || 'Unspecified';
-                    if (!subjectStats[subject]) {
-                        subjectStats[subject] = { time: 0, sessions: 0 };
-                    }
-                    subjectStats[subject].time += s.duration;
-                    subjectStats[subject].sessions += 1;
-                });
+                let subjectData = [];
+                let sLabels = [];
 
-                const subjectLabels = Object.keys(subjectStats);
-                const subjectData = subjectLabels.map(s => subjectStats[s].time);
+                if (this.analyticsHasSubjects && subjectLabels.length > 0) {
+                     subjectData = subjectLabels.map(s => subjectStats[s].time);
+                     sLabels = subjectLabels;
+                } else {
+                     subjectData = [1]; // Minimal value to show empty ring
+                     sLabels = ['No Data'];
+                }
 
                 this.subjectChart = new Chart(ctx2, {
                     type: 'doughnut',
                     data: {
-                        labels: subjectLabels.length ? subjectLabels : ['No Data'],
+                        labels: sLabels,
                         datasets: [{
-                            data: subjectData.length ? subjectData : [1],
-                            backgroundColor: ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                            data: subjectData,
+                            backgroundColor: this.analyticsHasSubjects 
+                                ? ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                                : ['#334155'], // Dark gray for empty state
                             borderWidth: 0
                         }]
                     },
@@ -2930,14 +3044,15 @@ createApp({
                         }
                     }
                 });
-
-            } catch (error) {
-                console.error("🔥 Error updating charts:", error);
-            } finally {
-                // Ensure the lock is ALWAYS released
-                this.updatingCharts = false;
             }
-        },
+
+        } catch (error) {
+            console.error("🔥 Error updating charts:", error);
+        } finally {
+            this.updatingCharts = false;
+        }
+    });
+},
 
         handleProfileImageUpload(event) {
             const file = event.target.files[0];

@@ -668,6 +668,24 @@ html:not(.hasTouch) select {
     height: 100% !important;
 }
 
+.chart-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 16px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    min-height: 300px; /* একটি ফিক্সড হাইট দিন */
+}
+
 /* Prevent horizontal overflow globally */
 html, body {
     max-width: 100%;
