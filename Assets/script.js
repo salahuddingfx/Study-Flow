@@ -1026,8 +1026,9 @@ createApp({
 
                 return data;
             } catch (error) {
-                // Local fallback: if 5000 is down, retry on 5001
-                if (isLocal && this.API_BASE_URL.includes(':5000')) {
+                // Only retry on network failures, not HTTP errors (4xx/5xx)
+                const isNetworkError = error instanceof TypeError;
+                if (isLocal && isNetworkError && this.API_BASE_URL.includes(':5000')) {
                     try {
                         const retryResponse = await fetch(`${altBase5001}${endpoint}`, {
                             ...options,
@@ -2787,8 +2788,8 @@ createApp({
 updateCharts() {
             console.log('updateCharts called');
             if (this.updatingCharts) {
-                console.log('updatingCharts is true, returning');
-    }
+                return;
+            }
 
     // ১. আগে ডাটা ক্যালকুলেট করুন (যাতে v-show true হতে পারে)
     const now = new Date();

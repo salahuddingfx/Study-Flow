@@ -239,12 +239,15 @@ Before you begin, make sure all the above tools are installed and properly confi
 ```bash
 git clone https://github.com/salahuddingfx/Study-Flow.git
 cd Study-Flow
+```
 
-2️⃣ Install Dependencies
+### 2️⃣ Install Dependencies
+```bash
 cd Backend
 npm install
+```
 
-3️⃣ Environment Configuration
+### 3️⃣ Environment Configuration
 
 Create a `.env` file in the **Backend** directory:
 
@@ -266,18 +269,19 @@ GEMINI_MODEL=gemini-2.0-flash-exp  # Default: unlimited experimental model
 - `gemma-2-27b-it` - Gemma 27B
 - `gemini-2.5-flash` - ⚠️ Rate Limited (5 RPM/20 RPD)
 
-4️⃣ Start the Backend Server
+### 4️⃣ Start the Backend Server
+```bash
 npm start
+```
 
-5️⃣ Run the Frontend
+### 5️⃣ Run the Frontend
 
 Use VS Code Live Server (recommended)
 
-Backend → http://localhost:5000
+- Backend → `http://localhost:5000`
+- Frontend → `http://127.0.0.1:5500/index.html` (Live Server)
 
-Frontend → http://127.0.0.1:5500/index.html (Live Server)
-
-Or any static server of your choice.
+Or serve from the backend directly at `http://localhost:5000`.
 
 ---
 
@@ -422,6 +426,13 @@ Study Flow/
 
 ## 🔄 Recent Upgrades
 
+### 🐛 Bug Fixes (Latest)
+- ✅ **Analytics Charts Fixed**: `updateCharts()` guard now properly has a `return` statement — prevents concurrent render conflicts
+- ✅ **Achievement 500 Error Fixed**: Added missing `quiz-perfects`, `quiz-completed`, `quiz-high-scores` types to Achievement model schema enum
+- ✅ **API Request Smarter Retry**: Port fallback now only triggers on network failures (TypeError/ERR_CONNECTION_REFUSED), not on HTTP errors (401/500)
+- ✅ **Canvas Always Visible**: Charts now render even with zero sessions — shows empty axes instead of hiding the canvas
+- ✅ **Achievement Level Safe Access**: Fixed potential crash when `achievement.level` is undefined
+
 ### 🤖 AI System v2.0
 - ⚡ **Unlimited AI Models**: Now using `gemini-2.0-flash-exp` (no rate limits!)
 - 🔄 **Smart Fallback**: Auto-tries 9+ models including Gemma 2 series
@@ -431,7 +442,7 @@ Study Flow/
 
 ### 🎨 UX Improvements
 - 🖱️ **Enhanced Custom Cursor**: Works on 17+ interactive element types
-- 📱 **Mobile Optimized**: Full-screen menu, no overflow, touch-friendly
+- 📱 **Mobile Optimized**: Stats cards now 3-column horizontal on all screen sizes
 - 🎭 **Glassmorphism**: Beautiful cursor with hover effects (desktop only)
 - 📰 **Blog System**: Default posts with images + modal reader
 - 🔐 **Admin Panel**: Full dashboard with analytics and user management
@@ -457,11 +468,12 @@ Study Flow/
 ## ⚙️ Environment & Running
 
 - Backend: Express on port `5000` (from `.env`).
-- Frontend: Open `index.html` via VS Code Live Server.
+- Frontend: Open `index.html` via VS Code Live Server or serve from backend.
 - AI: `GEMINI_API_KEY` in Backend `.env`.
 
 If you change ports, update `API_BASE_URL` in `Assets/script.js` accordingly.
-```
+
+---
 
 ## 🎮 Usage Guide
 
@@ -939,13 +951,26 @@ StudyFlow is designed to help you build **long-term study habits**, not just sho
 Contributions are highly appreciated and help make **StudyFlow** better for everyone.
 
 ### How to Contribute
-1. 🍴 **Fork** the repository  
-2. 🌱 **Create a feature branch**  
+1. 🍴 **Fork** the repository
+2. 🌱 **Create a feature branch**
    ```bash
    git checkout -b feature/your-feature-name
+   ```
+3. ✅ **Commit your changes**
+   ```bash
    git commit -m "Add: meaningful feature description"
+   ```
+4. 🚀 **Push and open a Pull Request**
+   ```bash
    git push origin feature/your-feature-name
-   
+   ```
+
+### Contribution Guidelines
+- Follow the existing code style
+- Write meaningful commit messages
+- Test your changes before submitting
+- Update documentation when needed
+
 
 <!-- ================= LICENSE HEADER BANNER ================= -->
 

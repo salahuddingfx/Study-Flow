@@ -26,7 +26,7 @@ const achievementSchema = mongoose.Schema({
     criteria: {
         type: {
             type: String,
-            enum: ['total-hours', 'sessions-count', 'streak-days', 'goals-completed', 'subjects-mastered', 'tasks-completed', 'perfect-week'],
+            enum: ['total-hours', 'sessions-count', 'streak-days', 'goals-completed', 'subjects-mastered', 'tasks-completed', 'perfect-week', 'quiz-perfects', 'quiz-completed', 'quiz-high-scores'],
             required: true
         },
         value: {

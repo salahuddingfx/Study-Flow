@@ -295,7 +295,7 @@ router.get('/export/csv', protect, async (req, res) => {
 
         let filter = { user: req.user.id };
         if (startDate && endDate) {
-            filter.startTime = { $gte: new Date(startDate), $lte: new Date(endDate) };
+            filter.timestamp = { $gte: new Date(startDate), $lte: new Date(endDate) };
         }
 
         let csvData = '';
@@ -393,12 +393,12 @@ router.get('/quiz-stats', protect, async (req, res) => {
     try {
         const Quiz = require('../models/Quiz');
         const quizzes = await Quiz.find({ user: req.user.id });
-        
+
         const stats = {
             totalQuizzes: quizzes.length,
             completedQuizzes: quizzes.filter(q => q.completed).length,
-            averageScore: quizzes.length > 0 
-                ? Math.round(quizzes.reduce((sum, q) => sum + (q.score || 0), 0) / quizzes.length) 
+            averageScore: quizzes.length > 0
+                ? Math.round(quizzes.reduce((sum, q) => sum + (q.score || 0), 0) / quizzes.length)
                 : 0,
             highestScore: quizzes.length > 0 ? Math.max(...quizzes.map(q => q.score || 0)) : 0,
             quizzes: quizzes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 10)

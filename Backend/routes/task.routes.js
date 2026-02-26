@@ -8,7 +8,7 @@ let io;
 const setIo = (socketIo) => {
     io = socketIo;
 };
-module.exports.setIo = setIo;
+
 
 // @desc    Get all tasks for user
 // @route   GET /api/tasks
@@ -28,7 +28,7 @@ router.get('/', protect, async (req, res) => {
 router.post('/', protect, async (req, res) => {
     // Support both 'title' (new) and 'text' (legacy)
     const title = req.body.title || req.body.text;
-    
+
     if (!title) {
         return res.status(400).json({ message: 'Title is required' });
     }
@@ -174,5 +174,5 @@ router.post('/sync', protect, async (req, res) => {
     }
 });
 
+router.setIo = setIo;
 module.exports = router;
-module.exports.setIo = setIo;

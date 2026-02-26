@@ -13,9 +13,3 @@
 # Service Worker
 /sw.js
   Cache-Control: no-cache
-
-# API Redirects (if needed)
-/api/*  https://study-flow-backend.onrender.com/api/:splat  200
-
-# SPA Fallback for GitHub Pages
-/*    /index.html   200

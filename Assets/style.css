@@ -863,3 +863,229 @@ button:active {
         font-size: 14px;
     }
 }
+
+/* ============================================================
+   MOBILE ANALYTICS & GLOBAL LAYOUT FIXES
+   ============================================================ */
+
+/* Analytics stat cards: compact on mobile */
+@media (max-width: 640px) {
+    /* Stat cards - tighten text so it doesn't overflow */
+    .stat-card-label {
+        font-size: 0.6rem;
+        line-height: 1.2;
+        word-break: break-word;
+        hyphens: auto;
+    }
+    .stat-card-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    /* Chart containers: fixed height on mobile */
+    .chart-container {
+        height: 200px !important;
+        min-height: 200px !important;
+    }
+    
+    /* Analytics tabs: full-width equal buttons */
+    .analytics-view-tabs button {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.25rem;
+    }
+    
+    /* Page section titles */
+    .section-title {
+        font-size: 1.125rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Timer mode buttons: 2x2 grid */
+    .timer-mode-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 400px) {
+    /* Very small screens */
+    .analytics-view-tabs button {
+        font-size: 0.65rem;
+        padding: 0.25rem;
+    }
+    
+    .chart-container {
+        height: 180px !important;
+        min-height: 180px !important;
+    }
+}
+
+/* Prevent content overflow */
+.glass, .glass-strong {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Chart empty state */
+.chart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 100%;
+    opacity: 0.5;
+}
+.chart-empty i {
+    font-size: 2.5rem;
+}
+
+/* Fix overflow in sections */
+@media (max-width: 480px) {
+    /* Subject distribution better label */
+    .subject-label {
+        font-size: 0.7rem;
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    /* Achievement progress bar label */
+    .achievement-title {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .analytics-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+    .analytics-stats-grid > div {
+        padding: 0.625rem !important;
+    }
+    .analytics-stats-grid .text-2xl {
+        font-size: 1.1rem !important;
+    }
+}
+
+/* Chart containers: proper min-height on mobile */
+@media (max-width: 640px) {
+    .chart-container {
+        height: 220px !important;
+        min-height: 220px !important;
+    }
+    
+    /* Analytics view buttons: ensure equal width */
+    .analytics-view-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+    
+    /* Stats card icon: smaller on mobile */
+    .stat-icon-box {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        flex-shrink: 0;
+    }
+    .stat-icon-box i {
+        font-size: 1.25rem !important;
+    }
+    
+    /* Achievement cards fix */
+    .achievement-card-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Leaderboard fix: prevent overflow */
+    .leaderboard-row {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+    
+    /* Subject progress bars */
+    .subject-progress-item {
+        padding: 0.625rem !important;
+    }
+    
+    /* Profile section */
+    .profile-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Prevent any element from overflowing horizontally */
+.glass, .glass-strong {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* Fix text overflow on mobile */
+@media (max-width: 640px) {
+    h2.text-3xl {
+        font-size: 1.5rem !important;
+    }
+    
+    /* Navigation sidebar better on mobile */
+    .mobile-nav-item {
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+    }
+    
+    /* Timer mode buttons */
+    .timer-mode-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    /* Bottom nav: ensure proper sizing */
+    .bottom-nav-item {
+        padding: 0.5rem 0.25rem;
+        min-width: 0;
+    }
+    .bottom-nav-item span {
+        font-size: 0.6rem !important;
+    }
+}
+
+/* Fix for cards that need to be compact on mobile */
+@media (max-width: 640px) {
+    .compact-mobile {
+        padding: 0.75rem !important;
+    }
+    
+    /* Reduce gap in grids on very small screens */
+    .gap-4 {
+        gap: 0.75rem;
+    }
+    .gap-6 {
+        gap: 1rem;
+    }
+}
+
+/* Chart empty state - center it properly */
+.chart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+.chart-empty i {
+    font-size: 2.5rem;
+    opacity: 0.3;
+}
+
+/* Fix overflow in quiz section */
+@media (max-width: 480px) {
+    .quiz-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.5rem;
+    }
+}
