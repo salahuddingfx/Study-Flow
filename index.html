@@ -2965,92 +2965,114 @@
             </div>
           </div>
 
-          <footer v-if="isAuthenticated" class="glass-strong border-t border-gray-700 p-6">
-            <div class="max-w-6xl mx-auto">
-              <div class="grid md:grid-cols-4 gap-8 mb-8">
-                <div>
-                  <div class="flex items-center gap-2 mb-4"><i class="ph-bold ph-brain text-2xl text-purple-400"></i>
+          <footer v-if="isAuthenticated" class="mt-12 border-t border-white/10">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+              <!-- Top Grid -->
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+                <!-- Brand -->
+                <div class="col-span-2 md:col-span-1">
+                  <div class="flex items-center gap-2 mb-4">
+                    <i class="ph-bold ph-brain text-2xl text-purple-400"></i>
                     <h3 class="text-lg font-bold">StudyFlow</h3>
                   </div>
-                  <p class="text-sm opacity-70 mb-4">{{ t('welcome_subtitle') }} - {{ t('boost_desc') }}</p>
-                  <div class="flex gap-3"><a href="https://github.com/salahuddingfx/Study-Flow" target="_blank"
-                      rel="noopener noreferrer"
-                      class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i
-                        class="ph-bold ph-github-logo text-xl"></i> </a> <a href="https://twitter.com" target="_blank"
-                      rel="noopener noreferrer"
-                      class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i
-                        class="ph-bold ph-twitter-logo text-xl"></i> </a> <a href="https://linkedin.com" target="_blank"
-                      rel="noopener noreferrer"
-                      class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"> <i
-                        class="ph-bold ph-linkedin-logo text-xl"></i> </a>
+                  <p class="text-sm opacity-60 mb-5 leading-relaxed">{{ t('welcome_subtitle') }}</p>
+                  <div class="flex gap-2">
+                    <a href="https://github.com/salahuddingfx/Study-Flow" target="_blank" rel="noopener noreferrer"
+                      class="w-9 h-9 rounded-lg bg-white/5 hover:bg-purple-600/30 border border-white/10 hover:border-purple-500/40 flex items-center justify-center transition-all">
+                      <i class="ph-bold ph-github-logo text-lg"></i>
+                    </a>
+                    <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"
+                      class="w-9 h-9 rounded-lg bg-white/5 hover:bg-purple-600/30 border border-white/10 hover:border-purple-500/40 flex items-center justify-center transition-all">
+                      <i class="ph-bold ph-twitter-logo text-lg"></i>
+                    </a>
+                    <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"
+                      class="w-9 h-9 rounded-lg bg-white/5 hover:bg-purple-600/30 border border-white/10 hover:border-purple-500/40 flex items-center justify-center transition-all">
+                      <i class="ph-bold ph-linkedin-logo text-lg"></i>
+                    </a>
                   </div>
                 </div>
+
+                <!-- Features -->
                 <div>
-                  <h3 class="text-lg font-bold mb-4">{{ t('features') }}</h3>
-                  <ul class="space-y-2 text-sm opacity-70">
-                    <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> {{
-                      t('pomodoro_timer') }}</li>
-                    <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> {{
-                      t('task_mgmt') }}
+                  <h3 class="text-sm font-semibold uppercase tracking-wider text-purple-400 mb-4">{{ t('features') }}</h3>
+                  <ul class="space-y-2.5 text-sm opacity-60">
+                    <li class="flex items-center gap-2 hover:opacity-100 transition-opacity">
+                      <i class="ph-bold ph-timer text-purple-400/70 text-xs"></i> {{ t('pomodoro_timer') }}
                     </li>
-                    <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> {{
-                      t('study_analytics') }}</li>
-                    <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> {{
-                      t('beautiful_themes') }}</li>
-                    <li class="flex items-center gap-2"><i class="ph-bold ph-check text-purple-400"></i> {{
-                      t('focus_music')
-                      }}</li>
+                    <li class="flex items-center gap-2 hover:opacity-100 transition-opacity">
+                      <i class="ph-bold ph-list-checks text-purple-400/70 text-xs"></i> {{ t('task_mgmt') }}
+                    </li>
+                    <li class="flex items-center gap-2 hover:opacity-100 transition-opacity">
+                      <i class="ph-bold ph-chart-bar text-purple-400/70 text-xs"></i> {{ t('study_analytics') }}
+                    </li>
+                    <li class="flex items-center gap-2 hover:opacity-100 transition-opacity">
+                      <i class="ph-bold ph-palette text-purple-400/70 text-xs"></i> {{ t('beautiful_themes') }}
+                    </li>
+                    <li class="flex items-center gap-2 hover:opacity-100 transition-opacity">
+                      <i class="ph-bold ph-music-notes text-purple-400/70 text-xs"></i> {{ t('focus_music') }}
+                    </li>
                   </ul>
                 </div>
+
+                <!-- Quick Links -->
                 <div>
-                  <h3 class="text-lg font-bold mb-4">{{ t('quick_links') }}</h3>
-                  <ul class="space-y-2 text-sm">
+                  <h3 class="text-sm font-semibold uppercase tracking-wider text-purple-400 mb-4">{{ t('quick_links') }}</h3>
+                  <ul class="space-y-2.5 text-sm">
                     <li><button @click="currentView = 'home'"
-                        class="opacity-70 hover:opacity-100 hover:text-purple-400"> {{
-                        t('nav_home') }} </button></li>
+                        class="opacity-60 hover:opacity-100 hover:text-purple-400 transition-all">{{ t('nav_home') }}</button></li>
                     <li><button @click="currentView = 'timer'"
-                        class="opacity-70 hover:opacity-100 hover:text-purple-400"> {{
-                        t('nav_timer') }} </button></li>
+                        class="opacity-60 hover:opacity-100 hover:text-purple-400 transition-all">{{ t('nav_timer') }}</button></li>
                     <li><button @click="currentView = 'tasks'"
-                        class="opacity-70 hover:opacity-100 hover:text-purple-400"> {{
-                        t('nav_tasks') }} </button></li>
+                        class="opacity-60 hover:opacity-100 hover:text-purple-400 transition-all">{{ t('nav_tasks') }}</button></li>
                     <li><button @click="currentView = 'analytics'"
-                        class="opacity-70 hover:opacity-100 hover:text-purple-400">
-                        {{ t('nav_analytics') }} </button></li>
-                    <li><button @click="showAchievementModal = true"
-                        class="opacity-70 hover:opacity-100 hover:text-purple-400 flex items-center gap-1"><i
-                          class="ph-bold ph-trophy"></i> Achievements </button></li>
+                        class="opacity-60 hover:opacity-100 hover:text-purple-400 transition-all">{{ t('nav_analytics') }}</button></li>
                     <li><button @click="showDeveloperModal = true"
-                        class="opacity-70 hover:opacity-100 hover:text-purple-400">
-                        {{ t('about_dev') }} </button></li>
+                        class="opacity-60 hover:opacity-100 hover:text-purple-400 transition-all">{{ t('about_dev') }}</button></li>
                   </ul>
                 </div>
+
+                <!-- Get in Touch -->
                 <div>
-                  <h3 class="text-lg font-bold mb-4">{{ t('get_in_touch') }}</h3>
-                  <ul class="space-y-3 text-sm opacity-70">
-                    <li class="flex items-center gap-2"><i class="ph-bold ph-envelope text-purple-400"></i> <a
-                        href="mailto:hello@studyflow.app" class="hover:text-purple-400">hello@studyflow.app</a></li>
-                    <li class="flex items-center gap-2"><i class="ph-bold ph-globe text-purple-400"></i> <a
-                        href="https://studyflow.salahuddin.codes" target="_blank" rel="noopener noreferrer"
-                        class="hover:text-purple-400">StudyFlow</a></li>
-                    <li class="flex items-center gap-2"><i class="ph-bold ph-calendar text-purple-400"></i> {{
-                      currentDateTime
-                      }}</li>
+                  <h3 class="text-sm font-semibold uppercase tracking-wider text-purple-400 mb-4">{{ t('get_in_touch') }}</h3>
+                  <ul class="space-y-2.5 text-sm opacity-60">
+                    <li class="flex items-center gap-2">
+                      <i class="ph-bold ph-envelope text-purple-400/70 text-xs"></i>
+                      <a href="mailto:hello@studyflow.app" class="hover:text-purple-400 hover:opacity-100 transition-all">hello@studyflow.app</a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <i class="ph-bold ph-globe text-purple-400/70 text-xs"></i>
+                      <a href="https://studyflow.salahuddin.codes" target="_blank" rel="noopener noreferrer"
+                        class="hover:text-purple-400 hover:opacity-100 transition-all">studyflow.salahuddin.codes</a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <i class="ph-bold ph-calendar text-purple-400/70 text-xs"></i>
+                      <span class="text-xs">{{ currentDateTime }}</span>
+                    </li>
                   </ul>
                 </div>
               </div>
-              <div class="pt-6 border-t border-gray-700">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm opacity-70">
-                  <div class="flex items-center gap-2"><i class="ph-bold ph-copyright text-purple-400"></i> <span>{{ new
-                      Date().getFullYear() }} StudyFlow. {{ t('rights_reserved') }}</span>
+
+              <!-- Bottom Bar -->
+              <div class="pt-6 border-t border-white/5">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 text-xs opacity-50">
+                  <div class="flex items-center gap-1.5">
+                    <i class="ph-bold ph-copyright text-purple-400/60"></i>
+                    <span>{{ new Date().getFullYear() }} StudyFlow. {{ t('rights_reserved') }}</span>
                   </div>
-                  <div class="flex items-center gap-2"><i class="ph-bold ph-code text-purple-400"></i> <span>{{
-                      t('crafted_with') }}</span> <i class="ph-fill ph-heart text-red-400"></i> <span>{{ t('by')
-                      }}</span>
+                  <div class="flex items-center gap-1.5">
+                    <i class="ph-bold ph-code text-purple-400/60"></i>
+                    <span>{{ t('crafted_with') }}</span>
+                    <i class="ph-fill ph-heart text-red-400"></i>
+                    <span>{{ t('by') }}</span>
                     <button @click="showDeveloperModal = true"
-                      class="font-semibold text-purple-400 hover:text-purple-300">Salah Uddin Kader</button>
+                      class="font-semibold text-purple-400 hover:text-purple-300 transition-colors">Salah Uddin Kader</button>
                   </div>
-                  <div class="flex items-center gap-4"><span>{{ t('made_with') }}</span>
+                  <div class="flex items-center gap-1.5">
+                    <span>Vue.js</span>
+                    <span class="opacity-30">•</span>
+                    <span>Tailwind CSS</span>
+                    <span class="opacity-30">•</span>
+                    <span>Node.js</span>
                   </div>
                 </div>
               </div>
