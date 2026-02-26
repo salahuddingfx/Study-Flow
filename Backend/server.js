@@ -10,7 +10,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const helmet = require('helmet');
 const path = require('path');
-const compression = require('compression'); 
+const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
@@ -38,16 +38,16 @@ app.use(helmet({
 
 // Rate Limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, 
-    max: 1000, 
-    message: { 
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
+    message: {
         success: false,
-        message: 'Too many requests, please try again later' 
-    }, 
+        message: 'Too many requests, please try again later'
+    },
     standardHeaders: true,
     legacyHeaders: false,
 });
-app.use('/api', limiter); 
+app.use('/api', limiter);
 
 // CORS Config
 const allowedOrigins = [
@@ -55,7 +55,7 @@ const allowedOrigins = [
     'http://localhost:5500',
     'https://salahuddingfx.github.io',      // GitHub Pages
     'https://studyflow-apk.netlify.app',    // Netlify App
-    process.env.FRONTEND_URL 
+    process.env.FRONTEND_URL
 ];
 
 const corsOptions = {
@@ -64,7 +64,7 @@ const corsOptions = {
             callback(null, true);
         } else {
             console.log("Blocked by CORS:", origin);
-            callback(null, true); 
+            callback(null, true);
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -83,17 +83,25 @@ const io = socketIo(server, {
 });
 
 // Standard Middleware
-app.use(express.json({ limit: '10mb' })); 
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
 
-// Static Files
+// No-cache for HTML files (always serve latest)
+app.use((req, res, next) => {
+    if (req.path.endsWith('.html') || req.path === '/') {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+    next();
+});
 app.use(express.static(path.join(__dirname, '..'), {
-    maxAge: '1d', 
-    etag: false
+    maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
+    etag: true
 }));
 
 // Socket Logic
@@ -133,7 +141,7 @@ io.on('connection', (socket) => {
             const User = require('./models/User');
             const achievements = await Achievement.find({ user: userId, unlocked: true }).sort({ unlockedAt: -1 });
             const user = await User.findById(userId).select('achievementLevel achievementLevelName achievementPoints totalAchievementsUnlocked');
-            
+
             io.to(`user_${userId}`).emit('achievements-updated', {
                 achievements,
                 userStats: user
@@ -150,7 +158,7 @@ io.on('connection', (socket) => {
                 .select('username firstName lastName achievementLevel achievementLevelName achievementPoints totalAchievementsUnlocked')
                 .sort({ achievementLevel: -1, achievementPoints: -1 })
                 .limit(10);
-            
+
             io.emit('leaderboard-updated', leaderboard);
         } catch (error) {
             console.error('Leaderboard update error:', error);
@@ -184,12 +192,12 @@ io.on('connection', (socket) => {
     const updateRoomCounts = () => {
         const rooms = ['Math Club', 'Lofi Lounge', 'Silent Study', 'Coffee Shop', 'Library']; // Predefined rooms
         const counts = {};
-        
+
         rooms.forEach(room => {
             const roomSet = io.sockets.adapter.rooms.get(room);
             counts[room] = roomSet ? roomSet.size : 0;
         });
-        
+
         io.emit('update-room-counts', counts);
     };
 
@@ -225,7 +233,7 @@ app.get('/api/health', (req, res) => {
 
 // Auth & User Routes
 app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/user', require('./routes/user.routes')); 
+app.use('/api/user', require('./routes/user.routes'));
 
 // Task Routes (with Socket.IO)
 const taskRoutes = require('./routes/task.routes');
@@ -278,7 +286,7 @@ app.get('*', (req, res) => {
 app.use((err, req, res, next) => {
     console.error(`❌ Error: ${err.message}`);
     const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-    
+
     if (res.headersSent) {
         return next(err);
     }
@@ -293,7 +301,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, async () => {
     console.clear();
-    
+
     // Colors
     const colors = {
         reset: '\x1b[0m',
@@ -362,28 +370,50 @@ server.listen(PORT, async () => {
     console.log(colors.cyan + '    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' + colors.reset);
     console.log('');
 
-    const shouldSendByDays = (lastSent, days) => {
+    // ====================================================
+    // 📧 Email Summary Scheduler (Daily / Weekly / Monthly)
+    // ====================================================
+
+    const HOURS_24 = 24 * 60 * 60 * 1000;
+    const DAYS_7 = 7 * 24 * 60 * 60 * 1000;
+    const DAYS_30 = 30 * 24 * 60 * 60 * 1000;
+    const CHECK_INTERVAL = 60 * 60 * 1000; // Check every 1 hour
+    const STARTUP_DELAY = 60 * 1000; // Wait 60s after startup before first check
+
+    const shouldSendSummary = (lastSent, intervalMs) => {
         if (!lastSent) return true;
-        const diffDays = Math.floor((Date.now() - new Date(lastSent)) / (1000 * 60 * 60 * 24));
-        return diffDays >= days;
+        const elapsed = Date.now() - new Date(lastSent).getTime();
+        return elapsed >= intervalMs;
     };
 
-    const buildSummaryMessage = (label, totalMinutes, sessionsCount, tasksCount, completedTasks, topSubject, streak) => (
-        `Your ${label} StudyFlow Summary\n\n` +
-        `Total study time: ${Math.round(totalMinutes)} minutes\n` +
-        `Sessions completed: ${sessionsCount}\n` +
-        `Tasks created: ${tasksCount}\n` +
-        `Tasks completed: ${completedTasks}\n` +
-        (topSubject ? `Top subject: ${topSubject.name} (${Math.round(topSubject.minutes)} min)\n` : '') +
-        `Current streak: ${streak || 0} days\n`
-    );
+    const buildSummaryMessage = (label, totalMinutes, sessionsCount, tasksCount, completedTasks, topSubject, streak) => {
+        const hours = Math.floor(totalMinutes / 60);
+        const mins = Math.round(totalMinutes % 60);
+        const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins} minutes`;
 
-    const sendSummaryEmail = async ({ user, label, daysBack, lastSentField, subject }) => {
+        return (
+            `📊 Your ${label} StudyFlow Summary\n\n` +
+            `⏱️ Total study time: ${timeStr}\n` +
+            `🔥 Sessions completed: ${sessionsCount}\n` +
+            `📝 Tasks created: ${tasksCount}\n` +
+            `✅ Tasks completed: ${completedTasks}\n` +
+            (topSubject ? `🏆 Top subject: ${topSubject.name} (${Math.round(topSubject.minutes)} min)\n` : '') +
+            `📅 Current streak: ${streak || 0} days\n\n` +
+            `Keep up the great work! 🚀`
+        );
+    };
+
+    const sendSummaryEmail = async ({ user, label, daysBack, lastSentField, subject, intervalMs }) => {
         const now = new Date();
+
+        // Check if enough time has passed since last send
+        if (!shouldSendSummary(user[lastSentField], intervalMs)) return false;
+
+        // Skip if user has no email
+        if (!user.email) return false;
+
         const startDate = new Date(now);
         startDate.setDate(now.getDate() - daysBack);
-
-        if (!shouldSendByDays(user[lastSentField], daysBack)) return;
 
         const sessions = await Session.find({
             user: user._id,
@@ -398,8 +428,8 @@ server.listen(PORT, async () => {
         const completedTasks = tasks.filter(t => t.completed).length;
         const subjectBreakdown = {};
         sessions.forEach(s => {
-            const subject = s.subject || 'Unspecified';
-            subjectBreakdown[subject] = (subjectBreakdown[subject] || 0) + (s.duration || 0);
+            const subj = s.subject || 'Unspecified';
+            subjectBreakdown[subj] = (subjectBreakdown[subj] || 0) + (s.duration || 0);
         });
 
         const topSubjectName = Object.keys(subjectBreakdown).sort((a, b) => subjectBreakdown[b] - subjectBreakdown[a])[0];
@@ -412,73 +442,139 @@ server.listen(PORT, async () => {
         await sendEmail({
             email: user.email,
             subject,
-            heading: `Your ${label} StudyFlow Summary`,
+            heading: `📊 Your ${label} StudyFlow Summary`,
             preheader: `Here is your ${label.toLowerCase()} progress snapshot.`,
             message,
             url: process.env.FRONTEND_URL || 'http://127.0.0.1:5500',
             ctaLabel: 'View Dashboard'
         });
 
+        // Update last sent timestamp
         user[lastSentField] = now;
         await user.save();
+        return true;
     };
 
-    // Summary scheduler (runs daily)
+    // Main scheduler function - checks all users
     const sendSummaries = async () => {
+        const timeNow = new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' });
+        console.log(`\n📧 [Email Scheduler] Running check at ${timeNow}`);
+
+        let dailySent = 0, weeklySent = 0, monthlySent = 0, errors = 0;
+
         try {
-            const users = await User.find({});
+            const users = await User.find({}).select(
+                'email username dailySummaryEnabled weeklySummaryEnabled monthlySummaryEnabled lastDailySummarySent lastWeeklySummarySent lastMonthlySummarySent streakCurrent'
+            );
+
+            console.log(`   👥 Found ${users.length} users to check`);
 
             for (const user of users) {
+                // Daily Summary (every 24 hours)
                 if (user.dailySummaryEnabled !== false) {
                     try {
-                        await sendSummaryEmail({
+                        const sent = await sendSummaryEmail({
                             user,
                             label: 'Daily',
                             daysBack: 1,
                             lastSentField: 'lastDailySummarySent',
-                            subject: 'Your Daily StudyFlow Summary'
+                            subject: '📊 Your Daily StudyFlow Summary',
+                            intervalMs: HOURS_24
                         });
+                        if (sent) {
+                            dailySent++;
+                            console.log(`   ✅ Daily summary sent to @${user.username}`);
+                        }
                     } catch (e) {
-                        console.error('Daily summary email failed:', e.message);
+                        errors++;
+                        console.error(`   ❌ Daily email failed for @${user.username}:`, e.message);
                     }
                 }
 
+                // Weekly Summary (every 7 days)
                 if (user.weeklySummaryEnabled !== false) {
                     try {
-                        await sendSummaryEmail({
+                        const sent = await sendSummaryEmail({
                             user,
                             label: 'Weekly',
                             daysBack: 7,
                             lastSentField: 'lastWeeklySummarySent',
-                            subject: 'Your Weekly StudyFlow Summary'
+                            subject: '📊 Your Weekly StudyFlow Summary',
+                            intervalMs: DAYS_7
                         });
+                        if (sent) {
+                            weeklySent++;
+                            console.log(`   ✅ Weekly summary sent to @${user.username}`);
+                        }
                     } catch (e) {
-                        console.error('Weekly summary email failed:', e.message);
+                        errors++;
+                        console.error(`   ❌ Weekly email failed for @${user.username}:`, e.message);
                     }
                 }
 
+                // Monthly Summary (every 30 days)
                 if (user.monthlySummaryEnabled !== false) {
                     try {
-                        await sendSummaryEmail({
+                        const sent = await sendSummaryEmail({
                             user,
                             label: 'Monthly',
                             daysBack: 30,
                             lastSentField: 'lastMonthlySummarySent',
-                            subject: 'Your Monthly StudyFlow Summary'
+                            subject: '📊 Your Monthly StudyFlow Summary',
+                            intervalMs: DAYS_30
                         });
+                        if (sent) {
+                            monthlySent++;
+                            console.log(`   ✅ Monthly summary sent to @${user.username}`);
+                        }
                     } catch (e) {
-                        console.error('Monthly summary email failed:', e.message);
+                        errors++;
+                        console.error(`   ❌ Monthly email failed for @${user.username}:`, e.message);
                     }
                 }
             }
         } catch (e) {
-            console.error('Summary scheduler error:', e.message);
+            console.error('   ❌ Summary scheduler error:', e.message);
         }
+
+        console.log(`   📊 Results: Daily=${dailySent}, Weekly=${weeklySent}, Monthly=${monthlySent}, Errors=${errors}`);
+        console.log(`   ⏰ Next check in 1 hour\n`);
     };
 
-    // Run once at startup and then daily
-    sendSummaries();
-    setInterval(sendSummaries, 24 * 60 * 60 * 1000);
+    // Delay first run by 60s to avoid spamming on frequent server restarts
+    console.log(`\n📧 [Email Scheduler] Will start first check in ${STARTUP_DELAY / 1000}s...`);
+    setTimeout(() => {
+        sendSummaries(); // First run after delay
+        setInterval(sendSummaries, CHECK_INTERVAL); // Then check every hour
+        console.log('📧 [Email Scheduler] Hourly check interval started');
+    }, STARTUP_DELAY);
+
+    // ====================================================
+    // 🏓 Keep-Alive Self-Ping (Prevents Render Free Tier Shutdown)
+    // ====================================================
+    const KEEP_ALIVE_INTERVAL = 3 * 60 * 1000; // Ping every 3 minutes
+
+    if (process.env.NODE_ENV === 'production' || process.env.RENDER) {
+        const keepAliveUrl = process.env.RENDER_EXTERNAL_URL
+            ? `${process.env.RENDER_EXTERNAL_URL}/api/health`
+            : `http://localhost:${PORT}/api/health`;
+
+        const keepAlive = () => {
+            const http = require(keepAliveUrl.startsWith('https') ? 'https' : 'http');
+            http.get(keepAliveUrl, (res) => {
+                console.log(`🏓 [Keep-Alive] Pinged ${keepAliveUrl} — Status: ${res.statusCode}`);
+            }).on('error', (err) => {
+                console.error(`🏓 [Keep-Alive] Ping failed:`, err.message);
+            });
+        };
+
+        // Start pinging after 30s delay, then every 3 minutes
+        setTimeout(() => {
+            keepAlive(); // First ping
+            setInterval(keepAlive, KEEP_ALIVE_INTERVAL);
+            console.log(`🏓 [Keep-Alive] Auto-ping started — every ${KEEP_ALIVE_INTERVAL / 1000}s to prevent shutdown`);
+        }, 30000);
+    }
 });
 
 // Graceful shutdown handlers
