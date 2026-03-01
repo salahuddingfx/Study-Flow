@@ -658,12 +658,14 @@ html:not(.hasTouch) select {
 /* Chart container */
 .chart-container {
     position: relative;
-    height: 300px;
     width: 100%;
-    max-width: 100%;
+    height: 300px;
+    min-height: 200px;
+    overflow: visible;
 }
 
 .chart-container canvas {
+    display: block;
     width: 100% !important;
     height: 100% !important;
 }
@@ -678,12 +680,6 @@ html:not(.hasTouch) select {
     padding: 16px;
     color: rgba(255, 255, 255, 0.7);
     font-size: 0.9rem;
-}
-
-.chart-container {
-    position: relative;
-    width: 100%;
-    min-height: 300px; /* একটি ফিক্সড হাইট দিন */
 }
 
 /* Prevent horizontal overflow globally */
@@ -1087,5 +1083,46 @@ button:active {
     .quiz-stats-grid {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 0.5rem;
+    }
+}
+
+/* --- Final analytics mobile fixes --- */
+.chart-container canvas {
+    display: block !important;
+}
+
+@media (max-width: 640px) {
+    .analytics-view-tabs {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    .analytics-view-tabs button {
+        min-width: 0;
+        white-space: nowrap;
+    }
+
+    .analytics-stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 0.5rem !important;
+    }
+
+    .analytics-stats-grid > div {
+        padding: 0.75rem 0.5rem !important;
+    }
+
+    .quiz-stats-grid > div {
+        padding: 0.875rem 0.5rem !important;
+    }
+
+    .chart-container {
+        height: 240px !important;
+        min-height: 240px !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .chart-container {
+        height: 220px !important;
+        min-height: 220px !important;
     }
 }

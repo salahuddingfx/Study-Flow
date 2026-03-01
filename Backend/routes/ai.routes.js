@@ -559,7 +559,14 @@ router.post('/timer-control', protect, async (req, res) => {
                 res.json({ 
                     success: true, 
                     message: `Great effort! Saved ${Math.round(elapsedMinutes)} minutes of study time.`,
-                    sessionId: session._id
+                    sessionId: session._id,
+                    session: {
+                        _id: session._id,
+                        subject: session.subject,
+                        duration: session.duration,
+                        timestamp: session.timestamp,
+                        task: session.task || ''
+                    }
                 });
             } else {
                 res.json({ success: false, message: 'No study time to save' });

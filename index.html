@@ -2162,7 +2162,7 @@
                   <i class="ph-bold ph-calendar-dots"></i> Monthly </button>
               </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 mb-6">
+            <div class="analytics-stats-grid grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 mb-6">
               <div
                 class="glass rounded-2xl p-2 sm:p-6 card-hover flex flex-col items-center justify-center text-center">
                 <div
@@ -2194,17 +2194,15 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
               <div class="glass rounded-2xl p-3 sm:p-6">
                 <h3 class="text-xl font-semibold mb-4">Study Time Trend</h3>
-                <div class="chart-container relative h-64 sm:h-80 w-full">
-                  <canvas v-show="chartJsReady" ref="studyTimeChart"></canvas>
-                  <div v-if="!chartJsReady" class="chart-empty">Chart library not loaded.</div>
-
+                <div class="chart-container relative h-64 sm:h-80 w-full" ref="studyTimeChartContainer">
+                  <canvas ref="studyTimeChart"></canvas>
                 </div>
               </div>
               <!-- Quiz Stats Card -->
               <div class="glass rounded-2xl p-3 sm:p-6">
                 <h3 class="text-xl font-semibold mb-4 flex items-center gap-2"><i
                     class="ph-bold ph-question text-blue-400"></i> Quiz Performance</h3>
-                <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="quiz-stats-grid grid grid-cols-2 gap-3 mb-4">
                   <div class="glass-strong p-4 rounded-xl text-center">
                     <div class="text-3xl font-bold text-blue-400">{{ quizStats.averageScore }}%</div>
                     <div class="text-xs opacity-70">Average Score</div>
@@ -2236,10 +2234,8 @@
               </div>
               <div class="glass rounded-2xl p-3 sm:p-6">
                 <h3 class="text-xl font-semibold mb-4">Subject Distribution</h3>
-                <div class="chart-container relative h-64 sm:h-80 w-full">
-                  <canvas v-show="chartJsReady" ref="subjectChart"></canvas>
-                  <div v-if="!chartJsReady" class="chart-empty">Chart library not loaded.</div>
-
+                <div class="chart-container relative h-64 sm:h-80 w-full" ref="subjectChartContainer">
+                  <canvas ref="subjectChart"></canvas>
                 </div>
               </div>
             </div>

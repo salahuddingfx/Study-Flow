@@ -875,6 +875,8 @@ createApp({
                             this.loadAchievementLeaderboard();
                             this.loadQuizStats();
                         }, 500);
+                        setTimeout(() => this.updateCharts(), 1200);
+                        setTimeout(() => this.updateCharts(), 2200);
                     });
                 });
             } else if (newView === 'calendar') {
@@ -1691,13 +1693,14 @@ createApp({
             }, 1000);
         },
 
-        pauseTimer() {
+        pauseTimer(options = {}) {
+            const { autoSaveIncomplete = true } = options;
             this.timerRunning = false;
             clearInterval(this.timerInterval);
             
             // Auto-save incomplete session if user studied for at least 1 minute
             const elapsedMinutes = (this.totalTimerDuration - this.timeRemaining) / 60;
-            if (elapsedMinutes >= 1 && this.currentSubject) {
+            if (autoSaveIncomplete && elapsedMinutes >= 1 && this.currentSubject) {
                 this.saveIncompleteSession(elapsedMinutes);
             }
             
@@ -1705,7 +1708,7 @@ createApp({
         },
 
         resetTimer() {
-            this.pauseTimer();
+            this.pauseTimer({ autoSaveIncomplete: false });
             this.setTimerMode(this.timerMode);
             this.emitTimerEvent('reset-timer', {});
         },
@@ -1723,8 +1726,25 @@ createApp({
                 });
                 
                 if (response && response.success) {
+                    if (response.session) {
+                        this.sessions.unshift(response.session);
+                    }
+
                     this.showInlineMessage(`✅ ${response.message}`);
                     console.log('🎯 Incomplete session saved:', response.sessionId);
+
+                    if (this.currentView === 'analytics') {
+                        this.$nextTick(() => this.updateCharts());
+                    }
+
+                    try {
+                        await this.apiRequest('/api/achievements/check-progress', {
+                            method: 'POST'
+                        });
+                        await this.loadAchievementStats();
+                    } catch (e) {
+                        console.warn('Achievement refresh after incomplete save failed', e);
+                    }
                 }
             } catch (error) {
                 console.error('Failed to save incomplete session:', error);
@@ -1732,7 +1752,7 @@ createApp({
         },
 
         async completeTimer() {
-            this.pauseTimer();
+            this.pauseTimer({ autoSaveIncomplete: false });
             this.playAlarm();
 
             if (this.timerMode === 'focus' || this.timerMode === 'custom') {
@@ -2096,21 +2116,44 @@ createApp({
 
         async loadUserData() {
             try {
-                const subjectsData = await this.apiRequest('/api/subjects');
-                this.subjects = subjectsData || [];
+                const endpointDefs = [
+                    { key: 'subjects', endpoint: '/api/subjects' },
+                    { key: 'tasks', endpoint: '/api/tasks' },
+                    { key: 'sessions', endpoint: '/api/sessions' },
+                    { key: 'goals', endpoint: '/api/goals' },
+                    { key: 'achievements', endpoint: '/api/achievements' }
+                ];
 
-                const tasksData = await this.apiRequest('/api/tasks');
-                this.tasks = tasksData || [];
+                const settled = await Promise.allSettled(
+                    endpointDefs.map(def => this.apiRequest(def.endpoint))
+                );
+
+                const normalizeArray = (payload, key) => {
+                    if (Array.isArray(payload)) return payload;
+                    if (payload && Array.isArray(payload[key])) return payload[key];
+                    return [];
+                };
+
+                endpointDefs.forEach((def, index) => {
+                    const result = settled[index];
+                    if (result.status === 'fulfilled') {
+                        this[def.key] = normalizeArray(result.value, def.key);
+                    } else {
+                        this[def.key] = [];
+                        console.warn(`Failed to load ${def.key}:`, result.reason);
+                    }
+                });
+
                 this.saveTasksCache();
 
-                const sessionsData = await this.apiRequest('/api/sessions');
-                this.sessions = sessionsData || [];
-
-                const goalsData = await this.apiRequest('/api/goals');
-                this.goals = goalsData || [];
-
-                const achievementsData = await this.apiRequest('/api/achievements');
-                this.achievements = achievementsData || [];
+                if (this.currentView === 'analytics') {
+                    this.$nextTick(() => {
+                        this.updateCharts();
+                        this.loadLeaderboard();
+                        this.loadAchievementLeaderboard();
+                        this.loadQuizStats();
+                    });
+                }
 
                 // Emit to Socket.io for real-time sync
                 if (this.socket && this.userId) {
@@ -2791,6 +2834,19 @@ updateCharts() {
                 return;
             }
 
+    const getSessionDate = (session) => {
+        const rawDate = session?.timestamp || session?.createdAt || session?.updatedAt;
+        if (!rawDate) return null;
+        const parsedDate = new Date(rawDate);
+        return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+    };
+
+    const getSessionDuration = (session) => {
+        const rawDuration = session?.duration ?? session?.minutes ?? session?.totalMinutes ?? 0;
+        const parsedDuration = Number(rawDuration);
+        return Number.isFinite(parsedDuration) && parsedDuration >= 0 ? parsedDuration : 0;
+    };
+
     // ১. আগে ডাটা ক্যালকুলেট করুন (যাতে v-show true হতে পারে)
     const now = new Date();
     let startDate, daysToShow, chartTitle;
@@ -2809,8 +2865,9 @@ updateCharts() {
         chartTitle = 'Monthly Focus Time';
     }
 
-    const filteredSessions = (this.sessions || []).filter(s => {
-        const sessionDate = new Date(s.timestamp);
+    const filteredSessions = (Array.isArray(this.sessions) ? this.sessions : []).filter(s => {
+        const sessionDate = getSessionDate(s);
+        if (!sessionDate) return false;
         return sessionDate >= startDate && sessionDate <= now;
     });
 
@@ -2820,7 +2877,7 @@ updateCharts() {
     // এই লাইনটি অত্যন্ত গুরুত্বপূর্ণ - এটি আগে আপডেট না করলে ক্যানভাস hidden থাকবে
     // We explicitly set this to TRUE to always try to render the chart, 
     // even if empty (it will show empty axis)
-    this.analyticsHasSessions = true; // filteredSessions.length > 0;
+    this.analyticsHasSessions = filteredSessions.length > 0;
 
     // Subject Data ক্যালকুলেশন
     const subjectStats = {};
@@ -2829,7 +2886,7 @@ updateCharts() {
         if (!subjectStats[subject]) {
             subjectStats[subject] = { time: 0, sessions: 0 };
         }
-        subjectStats[subject].time += s.duration;
+        subjectStats[subject].time += getSessionDuration(s);
         subjectStats[subject].sessions += 1;
     });
     const subjectLabels = Object.keys(subjectStats);
@@ -2855,13 +2912,24 @@ updateCharts() {
 
         this.chartJsReady = true;
 
-        // এখন সাইজ চেক করুন (ডাটা থাকার কারণে এখন এটি visible হওয়ার কথা)
-        const studyRect = this.$refs.studyTimeChart.getBoundingClientRect();
-        
-        // যদি এখনও সাইজ ০ হয় এবং ডাটা থাকে, তাহলে একটু অপেক্ষা করে রিট্রাই করুন
-        if (this.analyticsHasSessions && (studyRect.width === 0 || studyRect.height === 0)) {
-            setTimeout(() => this.updateCharts(), 200);
-            return;
+        // Force canvas visibility/sizing before Chart init
+        const studyCanvas = this.$refs.studyTimeChart;
+        const subjectCanvas = this.$refs.subjectChart;
+
+        studyCanvas.style.display = 'block';
+        studyCanvas.style.width = '100%';
+        studyCanvas.style.height = '100%';
+        subjectCanvas.style.display = 'block';
+        subjectCanvas.style.width = '100%';
+        subjectCanvas.style.height = '100%';
+
+        if (!studyCanvas.width || !studyCanvas.height) {
+            studyCanvas.width = 900;
+            studyCanvas.height = 360;
+        }
+        if (!subjectCanvas.width || !subjectCanvas.height) {
+            subjectCanvas.width = 900;
+            subjectCanvas.height = 360;
         }
 
         this.updatingCharts = true;
@@ -2883,9 +2951,10 @@ updateCharts() {
                      if (this.analyticsView === 'daily') {
                         const hourlyTotals = new Array(24).fill(0);
                         filteredSessions.forEach(s => {
-                            const date = new Date(s.timestamp);
+                            const date = getSessionDate(s);
+                            if (!date) return;
                             const hour = date.getHours();
-                            hourlyTotals[hour] += s.duration;
+                            hourlyTotals[hour] += getSessionDuration(s);
                         });
                         for (let hour = 0; hour < 24; hour++) {
                             labels.push(`${String(hour).padStart(2, '0')}:00`);
@@ -2901,9 +2970,11 @@ updateCharts() {
                             labels.push(d.toLocaleDateString(undefined, { weekday: 'short' }));
                         }
                         filteredSessions.forEach(s => {
-                            const dateStr = new Date(s.timestamp).toLocaleDateString();
+                            const sessionDate = getSessionDate(s);
+                            if (!sessionDate) return;
+                            const dateStr = sessionDate.toLocaleDateString();
                             if (dailyTotals[dateStr] !== undefined) {
-                                dailyTotals[dateStr] += s.duration;
+                                dailyTotals[dateStr] += getSessionDuration(s);
                             }
                         });
                         data = Object.values(dailyTotals);
@@ -2920,10 +2991,12 @@ updateCharts() {
                         }
 
                         filteredSessions.forEach(s => {
-                            const dateStr = new Date(s.timestamp).toLocaleDateString();
+                            const sessionDate = getSessionDate(s);
+                            if (!sessionDate) return;
+                            const dateStr = sessionDate.toLocaleDateString();
                              // Try to match key
                              if (dailyTotals[dateStr] !== undefined) {
-                                dailyTotals[dateStr] += s.duration;
+                                dailyTotals[dateStr] += getSessionDuration(s);
                             } else {
                                 // If exact locale string match fails (unlikely if same machine), 
                                 // we can try more robust matching, but usually this is fine.
@@ -2965,6 +3038,9 @@ updateCharts() {
                             data: data,
                             borderColor: '#8b5cf6',
                             backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 2,
+                            pointHoverRadius: 4,
                             tension: 0.4,
                             fill: true
                         }]
@@ -2972,6 +3048,7 @@ updateCharts() {
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
                         plugins: {
                             legend: { display: false },
                             title: {
@@ -2984,6 +3061,7 @@ updateCharts() {
                         scales: {
                             y: {
                                 beginAtZero: true,
+                                suggestedMax: Math.max(...data, 0) + 10,
                                 grid: { color: 'rgba(255,255,255,0.1)' },
                                 title: { display: true, text: 'Minutes', color: '#9ca3af' }
                             },
@@ -3025,12 +3103,15 @@ updateCharts() {
                             backgroundColor: this.analyticsHasSubjects 
                                 ? ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
                                 : ['#334155'], // Dark gray for empty state
-                            borderWidth: 0
+                            borderWidth: 2,
+                            borderColor: 'rgba(255,255,255,0.08)'
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+                        cutout: '62%',
                         plugins: {
                             legend: {
                                 position: window.innerWidth < 640 ? 'bottom' : 'right',
@@ -3046,6 +3127,9 @@ updateCharts() {
                     }
                 });
             }
+
+            this.studyTimeChart?.resize();
+            this.subjectChart?.resize();
 
         } catch (error) {
             console.error("🔥 Error updating charts:", error);
