@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyFlow - Professional Project Report | Smart Productivity Platform</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="StudyFlow - Professional Project Report">
+    <meta name="description" content="Comprehensive technical report of StudyFlow - A smart productivity and focus management system developed by Salah Uddin Kader. Features include Pomodoro timer, analytics, AI assistant, and gamification.">
+    <meta name="keywords" content="StudyFlow, productivity, focus management, Pomodoro timer, study tracker, analytics, project report, Salah Uddin Kader, educational technology">
+    <meta name="author" content="Salah Uddin Kader">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="StudyFlow - Professional Project Report">
+    <meta property="og:description" content="Smart Productivity & Focus Management System - Complete technical documentation and project overview.">
+    <meta property="og:image" content="https://studyflow.salahuddin.codes/Assets/brain-duotone.png">
+    <meta property="og:url" content="https://studyflow.salahuddin.codes">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="StudyFlow - Professional Project Report">
+    <meta property="twitter:description" content="Smart Productivity & Focus Management System developed by Salah Uddin Kader">
+    <meta property="twitter:image" content="https://studyflow.salahuddin.codes/Assets/brain-duotone.png">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "StudyFlow",
+      "description": "Smart Productivity & Focus Management System",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web Browser",
+      "author": {
+        "@type": "Person",
+        "name": "Salah Uddin Kader",
+        "url": "https://github.com/salahuddingfx"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #1a202c;
+            line-height: 1.6;
+        }
+        
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+        
+        /* Cover Page */
+        .cover-page {
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cover-page::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s linear infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        
+        .logo-container {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            margin: 0 auto 20px;
+            backdrop-filter: blur(10px);
+            border: 3px solid rgba(255,255,255,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .cover-title {
+            font-size: 72px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            letter-spacing: -2px;
+        }
+        
+        .cover-subtitle {
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 60px;
+            position: relative;
+            z-index: 2;
+            opacity: 0.95;
+        }
+        
+        .cover-meta {
+            position: relative;
+            z-index: 2;
+            font-size: 18px;
+            line-height: 2;
+            background: rgba(255,255,255,0.1);
+            padding: 30px 50px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .cover-meta strong {
+            font-weight: 700;
+            margin-right: 10px;
+        }
+        
+        /* Content Pages */
+        .content-page {
+            padding: 80px;
+            min-height: 100vh;
+        }
+        
+        .page-header {
+            border-bottom: 4px solid #667eea;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .page-title {
+            font-size: 48px;
+            font-weight: 900;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .page-subtitle {
+            font-size: 20px;
+            color: #718096;
+            font-weight: 300;
+        }
+        
+        .section {
+            margin-bottom: 50px;
+        }
+        
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .content-text {
+            font-size: 16px;
+            color: #4a5568;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .feature-card {
+            padding: 30px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 20px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        
+        .feature-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+        
+        .feature-desc {
+            font-size: 15px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .tech-badge {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .stat-number {
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0.95;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Signature Section */
+        .signature-section {
+            margin-top: 80px;
+            padding-top: 40px;
+            border-top: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .signature-block {
+            text-align: center;
+        }
+        
+        .signature-line {
+            width: 250px;
+            border-top: 2px solid #2d3748;
+            margin: 60px auto 15px;
+        }
+        
+        .signature-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        
+        .signature-title {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 600;
+        }
+        
+        .signature-image {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: -20px;
+            font-style: italic;
+        }
+        
+        .footer-badge {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            padding: 15px 30px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            border: 2px solid rgba(255,255,255,0.3);
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        @media print {
+            .cover-page, .content-page {
+                page-break-after: always;
+            }
+            body {
+                background: white;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <!-- Cover Page -->
+        <div class="cover-page">
+            <div class="logo-container">
+                <div class="logo">
+                    <svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#e2e8f0;stop-opacity:0.9" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Brain Icon -->
+                        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#brainGrad)" stroke-width="3" opacity="0.4"/>
+                        <path d="M35 30 Q25 35 25 45 Q25 55 30 60 Q35 65 45 65 Q50 65 50 60" fill="none" stroke="url(#brainGrad)" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M65 30 Q75 35 75 45 Q75 55 70 60 Q65 65 55 65 Q50 65 50 60" fill="none" stroke="url(#brainGrad)" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="40" cy="45" r="5" fill="url(#brainGrad)"/>
+                        <circle cx="60" cy="45" r="5" fill="url(#brainGrad)"/>
+                        <path d="M35 50 Q50 55 65 50" fill="none" stroke="url(#brainGrad)" stroke-width="3" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div style="font-size: 24px; font-weight: 700; letter-spacing: 2px;">STUDYFLOW</div>
+            </div>
+            
+            <h1 class="cover-title">StudyFlow</h1>
+            <p class="cover-subtitle">Smart Productivity & Focus Management System</p>
+            
+            <div class="cover-meta">
+                <div><strong>Project Name:</strong> StudyFlow - Productivity Platform</div>
+                <div><strong>Developer:</strong> Salah Uddin Kader</div>
+                <div><strong>Submission Date:</strong> March 2, 2026</div>
+                <div><strong>Version:</strong> 2.0 (Production Ready)</div>
+            </div>
+            
+            <div class="footer-badge">
+                📊 Comprehensive Project Report
+            </div>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="content-page">
+            <div class="page-header">
+                <h2 class="page-title">Executive Summary</h2>
+                <p class="page-subtitle">Project Overview & Impact</p>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-icon">🎯</div>
+                    Project Vision
+                </div>
+                <p class="content-text">
+                    StudyFlow is an advanced full-stack web application designed to revolutionize how students manage their study time, 
+                    track productivity, and achieve academic goals. Built with modern web technologies, it combines sophisticated time 
+                    management with gamification elements to create an engaging learning environment.
+                </p>
+                <p class="content-text">
+                    The platform addresses critical challenges in student productivity: procrastination, lack of focus tracking, and 
+                    insufficient motivation systems. By implementing proven techniques like the Pomodoro method alongside AI-powered 
+                    assistance and real-time analytics, StudyFlow transforms how students approach their educational journey.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-icon">📊</div>
+                    Key Metrics & Achievements
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">15+</div>
+                        <div class="stat-label">Core Features</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">10+</div>
+                        <div class="stat-label">Themes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Mobile Ready</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">PWA</div>
+                        <div class="stat-label">Enabled</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Page -->
+        <div class="content-page">
+            <div class="page-header">
+                <h2 class="page-title">Core Features</h2>
+                <p class="page-subtitle">Comprehensive Functionality Suite</p>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-title">⏱️ Advanced Pomodoro Timer</div>
+                    <div class="feature-desc">
+                        Customizable focus sessions with configurable durations, automatic break reminders, and session tracking. 
+                        Supports focus mode, short breaks, and long breaks with smart suggestions.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-title">📋 Task Management</div>
+                    <div class="feature-desc">
+                        Comprehensive task system with priorities, deadlines, subject categorization, and completion tracking. 
+                        Includes drag-and-drop reordering and bulk operations.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-title">📊 Analytics Dashboard</div>
+                    <div class="feature-desc">
+                        Real-time charts showing study patterns, subject distribution, daily/weekly/monthly statistics, and 
+                        performance trends with interactive visualizations powered by Chart.js.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-title">🎯 Goal Setting System</div>
+                    <div class="feature-desc">
+                        Smart goal tracking with progress visualization, deadline management, and achievement milestones. 
+                        Motivates users through clear target definition and progress monitoring.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-title">🏆 Gamification Engine</div>
+                    <div class="feature-desc">
+                        38 unique achievements, tier-based leveling system (Bronze to Diamond), leaderboards, and point-based 
+                        rewards that make productivity engaging and competitive.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-title">🤖 AI Assistant</div>
+                    <div class="feature-desc">
+                        Context-aware AI chatbot providing study tips, generating custom quizzes, creating personalized study 
+                        plans, and offering weekly summaries based on user activity.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-title">📅 Smart Calendar</div>
+                    <div class="feature-desc">
+                        Integrated FullCalendar with task visualization, deadline highlighting, drag-and-drop event management, 
+                        and schedule export functionality.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-title">🎨 Theme Customization</div>
+                    <div class="feature-desc">
+                        10 professionally designed themes including Dark, Light, Midnight, Morning, Evening, Forest, Sunset, 
+                        Ocean, Lavender, and Cherry with instant switching.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-title">🔐 Secure Authentication</div>
+                    <div class="feature-desc">
+                        JWT-based authentication with bcrypt password hashing, email verification, password reset via secure 
+                        tokens, and session management.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-title">🌐 Bilingual Support</div>
+                    <div class="feature-desc">
+                        Full English and Bengali language support with instant switching, user preference saving, and 
+                        culturally adapted UI elements.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-title">🎵 Focus Music Player</div>
+                    <div class="feature-desc">
+                        Integrated YouTube player with curated playlists, volume control, playback speed adjustment, and 
+                        ambient sound categories optimized for concentration.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-title">📱 PWA Support</div>
+                    <div class="feature-desc">
+                        Progressive Web App capabilities allowing installation on devices, offline functionality, push 
+                        notifications, and native app-like experience.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Stack -->
+        <div class="content-page">
+            <div class="page-header">
+                <h2 class="page-title">Technical Architecture</h2>
+                <p class="page-subtitle">Modern Full-Stack Implementation</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-icon">💻</div>
+                    Frontend Technologies
+                </div>
+                <div class="tech-stack">
+                    <div class="tech-badge">Vue.js 3</div>
+                    <div class="tech-badge">Composition API</div>
+                    <div class="tech-badge">Pinia State Management</div>
+                    <div class="tech-badge">Vue Router</div>
+                    <div class="tech-badge">Vite Build Tool</div>
+                    <div class="tech-badge">Tailwind CSS</div>
+                    <div class="tech-badge">Chart.js</div>
+                    <div class="tech-badge">FullCalendar</div>
+                    <div class="tech-badge">Socket.io Client</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-icon">⚙️</div>
+                    Backend Technologies
+                </div>
+                <div class="tech-stack">
+                    <div class="tech-badge">Node.js</div>
+                    <div class="tech-badge">Express.js</div>
+                    <div class="tech-badge">MongoDB + Mongoose</div>
+                    <div class="tech-badge">JWT Authentication</div>
+                    <div class="tech-badge">bcrypt Security</div>
+                    <div class="tech-badge">Nodemailer</div>
+                    <div class="tech-badge">Socket.io Server</div>
+                    <div class="tech-badge">RESTful API</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-icon">🚀</div>
+                    Deployment & DevOps
+                </div>
+                <div class="tech-stack">
+                    <div class="tech-badge">Render.com (Backend)</div>
+                    <div class="tech-badge">Netlify (Frontend)</div>
+                    <div class="tech-badge">MongoDB Atlas</div>
+                    <div class="tech-badge">GitHub Actions</div>
+                    <div class="tech-badge">Service Worker</div>
+                    <div class="tech-badge">PWA Manifest</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-icon">🎯</div>
+                    Key Technical Highlights
+                </div>
+                <p class="content-text">
+                    <strong>Real-time Updates:</strong> WebSocket-based real-time synchronization ensures instant leaderboard updates 
+                    and achievement notifications across all connected clients.
+                </p>
+                <p class="content-text">
+                    <strong>Offline-First Architecture:</strong> Service Worker implementation enables offline task creation, caching, 
+                    and automatic sync when connection is restored.
+                </p>
+                <p class="content-text">
+                    <strong>Performance Optimization:</strong> Lazy loading, code splitting, asset optimization, and CDN integration 
+                    deliver sub-second load times and smooth 60fps animations.
+                </p>
+                <p class="content-text">
+                    <strong>Security Best Practices:</strong> HTTPS enforcement, CORS configuration, input sanitization, rate limiting, 
+                    and secure password reset flows protect user data.
+                </p>
+            </div>
+        </div>
+
+        <!-- Conclusion & Signature -->
+        <div class="content-page">
+            <div class="page-header">
+                <h2 class="page-title">Conclusion</h2>
+                <p class="page-subtitle">Project Success & Future Vision</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-icon">✅</div>
+                    Project Outcomes
+                </div>
+                <p class="content-text">
+                    StudyFlow successfully delivers a production-ready, scalable productivity platform that combines cutting-edge 
+                    web technologies with research-backed productivity techniques. The application demonstrates proficiency in 
+                    full-stack development, modern JavaScript frameworks, database design, API architecture, and user experience design.
+                </p>
+                <p class="content-text">
+                    Through iterative development and user-centered design principles, StudyFlow has evolved into a comprehensive 
+                    solution that not only meets its initial objectives but exceeds expectations in terms of feature richness, 
+                    performance, and user engagement.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <div class="section-icon">🔮</div>
+                    Future Enhancements
+                </div>
+                <p class="content-text">
+                    • Advanced AI-powered study recommendations based on learning patterns<br>
+                    • Social study rooms with video conferencing integration<br>
+                    • Mobile native applications for iOS and Android<br>
+                    • Third-party calendar synchronization (Google Calendar, Outlook)<br>
+                    • Export analytics reports in PDF format<br>
+                    • Integration with educational platforms and learning management systems
+                </p>
+            </div>
+
+            <div class="signature-section">
+                <div class="signature-block">
+                    <div class="signature-image">SalahUddin</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-name">Salah Uddin Kader</div>
+                    <div class="signature-title">Full-Stack Developer</div>
+                    <div class="signature-title">Project Lead & Creator</div>
+                </div>
+
+                <div class="signature-block">
+                    <div class="signature-image">SalahUddin</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-name">Salah Uddin Kader</div>
+                    <div class="signature-title">System Administrator</div>
+                    <div class="signature-title">Project Director</div>
+                </div>
+
+                <div class="signature-block">
+                    <div class="signature-image">Sohana Rahman</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-name">Sohana Rahman</div>
+                    <div class="signature-title">Admin Panel Manager</div>
+                    <div class="signature-title">Data Coordinator</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; text-align: center; padding: 20px; background: rgba(102, 126, 234, 0.05); border-radius: 15px; border: 1px solid rgba(102, 126, 234, 0.15);">
+                <div style="font-size: 13px; color: #4a5568; margin-bottom: 5px;"><strong>Submission Date:</strong> March 2, 2026</div>
+                <div style="font-size: 13px; color: #4a5568;"><strong>Document Version:</strong> 2.0 (Final)</div>
+            </div>
+
+            <div style="margin-top: 60px; padding: 30px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 20px; color: white; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">🎓 StudyFlow</div>
+                <div style="font-size: 14px; opacity: 0.95;">Smart Productivity & Focus Management System</div>
+                <div style="font-size: 12px; opacity: 0.8; margin-top: 10px;">
+                    © 2026 StudyFlow. Developed with 💜 by Salah Uddin Kader<br/>
+                    <a href="https://studyflow.salahuddin.codes" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 11px; margin-top: 5px; display: inline-block;">studyflow.salahuddin.codes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.print();
+    </script>
+</body>
+</html>

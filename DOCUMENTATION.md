@@ -1,8 +1,8 @@
 # 📚 StudyFlow - Comprehensive Documentation
 
-**Version:** 2.0.0  
-**Last Updated:** February 4, 2026  
-**Status:** Production Ready
+**Version:** 2.5.0 (In Development)  
+**Last Updated:** March 2, 2026  
+**Status:** v2.0 Production Ready | v2.5 In Active Development
 
 ---
 
@@ -10,6 +10,7 @@
 
 1. [Project Overview](#1-project-overview)
 2. [Features & Capabilities](#2-features--capabilities)
+   - [2.1 What's Coming in v2.5](#21-whats-coming-in-v25-in-active-development)
 3. [Technology Stack](#3-technology-stack)
 4. [Installation & Setup](#4-installation--setup)
 5. [Deployment Guide](#5-deployment-guide)
@@ -213,6 +214,213 @@
 - XML sitemap for search engines
 - Robots.txt for crawl control
 - Proper indexing configuration
+
+---
+
+## 2.1 What's Coming in v2.5 (In Active Development)
+
+**Full-Stack Implementation** — All features include complete Frontend + Backend architecture
+
+### 📝 Advanced Note-Taking System
+
+**Frontend Implementation:**
+- **Rich Text Editor:** Vue component with TinyMCE/Quill integration
+- **Markdown Support:** Live preview with syntax highlighting (Prism.js)
+- **Auto-Save:** Debounced save every 3 seconds with local storage backup
+- **Search Interface:** Full-text search with tag autocomplete
+- **File Upload:** Drag-drop with image preview and Cloudinary integration
+- **Organization:** Folder structure with nested categories
+
+**Backend Implementation:**
+- **REST API Endpoints:**
+  - `POST /api/notes` - Create new note
+  - `GET /api/notes` - List all notes with pagination
+  - `GET /api/notes/:id` - Get single note
+  - `PUT /api/notes/:id` - Update note
+  - `DELETE /api/notes/:id` - Delete note
+  - `GET /api/notes/search?q=query` - Full-text search
+- **MongoDB Schema:**
+  ```javascript
+  {
+    userId: ObjectId,
+    title: String,
+    content: String,
+    markdown: String,
+    tags: [String],
+    attachments: [{ url, type, size }],
+    folder: String,
+    versions: [{ content, timestamp }],
+    createdAt: Date,
+    updatedAt: Date
+  }
+  ```
+- **Features:**
+  - Full-text indexing for fast search
+  - Version history (last 10 versions)
+  - File storage via Cloudinary/S3
+  - User-based access control
+
+---
+
+### 👥 Social & Collaborative Features
+
+**Frontend Implementation:**
+- **Room Management UI:** Create/join/leave study groups
+- **Member List:** Real-time participant updates
+- **Chat Interface:** Socket.IO-powered messaging with emoji support
+- **Synchronized Timer:** Visual sync indicator for group pomodoro
+- **Leaderboard:** Real-time ranking with animations
+- **Notifications:** Join/leave alerts, challenge updates
+
+**Backend Implementation:**
+- **REST API Endpoints:**
+  - `POST /api/groups` - Create study group
+  - `GET /api/groups` - List available groups
+  - `POST /api/groups/:id/join` - Join group
+  - `POST /api/groups/:id/leave` - Leave group
+  - `GET /api/groups/:id/members` - Get members
+  - `POST /api/groups/:id/challenges` - Create challenge
+- **WebSocket Events:**
+  - `group:message` - Chat messages
+  - `timer:sync` - Timer state updates
+  - `member:joined` - User joined notification
+  - `member:left` - User left notification
+  - `challenge:update` - Challenge progress
+- **MongoDB Schemas:**
+  ```javascript
+  Group: {
+    name: String,
+    description: String,
+    ownerId: ObjectId,
+    members: [{ userId, role, joinedAt }],
+    settings: { maxMembers, isPublic },
+    createdAt: Date
+  }
+  
+  GroupMessage: {
+    groupId: ObjectId,
+    userId: ObjectId,
+    message: String,
+    timestamp: Date
+  }
+  
+  GroupChallenge: {
+    groupId: ObjectId,
+    type: String (streak/study-time/tasks),
+    target: Number,
+    participants: [{ userId, progress }],
+    startDate: Date,
+    endDate: Date
+  }
+  ```
+- **Socket.IO Server:** Real-time broadcasting to room members
+
+---
+
+### 📴 Enhanced Offline Mode
+
+**Frontend Implementation:**
+- **Service Worker v6:** Advanced caching strategies
+  - Cache-first for static assets (fonts, images, CSS)
+  - Network-first with cache fallback for API calls
+  - Stale-while-revalidate for JavaScript files
+- **IndexedDB Integration:**
+  - Local storage for sessions, tasks, goals
+  - Offline queue for pending API requests
+  - Optimistic UI updates
+- **Sync Queue UI:** Show pending operations count
+- **Connection Status:** Visual indicator (online/offline/syncing)
+
+**Backend Implementation:**
+- **Sync API Endpoints:**
+  - `POST /api/sync/sessions` - Bulk upload offline sessions
+  - `POST /api/sync/tasks` - Sync tasks with timestamps
+  - `POST /api/sync/goals` - Sync goals
+  - `GET /api/sync/delta?since=timestamp` - Get changes since last sync
+- **Conflict Resolution:**
+  - Last-write-wins for simple conflicts
+  - Merge strategy for non-conflicting changes
+  - Manual resolution UI for complex conflicts
+- **Delta Sync:** Only send changed data to reduce bandwidth
+- **Timestamp Tracking:** Track last modified time for all entities
+
+---
+
+### 📊 Advanced Statistics & Export
+
+**Frontend Implementation:**
+- **Export Interface:**
+  - Format selector (PDF/Excel/CSV)
+  - Date range picker with presets
+  - Custom field selector
+  - Progress bar during generation
+- **Chart Builder:**
+  - Drag-drop chart creator
+  - Multiple chart types
+  - Custom color schemes
+- **Preview Mode:** See export before download
+
+**Backend Implementation:**
+- **Export API Endpoints:**
+  - `POST /api/export/pdf` - Generate PDF report
+  - `POST /api/export/excel` - Generate Excel file
+  - `POST /api/export/csv` - Generate CSV data
+  - `POST /api/export/email` - Email report to user
+- **Report Generator:**
+  - PDFKit for PDF generation
+  - ExcelJS for Excel files
+  - Custom templates with Handlebars
+  - Multi-page layouts
+- **Data Aggregation:**
+  - MongoDB aggregation pipelines
+  - Complex analytics queries
+  - Time-series analysis
+- **Email Integration:**
+  - Brevo API for delivery
+  - Attachment support (up to 10MB)
+  - HTML email templates
+
+---
+
+### 🛠️ Technical Stack for v2.5
+
+**New Frontend Dependencies:**
+```json
+{
+  "tinymce": "^6.8.0",
+  "quill": "^1.3.7",
+  "prismjs": "^1.29.0",
+  "socket.io-client": "^4.7.0",
+  "idb": "^8.0.0",
+  "exceljs": "^4.4.0"
+}
+```
+
+**New Backend Dependencies:**
+```json
+{
+  "socket.io": "^4.7.0",
+  "pdfkit": "^0.14.0",
+  "exceljs": "^4.4.0",
+  "handlebars": "^4.7.8",
+  "redis": "^4.6.0",
+  "ioredis": "^5.3.0",
+  "node-cron": "^3.0.3"
+}
+```
+
+**Infrastructure:**
+- **Redis:** Caching + Pub/Sub for real-time features
+- **Cloudinary/S3:** File storage for attachments
+- **WebSocket:** Persistent connections for real-time sync
+
+**Performance Goals:**
+- Group message latency: < 100ms
+- Offline sync time: < 5s for 100 sessions
+- PDF generation: < 3s for 30-day report
+- Search results: < 200ms
+
+**Expected Release:** Q2 2026 (April-June)
 
 ---
 
@@ -2196,8 +2404,12 @@ SOFTWARE.
 
 ---
 
-**Status:** ✅ Production Ready  
-**Version:** 2.0.0  
-**Last Updated:** February 4, 2026
+**Status:** ✅ v2.0 Production Ready | 🚧 v2.5 In Active Development  
+**Version:** 2.5.0 (In Development)  
+**Last Updated:** March 2, 2026
 
-*Knowledge grows when it is shared. Open Source empowers everyone. Happy Building!* 🚀
+**What's New in v2.5:**
+- 📝 Advanced Note-Taking System (Frontend + Backend)
+- 👥 Social Study Groups & Collaboration (Real-time)
+- 📴 Enhanced Offline Mode (Service Worker v6)
+- 📊 Advanced Statistics Export (PDF/Excel/CSV)

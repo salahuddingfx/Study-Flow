@@ -13,6 +13,9 @@ const sendEmail = async (options) => {
         throw new Error('Email service not configured. Missing BREVO_API_KEY or SMTP credentials');
     }
 
+    // Handle attachments (for PDF reports)
+    const attachments = options.attachments || [];
+
     console.log('📧 Initializing email service...');
     console.log('   Provider:', hasBrevoApiKey ? 'Brevo API' : 'Brevo SMTP');
     console.log('   From:', process.env.FROM_EMAIL || process.env.EMAIL_USER);
@@ -33,6 +36,7 @@ const sendEmail = async (options) => {
         to: options.email,
         subject: options.subject,
         text: textBody,
+        attachments: attachments, // Support PDF attachments
         html: `
             <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${preheaderText}</div>
             <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);padding:24px 0;font-family:Arial,sans-serif;">
@@ -120,15 +124,34 @@ const sendEmail = async (options) => {
                                             </div>
                                         </div>
                                     </div>
+                                    <div style="margin-top:16px;padding:16px;background:rgba(34,197,94,0.08);border-radius:12px;border:1px solid rgba(34,197,94,0.2);">
+                                        <div style="font-size:13px;font-weight:bold;color:#10b981;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#10b981"/>
+                                            </svg>
+                                            StudyFlow Team
+                                        </div>
+                                        <div style="font-size:11px;color:#cbd5f5;line-height:1.8;">
+                                            <div style="margin-bottom:6px;padding-left:4px;">
+                                                <strong style="color:#a7f3d0;">Salah Uddin Kader</strong> - Full-Stack Developer<br/>
+                                                <span style="opacity:0.8;">Architecture, Development, UI/UX Design</span>
+                                            </div>
+                                            <div style="margin-bottom:6px;padding-left:4px;">
+                                                <strong style="color:#a7f3d0;">Sohana Rahman</strong> - Admin Panel Manager<br/>
+                                                <span style="opacity:0.8;">Analytics, Reports, Data Coordination</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                             <tr>
                                 <td style="padding:20px 28px;background:linear-gradient(180deg,rgba(139,92,246,0.1) 0%,transparent 100%);border-top:1px solid rgba(139,92,246,0.15);color:#a3b8c7;font-size:11px;text-align:center;">
                                     <div style="margin-bottom:8px;">© ${new Date().getFullYear()} StudyFlow. All rights reserved.</div>
+                                    <div style="margin-bottom:6px;color:#64748b;">Developed with 💜 by Salah Uddin Kader</div>
                                     <div>
                                         <a href="https://studyflow.salahuddin.codes" style="color:#a78bfa;text-decoration:none;margin:0 6px;">Home</a> •
                                         <a href="https://studyflow.salahuddin.codes" style="color:#a78bfa;text-decoration:none;margin:0 6px;">Dashboard</a> •
-                                        <a href="https://github.com/salahuddingfx/Stud-yFlow" style="color:#a78bfa;text-decoration:none;margin:0 6px;">GitHub</a>
+                                        <a href="https://github.com/salahuddingfx/StudyFlow" style="color:#a78bfa;text-decoration:none;margin:0 6px;">GitHub</a>
                                     </div>
                                 </td>
                             </tr>
@@ -142,6 +165,28 @@ const sendEmail = async (options) => {
     if (hasBrevoApiKey) {
         try {
             console.log('📤 Sending email via Brevo API to:', options.email);
+            
+            // Prepare Brevo API payload
+            const brevoPayload = {
+                sender: {
+                    name: process.env.FROM_NAME || 'StudyFlow Support',
+                    email: process.env.FROM_EMAIL || process.env.EMAIL_USER
+                },
+                to: [{ email: options.email }],
+                subject: options.subject,
+                textContent: options.message,
+                htmlContent: message.html
+            };
+
+            // Add attachments if present (Brevo expects base64 encoded content)
+            if (attachments && attachments.length > 0) {
+                brevoPayload.attachment = attachments.map(att => ({
+                    content: att.content ? att.content.toString('base64') : '',
+                    name: att.filename || 'attachment'
+                }));
+                console.log(`   📎 Including ${attachments.length} attachment(s)`);
+            }
+
             const response = await fetch('https://api.brevo.com/v3/smtp/email', {
                 method: 'POST',
                 headers: {
@@ -149,16 +194,7 @@ const sendEmail = async (options) => {
                     'content-type': 'application/json',
                     'api-key': process.env.BREVO_API_KEY
                 },
-                body: JSON.stringify({
-                    sender: {
-                        name: process.env.FROM_NAME || 'StudyFlow Support',
-                        email: process.env.FROM_EMAIL || process.env.EMAIL_USER
-                    },
-                    to: [{ email: options.email }],
-                    subject: options.subject,
-                    textContent: options.message,
-                    htmlContent: message.html
-                })
+                body: JSON.stringify(brevoPayload)
             });
 
             const resultText = await response.text();

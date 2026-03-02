@@ -632,10 +632,16 @@
     <div v-if="showThemeModal"
       class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop overflow-y-auto"
       @click="showThemeModal = false">
-      <div class="glass-strong rounded-3xl p-8 max-w-2xl w-full my-8 animate-slideUp" @click.stop>
-        <h3 class="text-2xl font-bold mb-6 flex items-center gap-2"><i class="ph-bold ph-palette text-purple-400"></i>
-          Choose Your Theme</h3>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"><button @click="changeTheme('dark')"
+      <div class="theme-modal-panel glass-strong rounded-3xl p-8 max-w-2xl w-full my-8 animate-slideUp" @click.stop>
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-2xl font-bold flex items-center gap-2"><i class="ph-bold ph-palette text-purple-400"></i>
+            Choose Your Theme</h3>
+          <button @click="showThemeModal = false" class="w-10 h-10 rounded-xl hover:bg-white/10 flex items-center justify-center"
+            aria-label="Close theme selector" title="Close">
+            <i class="ph-bold ph-x text-xl"></i>
+          </button>
+        </div>
+        <div class="theme-grid grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"><button @click="changeTheme('dark')"
             :class="currentTheme === 'dark' ? 'ring-4 ring-purple-500' : ''"
             class="relative overflow-hidden rounded-xl h-32 transition-all hover:scale-105"
             style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)">
@@ -746,8 +752,11 @@
               </div>
             </div>
           </button>
-        </div><button @click="showThemeModal = false"
-          class="w-full btn-primary px-6 py-3 rounded-xl font-semibold text-white"> Done </button>
+        </div>
+        <div class="theme-modal-footer">
+          <button @click="showThemeModal = false"
+            class="w-full btn-primary px-6 py-3 rounded-xl font-semibold text-white"> Done </button>
+        </div>
       </div>
     </div>
     <div v-if="showNotificationSettings"
@@ -1560,9 +1569,15 @@
       </div>
     </div>
 
-    <!-- Scroll to Top Button - Always rendered, visibility controlled by CSS -->
-    <button v-show="isAuthenticated" @click="scrollToTop" class="scroll-to-top" :class="{ 'visible': showScrollTop }"
-      aria-label="Scroll to top" title="Back to top">
+    <!-- Scroll to Top Button - Left Side -->
+    <button v-show="isAuthenticated" @click="scrollToTop" class="scroll-to-top scroll-to-top-left"
+      :class="{ 'visible': showScrollTop }" aria-label="Scroll to top left" title="Back to top (left)">
+      <i class="ph-bold ph-arrow-up text-2xl text-white"></i>
+    </button>
+
+    <!-- Scroll to Top Button - Right Side (for symmetry) -->
+    <button v-show="isAuthenticated" @click="scrollToTop" class="scroll-to-top scroll-to-top-right"
+      :class="{ 'visible': showScrollTop }" aria-label="Scroll to top right" title="Back to top (right)">
       <i class="ph-bold ph-arrow-up text-2xl text-white"></i>
     </button>
 
@@ -1728,7 +1743,7 @@
               <i class="ph-bold ph-sign-out text-lg"></i> {{ t('nav_logout') }} </button>
           </nav>
         </div>
-        <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8 pb-24">
+        <div ref="mainScrollContainer" class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8 pb-24">
           <div v-if="currentView === 'home'" class="max-w-6xl mx-auto animate-fadeIn">
             <div class="text-center mb-12">
               <div class="mb-6"><i class="ph-bold ph-brain text-7xl text-purple-400 animate-pulse"></i>
@@ -1860,6 +1875,10 @@
                 </div>
               </div>
             </div>
+            
+            <!-- Streak Tracker Widget -->
+            <div id="streak-widget" class="mb-12"></div>
+            
             <div class="glass rounded-3xl p-8 md:p-12 text-center">
               <h2 class="text-3xl md:text-4xl font-bold mb-4">{{ t('ready_boost') }}</h2>
               <p class="text-lg opacity-80 mb-8">{{ t('boost_desc') }}</p><button @click="currentView = 'timer'"
@@ -2192,16 +2211,25 @@
               </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
-              <div class="glass rounded-2xl p-3 sm:p-6">
-                <h3 class="text-xl font-semibold mb-4">Study Time Trend</h3>
+              <div class="glass rounded-2xl p-4 sm:p-6 border border-green-500/10 hover:border-green-500/30 transition-all">
+                <h3 class="text-xl font-semibold mb-6 flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-600/30 to-emerald-600/30 flex items-center justify-center">
+                    <i class="ph-bold ph-chart-line text-xl text-green-400"></i>
+                  </div>
+                  <span>Study Time Trend</span>
+                </h3>
                 <div class="chart-container relative h-64 sm:h-80 w-full" ref="studyTimeChartContainer">
                   <canvas ref="studyTimeChart"></canvas>
                 </div>
               </div>
               <!-- Quiz Stats Card -->
-              <div class="glass rounded-2xl p-3 sm:p-6">
-                <h3 class="text-xl font-semibold mb-4 flex items-center gap-2"><i
-                    class="ph-bold ph-question text-blue-400"></i> Quiz Performance</h3>
+              <div class="glass rounded-2xl p-4 sm:p-6 border border-blue-500/10 hover:border-blue-500/30 transition-all">
+                <h3 class="text-xl font-semibold mb-6 flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600/30 to-cyan-600/30 flex items-center justify-center">
+                    <i class="ph-bold ph-question text-xl text-blue-400"></i>
+                  </div>
+                  <span>Quiz Performance</span>
+                </h3>
                 <div class="quiz-stats-grid grid grid-cols-2 gap-3 mb-4">
                   <div class="glass-strong p-4 rounded-xl text-center">
                     <div class="text-3xl font-bold text-blue-400">{{ quizStats.averageScore }}%</div>
@@ -2231,16 +2259,55 @@
                     <div class="text-xs opacity-70">{{ new Date(quiz.createdAt).toLocaleDateString() }}</div>
                   </div>
                 </div>
+            </div>
+
+            <!-- Today's Progress Card -->
+            <div class="glass rounded-2xl p-4 sm:p-6 mb-6 border border-orange-500/10 hover:border-orange-500/30 transition-all">
+              <h3 class="text-xl font-semibold mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-600/30 to-yellow-600/30 flex items-center justify-center">
+                  <i class="ph-bold ph-lightning text-xl text-orange-400"></i>
+                </div>
+                <span>Today's Progress</span>
+              </h3>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div class="glass-strong p-4 rounded-xl text-center hover:bg-white/5 transition-colors">
+                  <div class="text-2xl sm:text-3xl font-bold text-purple-400">{{ todayStats.minutes }}</div>
+                  <div class="text-xs opacity-70 mt-1">Minutes Today</div>
+                </div>
+                <div class="glass-strong p-4 rounded-xl text-center hover:bg-white/5 transition-colors">
+                  <div class="text-2xl sm:text-3xl font-bold text-green-400">{{ todayStats.sessions }}</div>
+                  <div class="text-xs opacity-70 mt-1">Sessions</div>
+                </div>
+                <div class="glass-strong p-4 rounded-xl text-center hover:bg-white/5 transition-colors">
+                  <div class="text-2xl sm:text-3xl font-bold text-blue-400">{{ todayStats.tasksCompleted }}</div>
+                  <div class="text-xs opacity-70 mt-1">Tasks Done</div>
+                </div>
+                <div class="glass-strong p-4 rounded-xl text-center hover:bg-white/5 transition-colors">
+                  <div class="text-2xl sm:text-3xl font-bold text-orange-400">{{ todayStats.streak || 0 }}</div>
+                  <div class="text-xs opacity-70 mt-1">Day Streak</div>
+                </div>
               </div>
-              <div class="glass rounded-2xl p-3 sm:p-6">
-                <h3 class="text-xl font-semibold mb-4">Subject Distribution</h3>
+            </div>
+
+            <div class="glass rounded-2xl p-4 sm:p-6 mb-6 border border-purple-500/10 hover:border-purple-500/30 transition-all">
+              <h3 class="text-xl font-semibold mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600/30 to-cyan-600/30 flex items-center justify-center">
+                  <i class="ph-bold ph-chart-pie text-xl text-blue-400"></i>
+                </div>
+                <span>Subject Distribution</span>
+              </h3>
                 <div class="chart-container relative h-64 sm:h-80 w-full" ref="subjectChartContainer">
                   <canvas ref="subjectChart"></canvas>
                 </div>
               </div>
             </div>
-            <div class="glass rounded-2xl p-3 sm:p-6 mb-6">
-              <h3 class="text-xl font-semibold mb-4">Subject Progress</h3>
+            <div class="glass rounded-2xl p-4 sm:p-6 mb-6 border border-purple-500/10 hover:border-purple-500/30 transition-all">
+              <h3 class="text-xl font-semibold mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600/30 to-pink-600/30 flex items-center justify-center">
+                  <i class="ph-bold ph-books text-xl text-purple-400"></i>
+                </div>
+                <span>Subject Progress</span>
+              </h3>
               <div v-if="Object.keys(subjectStats).length === 0" class="text-center opacity-70 py-8"><i
                   class="ph-bold ph-books text-5xl mb-3"></i>
                 <p>No study data yet. Start a focus session!</p>
@@ -2671,7 +2738,7 @@
           </div>
 
           <!-- AI Floating Button and Popup -->
-          <div v-if="isAuthenticated && !showLoader" class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
+          <div v-if="isAuthenticated && !showLoader" class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-40">
             <!-- Floating Trigger Button -->
             <button @click="showAIChat = !showAIChat"
               class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/30 flex items-center justify-center hover:scale-110 transition-transform duration-300 group">
@@ -2679,13 +2746,13 @@
                 class="text-2xl sm:text-3xl text-white group-hover:rotate-12 transition-transform"></i>
               <!-- Notification Dot -->
               <span
-                class="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full animate-pulse border-2 border-gray-900"
+                class="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full animate-pulse border-2 border-gray-900"
                 v-if="!showAIChat"></span>
             </button>
 
             <!-- AI Chat Popup Modal -->
             <div v-if="showAIChat"
-              class="absolute bottom-16 sm:bottom-20 right-0 w-[calc(100vw-2rem)] sm:w-[400px] h-[500px] sm:h-[600px] glass-strong rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-slideUp border border-purple-500/30">
+              class="ai-chat-popup absolute bottom-16 sm:bottom-20 right-0 w-[calc(100vw-2rem)] sm:w-[400px] h-[500px] sm:h-[600px] glass-strong rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-slideUp border border-purple-500/30">
               <!-- Header -->
               <div
                 class="p-4 bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-b border-white/10 flex justify-between items-center backdrop-blur-md">
@@ -2961,114 +3028,151 @@
             </div>
           </div>
 
-          <footer v-if="isAuthenticated" class="mt-12 border-t border-white/10">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+          <footer v-if="isAuthenticated" class="mt-16 border-t border-white/10 bg-gradient-to-b from-transparent to-black/20">
+            <div class="max-w-7xl mx-auto px-6 sm:px-8 py-12">
               <!-- Top Grid -->
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
                 <!-- Brand -->
-                <div class="col-span-2 md:col-span-1">
-                  <div class="flex items-center gap-2 mb-4">
-                    <i class="ph-bold ph-brain text-2xl text-purple-400"></i>
-                    <h3 class="text-lg font-bold">StudyFlow</h3>
+                <div class="col-span-1">
+                  <div class="flex items-center gap-3 mb-5">
+                    <i class="ph-bold ph-brain text-3xl text-purple-400"></i>
+                    <h3 class="text-xl font-bold">StudyFlow</h3>
                   </div>
-                  <p class="text-sm opacity-60 mb-5 leading-relaxed">{{ t('welcome_subtitle') }}</p>
-                  <div class="flex gap-2">
+                  <p class="text-sm opacity-70 mb-6 leading-relaxed max-w-xs">{{ t('welcome_subtitle') }}</p>
+                  <div class="flex gap-3">
                     <a href="https://github.com/salahuddingfx/Study-Flow" target="_blank" rel="noopener noreferrer"
-                      class="w-9 h-9 rounded-lg bg-white/5 hover:bg-purple-600/30 border border-white/10 hover:border-purple-500/40 flex items-center justify-center transition-all">
-                      <i class="ph-bold ph-github-logo text-lg"></i>
+                      class="w-10 h-10 rounded-xl bg-white/5 hover:bg-purple-600/30 border border-white/10 hover:border-purple-500/50 flex items-center justify-center transition-all hover:scale-110">
+                      <i class="ph-bold ph-github-logo text-xl"></i>
                     </a>
                     <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"
-                      class="w-9 h-9 rounded-lg bg-white/5 hover:bg-purple-600/30 border border-white/10 hover:border-purple-500/40 flex items-center justify-center transition-all">
-                      <i class="ph-bold ph-twitter-logo text-lg"></i>
+                      class="w-10 h-10 rounded-xl bg-white/5 hover:bg-purple-600/30 border border-white/10 hover:border-purple-500/50 flex items-center justify-center transition-all hover:scale-110">
+                      <i class="ph-bold ph-twitter-logo text-xl"></i>
                     </a>
                     <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"
-                      class="w-9 h-9 rounded-lg bg-white/5 hover:bg-purple-600/30 border border-white/10 hover:border-purple-500/40 flex items-center justify-center transition-all">
-                      <i class="ph-bold ph-linkedin-logo text-lg"></i>
+                      class="w-10 h-10 rounded-xl bg-white/5 hover:bg-purple-600/30 border border-white/10 hover:border-purple-500/50 flex items-center justify-center transition-all hover:scale-110">
+                      <i class="ph-bold ph-linkedin-logo text-xl"></i>
                     </a>
                   </div>
                 </div>
 
                 <!-- Features -->
-                <div>
-                  <h3 class="text-sm font-semibold uppercase tracking-wider text-purple-400 mb-4">{{ t('features') }}</h3>
-                  <ul class="space-y-2.5 text-sm opacity-60">
-                    <li class="flex items-center gap-2 hover:opacity-100 transition-opacity">
-                      <i class="ph-bold ph-timer text-purple-400/70 text-xs"></i> {{ t('pomodoro_timer') }}
+                <div class="col-span-1">
+                  <h3 class="text-base font-bold uppercase tracking-wider text-purple-400 mb-5">{{ t('features') }}</h3>
+                  <ul class="space-y-3 text-sm">
+                    <li class="flex items-center gap-3 opacity-70 hover:opacity-100 transition-opacity cursor-default">
+                      <i class="ph-bold ph-timer text-purple-400 text-base"></i>
+                      <span>{{ t('pomodoro_timer') }}</span>
                     </li>
-                    <li class="flex items-center gap-2 hover:opacity-100 transition-opacity">
-                      <i class="ph-bold ph-list-checks text-purple-400/70 text-xs"></i> {{ t('task_mgmt') }}
+                    <li class="flex items-center gap-3 opacity-70 hover:opacity-100 transition-opacity cursor-default">
+                      <i class="ph-bold ph-list-checks text-purple-400 text-base"></i>
+                      <span>{{ t('task_mgmt') }}</span>
                     </li>
-                    <li class="flex items-center gap-2 hover:opacity-100 transition-opacity">
-                      <i class="ph-bold ph-chart-bar text-purple-400/70 text-xs"></i> {{ t('study_analytics') }}
+                    <li class="flex items-center gap-3 opacity-70 hover:opacity-100 transition-opacity cursor-default">
+                      <i class="ph-bold ph-chart-bar text-purple-400 text-base"></i>
+                      <span>{{ t('study_analytics') }}</span>
                     </li>
-                    <li class="flex items-center gap-2 hover:opacity-100 transition-opacity">
-                      <i class="ph-bold ph-palette text-purple-400/70 text-xs"></i> {{ t('beautiful_themes') }}
+                    <li class="flex items-center gap-3 opacity-70 hover:opacity-100 transition-opacity cursor-default">
+                      <i class="ph-bold ph-palette text-purple-400 text-base"></i>
+                      <span>{{ t('beautiful_themes') }}</span>
                     </li>
-                    <li class="flex items-center gap-2 hover:opacity-100 transition-opacity">
-                      <i class="ph-bold ph-music-notes text-purple-400/70 text-xs"></i> {{ t('focus_music') }}
+                    <li class="flex items-center gap-3 opacity-70 hover:opacity-100 transition-opacity cursor-default">
+                      <i class="ph-bold ph-music-notes text-purple-400 text-base"></i>
+                      <span>{{ t('focus_music') }}</span>
                     </li>
                   </ul>
                 </div>
 
                 <!-- Quick Links -->
-                <div>
-                  <h3 class="text-sm font-semibold uppercase tracking-wider text-purple-400 mb-4">{{ t('quick_links') }}</h3>
-                  <ul class="space-y-2.5 text-sm">
+                <div class="col-span-1">
+                  <h3 class="text-base font-bold uppercase tracking-wider text-purple-400 mb-5">{{ t('quick_links') }}</h3>
+                  <ul class="space-y-3 text-sm">
                     <li><button @click="currentView = 'home'"
-                        class="opacity-60 hover:opacity-100 hover:text-purple-400 transition-all">{{ t('nav_home') }}</button></li>
+                        class="opacity-70 hover:opacity-100 hover:text-purple-400 transition-all text-left">{{ t('nav_home') }}</button></li>
                     <li><button @click="currentView = 'timer'"
-                        class="opacity-60 hover:opacity-100 hover:text-purple-400 transition-all">{{ t('nav_timer') }}</button></li>
+                        class="opacity-70 hover:opacity-100 hover:text-purple-400 transition-all text-left">{{ t('nav_timer') }}</button></li>
                     <li><button @click="currentView = 'tasks'"
-                        class="opacity-60 hover:opacity-100 hover:text-purple-400 transition-all">{{ t('nav_tasks') }}</button></li>
+                        class="opacity-70 hover:opacity-100 hover:text-purple-400 transition-all text-left">{{ t('nav_tasks') }}</button></li>
                     <li><button @click="currentView = 'analytics'"
-                        class="opacity-60 hover:opacity-100 hover:text-purple-400 transition-all">{{ t('nav_analytics') }}</button></li>
+                        class="opacity-70 hover:opacity-100 hover:text-purple-400 transition-all text-left">{{ t('nav_analytics') }}</button></li>
                     <li><button @click="showDeveloperModal = true"
-                        class="opacity-60 hover:opacity-100 hover:text-purple-400 transition-all">{{ t('about_dev') }}</button></li>
+                        class="opacity-70 hover:opacity-100 hover:text-purple-400 transition-all text-left">{{ t('about_dev') }}</button></li>
                   </ul>
                 </div>
 
                 <!-- Get in Touch -->
-                <div>
-                  <h3 class="text-sm font-semibold uppercase tracking-wider text-purple-400 mb-4">{{ t('get_in_touch') }}</h3>
-                  <ul class="space-y-2.5 text-sm opacity-60">
-                    <li class="flex items-center gap-2">
-                      <i class="ph-bold ph-envelope text-purple-400/70 text-xs"></i>
-                      <a href="mailto:hello@studyflow.app" class="hover:text-purple-400 hover:opacity-100 transition-all">hello@studyflow.app</a>
+                <div class="col-span-1">
+                  <h3 class="text-base font-bold uppercase tracking-wider text-purple-400 mb-5">{{ t('get_in_touch') }}</h3>
+                  <ul class="space-y-3 text-sm">
+                    <li class="flex items-start gap-3 opacity-70 hover:opacity-100 transition-opacity">
+                      <i class="ph-bold ph-envelope text-purple-400 text-base mt-0.5"></i>
+                      <a href="mailto:hello@studyflow.app" class="hover:text-purple-400 transition-all break-all">hello@studyflow.app</a>
                     </li>
-                    <li class="flex items-center gap-2">
-                      <i class="ph-bold ph-globe text-purple-400/70 text-xs"></i>
+                    <li class="flex items-start gap-3 opacity-70 hover:opacity-100 transition-opacity">
+                      <i class="ph-bold ph-globe text-purple-400 text-base mt-0.5"></i>
                       <a href="https://studyflow.salahuddin.codes" target="_blank" rel="noopener noreferrer"
-                        class="hover:text-purple-400 hover:opacity-100 transition-all">studyflow.salahuddin.codes</a>
+                        class="hover:text-purple-400 transition-all break-all">studyflow.salahuddin.codes</a>
                     </li>
-                    <li class="flex items-center gap-2">
-                      <i class="ph-bold ph-calendar text-purple-400/70 text-xs"></i>
+                    <li class="flex items-start gap-3 opacity-70">
+                      <i class="ph-bold ph-calendar text-purple-400 text-base mt-0.5"></i>
                       <span class="text-xs">{{ currentDateTime }}</span>
                     </li>
                   </ul>
                 </div>
               </div>
 
-              <!-- Bottom Bar -->
-              <div class="pt-6 border-t border-white/5">
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 text-xs opacity-50">
-                  <div class="flex items-center gap-1.5">
-                    <i class="ph-bold ph-copyright text-purple-400/60"></i>
-                    <span>{{ new Date().getFullYear() }} StudyFlow. {{ t('rights_reserved') }}</span>
+              <!-- Bottom Bar - Professional Design -->
+              <div class="pt-8 border-t border-white/10">
+                <!-- Main Footer Content -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-6">
+                  <!-- Copyright -->
+                  <div class="flex items-center justify-center md:justify-start gap-2 flex-wrap">
+                    <i class="ph-bold ph-copyright text-purple-400"></i>
+                    <span class="opacity-70">{{ new Date().getFullYear() }} StudyFlow.</span>
+                    <span class="opacity-50">{{ t('rights_reserved') }}</span>
                   </div>
-                  <div class="flex items-center gap-1.5">
-                    <i class="ph-bold ph-code text-purple-400/60"></i>
-                    <span>{{ t('crafted_with') }}</span>
-                    <i class="ph-fill ph-heart text-red-400"></i>
-                    <span>{{ t('by') }}</span>
+                  
+                  <!-- Developer Attribution -->
+                  <div class="flex items-center justify-center gap-2 flex-wrap">
+                    <i class="ph-bold ph-code text-purple-400"></i>
+                    <span class="opacity-70">{{ t('crafted_with') }}</span>
+                    <i class="ph-fill ph-heart text-red-400 animate-pulse"></i>
+                    <span class="opacity-70">{{ t('by') }}</span>
                     <button @click="showDeveloperModal = true"
-                      class="font-semibold text-purple-400 hover:text-purple-300 transition-colors">Salah Uddin Kader</button>
+                      class="font-bold text-purple-400 hover:text-purple-300 transition-colors">Salah Uddin Kader</button>
                   </div>
-                  <div class="flex items-center gap-1.5">
-                    <span>Vue.js</span>
-                    <span class="opacity-30">•</span>
-                    <span>Tailwind CSS</span>
-                    <span class="opacity-30">•</span>
-                    <span>Node.js</span>
+                  
+                  <!-- Tech Stack -->
+                  <div class="flex items-center justify-center md:justify-end gap-2 flex-wrap">
+                    <span class="text-xs px-3 py-1.5 bg-purple-500/10 rounded-lg border border-purple-500/20">Vue.js</span>
+                    <span class="text-xs px-3 py-1.5 bg-purple-500/10 rounded-lg border border-purple-500/20">Node.js</span>
+                    <span class="text-xs px-3 py-1.5 bg-purple-500/10 rounded-lg border border-purple-500/20">MongoDB</span>
+                  </div>
+                </div>
+                
+                <!-- Professional Credits Bar -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-white/5">
+                  <!-- Project Info -->
+                  <div class="text-xs opacity-50 text-center sm:text-left">
+                  <div class="text-xs opacity-50 text-center sm:text-left">
+                    <span class="font-bold text-purple-400">StudyFlow v2.0</span>
+                    <span class="mx-2 opacity-30">•</span>
+                    <span>Smart Productivity Platform</span>
+                  </div>
+                  
+                  <!-- Team Credits -->
+                  <div class="text-xs opacity-50 text-center">
+                    <span class="font-semibold text-purple-300">Developer:</span> Salah Uddin Kader
+                    <span class="mx-2 opacity-30">•</span>
+                    <span class="font-semibold text-purple-300">Admin:</span> Sohana Rahman
+                  </div>
+                  
+                  <!-- Website Link -->
+                  <div class="text-xs opacity-50 text-center sm:text-right">
+                    <a href="https://studyflow.salahuddin.codes" target="_blank" 
+                      class="hover:text-purple-400 hover:opacity-100 transition-all inline-flex items-center gap-1.5">
+                      <i class="ph-bold ph-link text-sm"></i>
+                      <span>studyflow.salahuddin.codes</span>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -3080,6 +3184,24 @@
 
   <!-- Main Application Script -->
   <script src="Assets/script.js"></script>
+  <script src="Assets/streak.js"></script>
+  
+  <script>
+    // Initialize streak tracker when user is authenticated (with small delay to ensure Vue is ready)
+    setTimeout(() => {
+      if (localStorage.getItem('token')) {
+        StreakTracker.init().catch(err => console.error('Streak init error:', err));
+      }
+    }, 500);
+    
+    // Auto-update streak after completing study session
+    document.addEventListener('sessionCompleted', (event) => {
+      const { duration } = event.detail;
+      if (duration > 0) {
+        StreakTracker.updateStreak(duration).catch(err => console.error('Streak update error:', err));
+      }
+    });
+  </script>
 
   <!-- Lazy Load & Performance Utilities -->
   <script src="Assets/lazy-load.js" defer></script>

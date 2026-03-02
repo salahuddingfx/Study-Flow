@@ -1,6 +1,10 @@
-const CACHE_NAME = 'studyflow-v8-production';
-const RUNTIME_CACHE = 'studyflow-runtime-v8';
-const CDN_CACHE = 'studyflow-cdn-v8';
+// StudyFlow Service Worker v2.5
+// Enhanced offline mode with IndexedDB sync queue
+const CACHE_NAME = 'studyflow-v2.5-production';
+const RUNTIME_CACHE = 'studyflow-runtime-v2.5';
+const CDN_CACHE = 'studyflow-cdn-v2.5';
+const IDB_NAME = 'studyflow-offline-db';
+const IDB_VERSION = 1;
 
 // Static assets to cache immediately
 const urlsToCache = [

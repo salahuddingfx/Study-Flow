@@ -262,6 +262,8 @@ app.use('/api/goals', goalRoutes);
 const achievementRoutes = require('./routes/achievement.routes');
 achievementRoutes.setIo(io); // এটি মিসিং ছিল, এখন ঠিক করা হয়েছে
 app.use('/api/achievements', achievementRoutes);
+// Streak Routes (Study Streak Tracker)
+app.use('/api/streak', require('./routes/streak.routes'));
 // Admin Routes (Admin Dashboard)
 app.use('/api/admin', require('./routes/admin.routes'));
 

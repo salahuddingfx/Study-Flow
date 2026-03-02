@@ -25,6 +25,40 @@ It combines the **Pomodoro technique**, **real-time analytics**, **task & subjec
 
 ---
 
+## ⚡ Quick Start
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/salahuddingfx/Study-Flow.git
+cd Study-Flow
+
+# 2. Install backend dependencies
+cd Backend
+npm install
+
+# 3. Create .env file with your credentials
+cp .env.example .env
+# Edit .env with your MongoDB URI, JWT secret, and Gemini API key
+
+# 4. Start the backend server
+npm start
+
+# 5. Open index.html with Live Server or visit http://localhost:5000
+```
+
+**📖 Detailed Setup:** See [Installation & Setup](#-installation--setup) section below
+
+**🚀 Try it now:** [Live Demo](https://studyflow.salahuddin.codes)
+
+---
+
+<p align="center">
+  <img
+    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=28&pause=1000&color=F59E0B&center=true&vCenter=true&width=1000&lines=✨+Powerful+Features+for+Maximum+Productivity;🎯+Focus+Sessions+%7C+📊+Analytics+%7C+🔥+Streaks;🤖+AI+Assistant+%7C+🎵+Music+%7C+🏆+Achievements"
+    alt="Features Animation"
+  />
+</p>
+
 ## ✨ Key Features
 
 ### 🎯 Core Productivity Features
@@ -33,6 +67,9 @@ It combines the **Pomodoro technique**, **real-time analytics**, **task & subjec
 
 - 📊 **Deep Analytics Dashboard**  
   Daily, weekly & monthly productivity insights with interactive charts  
+
+- 🔥 **Study Streak Tracker** ⭐ NEW  
+  Track daily consistency, build habit chains, unlock milestones & compete on leaderboards  
 
 - 🎵 **Integrated Music Player**  
   YouTube links & local audio support for focus music  
@@ -45,6 +82,9 @@ It combines the **Pomodoro technique**, **real-time analytics**, **task & subjec
 
 - 🏆 **Gamified Achievements**  
   Unlock rewards and badges for reaching study milestones  
+
+- 📧 **Email Progress Reports**  
+  Automated PDF reports with multi-page analytics via Brevo API  
 
 ### 🔐 Security & Authentication
 - 🔒 **Secure Authentication**  
@@ -92,32 +132,89 @@ It combines the **Pomodoro technique**, **real-time analytics**, **task & subjec
 - 🗺️ **Sitemap & Robots.txt**  
   Proper indexing for search engines  
 
+### 🚀 Coming Soon (v2.5) — Full Stack Features
+**All features include complete Frontend UI + Backend API implementations**
+
+- 📝 **Advanced Note-Taking** ⭐ IN PROGRESS  
+  Markdown editor with syntax highlighting & auto-save functionality  
+  `Frontend: Rich text editor | Backend: Notes API + MongoDB storage`
+
+- 👥 **Social Study Groups** ⭐ IN PROGRESS  
+  Create rooms, invite friends, and study together in real-time  
+  `Frontend: Group UI + Socket.IO | Backend: Room management API + Real-time sync`
+
+- 🤝 **Collaborative Study Rooms** ⭐ IN PROGRESS  
+  Share sessions, compete on leaderboards, and group challenges  
+  `Frontend: Room interface | Backend: Session sharing API + WebSocket`
+
+- ⏱️ **Pomodoro Group Sessions** ⭐ IN PROGRESS  
+  Synchronized timers for collaborative study groups  
+  `Frontend: Sync timer UI | Backend: Timer coordination API + Broadcasting`
+
+- 📴 **Enhanced Offline Mode** ⭐ IN PROGRESS  
+  Full functionality without internet connection  
+  `Frontend: Service Worker v6 + IndexedDB | Backend: Sync queue API`
+
+- 📊 **Advanced Statistics Export** ⭐ IN PROGRESS  
+  Generate detailed reports in PDF, Excel, and CSV formats  
+  `Frontend: Export UI + jsPDF | Backend: Report generation API + Templates`
+
 ---
+
+<p align="center">
+  <img
+    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=26&pause=1000&color=8B5CF6&center=true&vCenter=true&width=900&lines=🏆+Unlock+Achievements+%26+Earn+Badges;💎+27+Achievements+Across+5+Categories;🔥+Track+Streaks+%7C+💪+Level+Up+Your+Skills"
+    alt="Achievement System Animation"
+  />
+</p>
 
 ## 🏆 Achievement System
 
-StudyFlow includes a gamified achievement system to motivate consistent study habits. Earn points and unlock badges by reaching study milestones:
+StudyFlow includes a comprehensive gamified achievement system to motivate consistent study habits. Earn points and unlock badges by reaching milestones across multiple categories:
 
 ### 📚 Study Time Achievements
 - **First Steps**: Complete 1 study session (10 points)
 - **Hour Master**: Study for 1 hour total (15 points)
 - **Dedicated Scholar**: Study for 10 hours total (50 points)
 - **Study Warrior**: Study for 50 hours total (150 points)
+- **Study Warrior**: Study for 100 hours total (300 points)
 
-### 🔥 Consistency Achievements
-- **Consistency King**: Maintain a 7-day study streak (75 points)
+### 🔥 Streak & Consistency Achievements
+- **Week Warrior**: 7-day study streak (75 points) 🔥
+- **Fortnight Focus**: 14-day study streak (150 points) 🔥
+- **Month Master**: 30-day study streak (300 points) 🔥
+- **Persistence Pro**: 60-day study streak (600 points) 🔥
+- **Centurion**: 100-day study streak (1000 points) 🔥
+- **Year Legend**: 365-day study streak (3650 points) 🔥
 - **Perfect Week**: Study every day for a week (100 points)
 
 ### 🎯 Goal & Task Achievements
 - **Goal Crusher**: Complete 1 goal (20 points)
 - **Goal Master**: Complete 10 goals (100 points)
+- **Goal Champion**: Complete 50 goals (500 points)
 - **Subject Explorer**: Create 1 subject (10 points)
 - **Task Manager**: Complete 1 task (15 points)
 - **Task Champion**: Complete 50 tasks (80 points)
+- **Task Master**: Complete 100 tasks (200 points)
 
-**Note**: Achievements are automatically unlocked as you progress. Check your profile to see earned badges!
+### 🧠 Quiz Performance Achievements
+- **Quiz Novice**: Complete first quiz (10 points)
+- **Quiz Master**: Complete 10 quizzes (50 points)
+- **Perfect Score**: Score 100% on a quiz (25 points)
+- **High Achiever**: Score 90%+ on 5 quizzes (75 points)
+
+**💡 Pro Tip:** Achievements unlock automatically as you progress. Check your profile to see earned badges and track your journey to becoming a study master!
+
+**🔥 Streak Leaderboard:** Compete globally! Top 10 streakers are featured on the leaderboard with their current and longest streaks displayed.
 
 ---
+
+<p align="center">
+  <img
+    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=26&pause=1000&color=10B981&center=true&vCenter=true&width=1000&lines=🛠️+Built+with+Modern+Tech+Stack;Vue+3+%7C+Node.js+%7C+MongoDB+%7C+Express;Socket.IO+%7C+Tailwind+%7C+Chart.js"
+    alt="Technology Stack Animation"
+  />
+</p>
 
 ## 🛠️ Technology Stack
 
@@ -233,6 +330,13 @@ Before you begin, make sure all the above tools are installed and properly confi
 
 ---
 
+<p align="center">
+  <img
+    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=26&pause=1000&color=3B82F6&center=true&vCenter=true&width=900&lines=🚀+Get+Started+in+Minutes;📦+Clone+%7C+Install+%7C+Configure+%7C+Run;⚡+Easy+Setup+Process"
+    alt="Installation Animation"
+  />
+</p>
+
 ## 🚀 Installation & Setup
 
 ### 1️⃣ Clone the Repository
@@ -284,6 +388,13 @@ Use VS Code Live Server (recommended)
 Or serve from the backend directly at `http://localhost:5000`.
 
 ---
+
+<p align="center">
+  <img
+    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=26&pause=1000&color=EC4899&center=true&vCenter=true&width=1000&lines=🚀+Deploy+Anywhere+in+Minutes;Netlify+%7C+Vercel+%7C+GitHub+Pages+%7C+Docker;🌐+Global+CDN+%7C+Auto+HTTPS+%7C+CI%2FCD"
+    alt="Deployment Animation"
+  />
+</p>
 
 ## 🚀 Deployment Guide
 
@@ -401,32 +512,78 @@ lhci autorun --collect.url=http://localhost:8000
 Study Flow/
 ├── Backend/
 │   ├── config/            # Database & app configuration
+│   ├── controllers/       # Business logic handlers
 │   ├── middleware/        # Auth & custom middlewares
-│   ├── models/            # Mongoose schemas
-│   ├── routes/            # API routes
+│   ├── models/            # Mongoose schemas (User, Task, Session, Streak, etc.)
+│   ├── routes/            # API routes (auth, tasks, analytics, streak, AI)
+│   ├── utils/             # Helper functions & email services
 │   ├── node_modules/
-│   ├── .env               # Environment variables
+│   ├── .env               # Environment variables (SECRET!)
 │   ├── package.json
 │   ├── package-lock.json
 │   ├── server.js          # Express server entry point
 │   └── check-deployment.js
 │
-├── Frontend/
-│   ├── Assets/
-│   │   ├── script.js      # Frontend logic
-│   │   └── style.css     # UI styles
-│   └── index.html        # Main frontend entry
+├── Assets/
+│   ├── icons/             # App icons & PWA assets
+│   ├── chart.umd.min.js   # Chart.js library
+│   ├── critical.css       # Inlined critical CSS
+│   ├── lazy-load.js       # Lazy loading utility
+│   ├── script.js          # Main Vue 3 app (4800+ lines)
+│   ├── streak.js          # Streak tracker module
+│   ├── style.css          # Global styles & themes
+│   └── translations.js    # i18n translations
+│
+├── Documentation/
+│   ├── DOCUMENTATION.md       # Full project documentation
+│   ├── STREAK_TRACKER.md      # Streak system API & features
+│   ├── REPORT_SYSTEMS.md      # Email reporting system
+│   ├── EMAIL_REPORT_SYSTEM.md # Brevo integration guide
+│   └── SECURITY.md            # Security best practices
 │
 ├── .gitignore
-├── DEPLOYMENT.md
-├── readme.md
-└── render.yaml
+├── .github/               # GitHub Actions & templates
+├── CNAME                  # Custom domain config
+├── index.html             # Main frontend entry (3200+ lines)
+├── manifest.json          # PWA manifest
+├── sw.js                  # Service Worker v5
+├── sitemap.xml            # SEO sitemap
+├── robots.txt             # Crawler rules
+├── render.yaml            # Render.com deployment config
+├── readme.md              # This file
+└── LICENSE                # MIT License
+
+**Note:** The Assets/app/ folder has been removed during codebase cleanup. All modular Vue components were consolidated into Assets/script.js for better performance.
+```
 
 ---
 
-## 🔄 Recent Upgrades
+## 🔥 What's New in v2.0
 
-### 🐛 Bug Fixes (Latest)
+### 🎯 Streak Tracker System (Latest Addition!)
+Track your daily study consistency and build powerful habits:
+
+- **📈 Daily Streak Counter**: Visual streak widget showing current & longest streaks
+- **🏆 Milestone Achievements**: Unlock badges at 7, 14, 30, 60, 100 & 365 day milestones  
+- **👥 Global Leaderboard**: Compete with top 10 streakers worldwide
+- **📊 History Tracking**: View 30-day study history with completion status
+- **⚡ Auto-Update**: Streaks automatically update after completing focus sessions
+- **💾 MongoDB Integration**: Full backend model with REST API endpoints
+
+📖 **See:** [STREAK_TRACKER.md](STREAK_TRACKER.md) for complete API documentation
+
+### 📧 Email Progress Reports
+Automated weekly/monthly reports delivered to your inbox:
+
+- **📄 Multi-Page PDF Format**: Professional HTML-to-PDF conversion
+- **📊 Comprehensive Analytics**: Sessions, subjects, tasks & achievements
+- **🎨 Beautiful Design**: Styled with gradients & charts
+- **🔄 Auto-Generation**: Scheduled reports via Brevo API
+- **📎 Export Feature**: Download reports anytime from dashboard
+
+📖 **See:** [REPORT_SYSTEMS.md](REPORT_SYSTEMS.md) for dual report system architecture
+
+### 🐛 Major Bug Fixes
 - ✅ **Analytics Charts Fixed**: `updateCharts()` guard now properly has a `return` statement — prevents concurrent render conflicts
 - ✅ **Achievement 500 Error Fixed**: Added missing `quiz-perfects`, `quiz-completed`, `quiz-high-scores` types to Achievement model schema enum
 - ✅ **API Request Smarter Retry**: Port fallback now only triggers on network failures (TypeError/ERR_CONNECTION_REFUSED), not on HTTP errors (401/500)
@@ -453,6 +610,101 @@ Study Flow/
 - ⚡ Compression middleware enabled
 - 🛡️ Helmet.js security headers
 - 🚦 Rate limiting configured
+
+---
+
+## 🚀 What's Coming in v2.5
+
+**Full-Stack Implementation** — All features include complete Frontend + Backend architecture:
+
+### 📝 Advanced Note-Taking System
+**Frontend Implementation:**
+- **✍️ Rich Text Editor**: Markdown support with live preview (Vue component)
+- **🎨 Syntax Highlighting**: Code blocks with Prism.js integration
+- **💾 Auto-Save**: Debounced save with local storage backup
+- **🔍 Search & Tags**: Tag management UI with autocomplete
+- **📎 Attachments**: Drag-drop file upload with preview
+
+**Backend Implementation:**
+- **📄 Notes API**: RESTful endpoints (`/api/notes`)
+- **💾 MongoDB Schema**: Note model with versioning
+- **🔍 Search Engine**: Full-text search with indexing
+- **📎 File Storage**: Cloudinary/S3 integration
+- **🔐 Access Control**: User-based permissions
+
+---
+
+### 👥 Social & Collaborative Features
+**Frontend Implementation:**
+- **🤝 Study Groups UI**: Room creation/management interface
+- **💬 Real-Time Chat**: Socket.IO-powered messaging
+- **⏱️ Group Pomodoro**: Synchronized timer with visual sync
+- **🏆 Leaderboard**: Real-time ranking updates
+- **📊 Analytics Dashboard**: Shared progress visualization
+
+**Backend Implementation:**
+- **🏠 Room Management API**: CRUD operations for groups
+- **🔌 WebSocket Server**: Socket.IO for real-time events
+- **⏱️ Timer Coordinator**: Broadcast timer state to all members
+- **🏆 Challenge System**: Achievement tracking per group
+- **📊 Group Analytics**: Aggregated stats calculation
+
+---
+
+### 📴 Enhanced Offline Mode
+**Frontend Implementation:**
+- **🔌 Service Worker v6**: Advanced caching strategies
+- **💾 IndexedDB**: Local data persistence
+- **🔄 Sync Queue**: Background sync when online
+- **📱 PWA Manifest**: Enhanced installability
+- **⚡ Optimistic Updates**: Instant UI feedback
+
+**Backend Implementation:**
+- **🔄 Sync API**: Conflict resolution endpoints
+- **📦 Data Reconciliation**: Merge strategies for conflicts
+- **⏱️ Timestamp Tracking**: Last-modified headers
+- **🔐 Auth Tokens**: Offline-compatible JWT
+- **📊 Delta Sync**: Send only changed data
+
+---
+
+### 📊 Advanced Statistics & Export
+**Frontend Implementation:**
+- **📑 Export UI**: Multi-format selection interface
+- **📊 Chart Builder**: Custom visualization creator
+- **📅 Date Picker**: Advanced range selection
+- **⚡ Progress Indicators**: Real-time export status
+- **💾 Download Manager**: Handle large files
+
+**Backend Implementation:**
+- **📄 Report Generator**: PDF/Excel/CSV creation
+- **📊 Data Aggregation**: Complex analytics queries
+- **🎨 Template Engine**: Customizable report layouts
+- **📦 File Compression**: Optimize download size
+- **📧 Email Delivery**: Send reports via Brevo API
+
+---
+
+### 🛠️ Technical Stack for v2.5
+```
+Frontend:
+├── Vue 3 Composition API (existing)
+├── Socket.IO Client (real-time)
+├── IndexedDB API (offline storage)
+├── jsPDF + SheetJS (exports)
+├── Prism.js (syntax highlighting)
+└── TinyMCE/Quill (rich text editor)
+
+Backend:
+├── Express.js (existing)
+├── Socket.IO Server (WebSocket)
+├── MongoDB + Mongoose (existing)
+├── Node-cron (scheduled tasks)
+├── ExcelJS + PDFKit (exports)
+└── Redis (caching + pub/sub)
+```
+
+**🎯 Expected Release**: Q2 2026 • **👨‍💻 Contributions Welcome!**
 
 ---
 
@@ -563,6 +815,48 @@ Category: Monthly Target
 
 ---
 
+### � Study Streak Tracker
+
+#### What is a Study Streak?
+A study streak measures your consistency by tracking consecutive days you complete at least one focus session. Building streaks creates powerful study habits!
+
+#### Streak Widget (Dashboard)
+- **Current Streak**: Days in a row you've studied
+- **Longest Streak**: Your personal best record
+- **Today's Status**: Whether you've studied today
+- **Streak History**: Last 30 days visual timeline
+
+#### Maintaining Your Streak
+- ✅ Complete **at least one** focus session daily
+- 🕐 Must complete session before midnight
+- 📊 Any session duration counts (even 5 minutes!)
+- 🔄 Streak auto-updates after each completed session
+
+#### Streak Milestones
+Unlock special achievements and badges:
+- 🔥 **7 Days** - Week Warrior (75 points)
+- 🔥 **14 Days** - Fortnight Focus (150 points)
+- 🔥 **30 Days** - Month Master (300 points)
+- 🔥 **60 Days** - Persistence Pro (600 points)
+- 🔥 **100 Days** - Centurion (1000 points)
+- 🔥 **365 Days** - Year Legend (3650 points)
+
+#### Global Leaderboard
+- 🏆 View top 10 global streakers
+- 📊 See current & longest streaks
+- 🎯 Compete with other students
+- 💪 Stay motivated by community progress
+
+#### Streak Recovery
+- ❌ **Broken Streak**: If you miss a day, streak resets to 0
+- 🔄 **No Rollback**: Current design has no grace period
+- 🎯 **Pro Tip**: Set daily reminders to maintain streaks
+- 💡 **Stay Consistent**: Even 10 minutes counts!
+
+📖 **Full API Documentation**: See [STREAK_TRACKER.md](STREAK_TRACKER.md)
+
+---
+
 ### 📊 Analytics Dashboard
 
 #### Available Insights
@@ -570,6 +864,11 @@ Category: Monthly Target
 - **Daily/Weekly/Monthly Trends** - Visual charts
 - **Subject Breakdown** - Time per subject
 - **Productivity Score** - Performance metrics
+- **Today's Progress** - Real-time metrics (NEW!) 🔥
+  - Minutes studied today
+  - Sessions completed
+  - Tasks finished
+  - Current streak count
 - **Streak Tracking** - Consecutive study days
 - **Comparison Charts** - Period over period
 - **Focus Quality** - Session effectiveness
@@ -906,16 +1205,54 @@ This section explains how to use **StudyFlow** effectively from the first login 
 StudyFlow is designed to help you build **long-term study habits**, not just short sessions.
 
 
-<!-- ================= DEVELOPER PROFILE ================= -->
+<!-- ================= TEAM ================= -->
 
-## 👨‍💻 Developer
+## 👥 Team
 
 <p align="center">
   <img 
-    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=22&pause=1000&color=38B2AC&center=true&vCenter=true&width=700&lines=Salah+Uddin+Kader;Full+Stack+Developer;UI%2FUX+Designer;Building+Modern+Productivity+Tools" 
-    alt="Developer Typing Animation"
+    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=22&pause=1000&color=38B2AC&center=true&vCenter=true&width=800&lines=Built+with+Passion+and+Dedication;Team+StudyFlow+%F0%9F%9A%80" 
+    alt="Team Typing Animation"
   />
 </p>
+
+### 💻 Development Team
+
+<table align="center">
+<tr>
+<td align="center" width="50%">
+<img src="https://img.shields.io/badge/Developer-Salah_Uddin_Kader-purple?style=for-the-badge" /><br/>
+<strong>Lead Developer & Designer</strong><br/>
+<sub>Full Stack Development | UI/UX Design | System Architecture</sub><br/><br/>
+<a href="https://github.com/salahuddingfx">
+<img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white"/>
+</a>
+<a href="mailto:salauddinkaderappy@gmail.com">
+<img src="https://img.shields.io/badge/Email-D14836?style=flat-square&logo=gmail&logoColor=white"/>
+</a>
+<a href="https://www.linkedin.com/in/salahuddingfx">
+<img src="https://img.shields.io/badge/LinkedIn-0077B5?style=flat-square&logo=linkedin&logoColor=white"/>
+</a>
+</td>
+<td align="center" width="50%">
+<img src="https://img.shields.io/badge/Admin-Sohana_Rahman-blue?style=for-the-badge" /><br/>
+<strong>Project Administrator</strong><br/>
+<sub>Project Management | Content Strategy | Quality Assurance</sub><br/><br/>
+<br/>
+<sub>📊 Ensuring project excellence & user experience</sub>
+</td>
+</tr>
+</table>
+
+<p align="center">
+  <em>Built for students, by students • University Project 2026</em>
+</p>
+
+---
+
+<!-- ================= DEVELOPER PROFILE ================= -->
+
+## 👨‍💻 About the Developer
 
 <p align="center">
   <strong>Salah Uddin Kader</strong><br/>
@@ -925,18 +1262,6 @@ StudyFlow is designed to help you build **long-term study habits**, not just sho
 <p align="center">
   Passionate about building scalable web applications and clean user experiences.<br/>
   StudyFlow reflects my journey in mastering modern full-stack development.
-</p>
-
-<p align="center">
-  <a href="https://github.com/salahuddingfx">
-    <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white"/>
-  </a>
-  <a href="mailto:salauddinkaderappy@gmail.com">
-    <img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white"/>
-  </a>
-  <a href="https://www.linkedin.com/in/salahuddingfx">
-    <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white"/>
-  </a>
 </p>
 
 <p align="center">
@@ -976,7 +1301,7 @@ Contributions are highly appreciated and help make **StudyFlow** better for ever
 
 <p align="center">
   <img 
-    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=20&pause=1000&color=7C3AED&center=true&vCenter=true&width=700&lines=Open+Source+%7C+MIT+Licensed;Built+for+Learning+and+Growth" 
+    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=28&pause=1000&color=7C3AED&center=true&vCenter=true&width=900&lines=📄+Open+Source+%7C+MIT+Licensed;✨+Free+to+Use+%7C+Modify+%7C+Distribute;💜+Built+for+Learning+and+Community+Growth" 
     alt="License Banner"
   />
 </p>
@@ -985,22 +1310,83 @@ Contributions are highly appreciated and help make **StudyFlow** better for ever
 
 ## 📄 License
 
-This project is licensed under the **MIT License**, a permissive open-source license that allows you to:
+<p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-purple?style=for-the-badge&logo=opensourceinitiative&logoColor=white" />
+  <img src="https://img.shields.io/badge/Open_Source-❤️-red?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Free_Forever-✨-yellow?style=for-the-badge" />
+</p>
 
-- ✅ Use the software freely  
-- ✅ Modify and adapt it for your needs  
-- ✅ Distribute and share it  
-- ✅ Use it for personal or commercial projects  
+This project is licensed under the **MIT License** - one of the most permissive and widely-used open-source licenses.
 
-As long as the original copyright
-and license notice are included.
+### ✅ What You CAN Do
+
+<table>
+<tr>
+<td width="50%">
+
+#### 🎯 Commercial Use
+- ✅ Use in commercial products
+- ✅ Sell modified versions
+- ✅ Use in proprietary software
+- ✅ Monetize your fork
+
+#### 🔧 Modification
+- ✅ Edit source code freely
+- ✅ Create derivative works
+- ✅ Customize for your needs
+- ✅ Port to other platforms
+
+</td>
+<td width="50%">
+
+#### 📤 Distribution
+- ✅ Share publicly or privately
+- ✅ Include in packages/bundles
+- ✅ Redistribute modified versions
+- ✅ Use as template for projects
+
+#### 🎓 Educational Use
+- ✅ Use for learning purposes
+- ✅ Include in tutorials/courses
+- ✅ Reference in academic work
+- ✅ Teach with real-world code
+
+</td>
+</tr>
+</table>
+
+### ⚠️ Requirements (Simple!)
+
+### 📋 You Must:
+1. **Include the original MIT license** in any copy of the software
+2. **Include the copyright notice** (see LICENSE file)
+3. That's it! No other restrictions.
+
+### 🚫 You're NOT Required To:
+- ❌ Share your modifications (but we'd love it if you do!)
+- ❌ Open source your derivative work
+- ❌ Credit us in your UI (but appreciated!)
+- ❌ Notify us of usage
+
+### 🛡️ Limitation of Liability
+
+The software is provided **"AS IS"**, without warranty of any kind. The authors are not liable for any damages or issues arising from its use.
+
+### 🤝 Recommended (But Optional)
+
+While not required, we encourage you to:
+- ⭐ **Star this repo** if you find it useful
+- 🔗 **Link back** to this project in your README
+- 💬 **Share improvements** via pull requests
+- 📢 **Mention StudyFlow** in your project credits
 
 ---
 
-### © Copyright
+### © Copyright Notice
 
+**MIT License - Copyright © 2026 Salah Uddin Kader**
 
-All rights reserved under the MIT License.
+All rights reserved under the MIT License terms.
 
 ---
 
@@ -1055,27 +1441,131 @@ First Paint:          1.2s
 Time to Interactive:  3.2s
 Bundle Size:          198 KB (first load)
 Cached Load:          < 10 KB
+Service Worker:       v5 (Active)
+Chart Load Time:      < 100ms (optimized)
+Scroll Performance:   200px threshold
 ```
 
+### 🚀 Recent Performance Optimizations
+- ✅ **Faster Chart Loading**: Reduced from 500ms to 100ms initial load
+- ✅ **Smart Scroll Detection**: Container-specific scroll listener added
+- ✅ **Optimized Analytics**: Charts render with retry mechanism (100ms/800ms/1500ms)
+- ✅ **Improved Scroll Buttons**: Now visible at 200px (was 300px)
+- ✅ **Better Memory Management**: Proper cleanup of event listeners
+
 ---
+
+<p align="center">
+  <img
+    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=26&pause=1000&color=06B6D4&center=true&vCenter=true&width=1000&lines=🎯+Feature+Roadmap+%26+Vision;✅+v2.0+Released+%7C+🚧+In+Progress;📋+Exciting+Features+Coming+Soon"
+    alt="Roadmap Animation"
+  />
+</p>
 
 ## 🎯 Roadmap
 
-- [ ] Mobile native apps
-- [ ] Browser extensions
-- [ ] Flashcard system
-- [ ] Note-taking
-- [ ] Calendar sync
-- [ ] Social features
+### ✅ Completed (v2.0)
+- [x] Study Streak Tracker with leaderboard
+- [x] Email progress reports (PDF)
+- [x] AI Study Assistant (Gemini)
+- [x] Multi-page analytics
+- [x] Achievement system
+- [x] PWA support
+- [x] Dark/Light themes
+- [x] Blog system
+- [x] Admin panel
+- [x] Quiz generation
+
+### 🚧 In Progress (v2.5) — Full-Stack Development
+**All features include Frontend UI + Backend API + Database models**
+
+- [ ] 📝 **Advanced Note-Taking** - Markdown editor with syntax highlighting & auto-save  
+  `Vue UI + Express API + MongoDB + File Storage`
+
+- [ ] 👥 **Social Study Groups** - Create rooms, invite friends, study together in real-time  
+  `Socket.IO Client + WebSocket Server + Room Management API`
+
+- [ ] 🤝 **Collaborative Study Rooms** - Share sessions, compete on leaderboards, group challenges  
+  `Real-time UI + Broadcasting System + Group Analytics API`
+
+- [ ] ⏱️ **Pomodoro Group Sessions** - Synchronized timers for study groups  
+  `Sync Timer Component + Timer Coordination API + State Broadcasting`
+
+- [ ] 📴 **Enhanced Offline Mode** - Full functionality without internet connection  
+  `Service Worker v6 + IndexedDB + Sync Queue API + Conflict Resolution`
+
+- [ ] 📊 **Advanced Statistics Export** - Generate detailed reports (PDF/Excel/CSV)  
+  `Export UI + jsPDF/SheetJS + Report Generation API + Email Delivery`
+
+### 📋 Planned Features (v3.0)
+- [ ] 📱 **Mobile Native Apps** (iOS/Android) - Download from App Store & Play Store
+- [ ] 🔌 **Browser Extensions** (Chrome/Firefox/Edge) - Quick timer & task access
+- [ ] 🗂️ **Flashcard System** - Spaced repetition algorithm for memorization
+- [ ] 🗒️ **Smart Study Notes** - Auto-organize, tag, search & sync across devices
+- [ ] 📅 **Calendar Integration** - Sync with Google Calendar & Outlook
+- [ ] 💬 **Real-Time Chat** - In-app messaging for study group collaboration
+- [ ] 🎙️ **Voice Commands** - Start/stop timer with voice ("Hey StudyFlow")
+- [ ] 🎵 **Collaborative Playlists** - Share and discover study music
+- [ ] 🏫 **LMS Integration** - Connect with Canvas, Moodle, Blackboard
+- [ ] 🎨 **Custom Themes** - Create your own color schemes
+- [ ] 🔔 **Smart Reminders** - AI-powered study time suggestions
+- [ ] 🧠 **AI Study Coach** - Personalized learning path recommendations
+- [ ] 📚 **Digital Library** - Organize & annotate study materials
+
+**💡 Have a feature request?** [Create an issue](https://github.com/salahuddingfx/Study-Flow/issues) and let us know!
 
 ---
 
-## 📞 Support
+<p align="center">
+  <img
+    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=26&pause=1000&color=F59E0B&center=true&vCenter=true&width=1000&lines=📚+Comprehensive+Documentation;📖+Guides+%7C+API+Docs+%7C+Tutorials;🔐+Security+%7C+Architecture+%7C+Deployment"
+    alt="Documentation Animation"
+  />
+</p>
 
-- 📖 [Performance Report](PERFORMANCE_REPORT.md)
-- 🚀 [Deployment Guide](DEPLOYMENT_OPTIMIZED.md)
+## 📚 Documentation
+
+Comprehensive guides and references available:
+
+### 📚 Documentation
+- **[DOCUMENTATION.md](DOCUMENTATION.md)** - Complete project documentation (2200+ lines)
+- **[readme.md](readme.md)** - Quick start guide (this file)
+
+### 🔥 Feature-Specific Guides
+- **[STREAK_TRACKER.md](STREAK_TRACKER.md)** - Daily streak system API & implementation
+- **[REPORT_SYSTEMS.md](REPORT_SYSTEMS.md)** - Dual report system (client + server)
+- **[EMAIL_REPORT_SYSTEM.md](EMAIL_REPORT_SYSTEM.md)** - Brevo email integration
+
+### 🛡️ Security & Best Practices
+- **[SECURITY.md](SECURITY.md)** - Security guidelines & vulnerability reporting
+- **[SECURITY_ALERT.md](SECURITY_ALERT.md)** - Active security notices
+
+### 🏗️ Architecture & Deployment
+- **[render.yaml](render.yaml)** - Render.com deployment configuration
+- **[.github/](.github/)** - GitHub Actions & issue templates
+
+---
+
+<p align="center">
+  <img
+    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=26&pause=1000&color=EF4444&center=true&vCenter=true&width=900&lines=📞+Need+Help%3F+We're+Here!;💬+Community+%7C+Documentation+%7C+Support;🚀+Get+Answers+Fast"
+    alt="Support Animation"
+  />
+</p>
+
+## 📞 Support & Resources
+
+### 🆘 Get Help
+- 📖 [Full Documentation](DOCUMENTATION.md)
 - 🐛 [Issue Tracker](https://github.com/salahuddingfx/Study-Flow/issues)
-- 📧 salauddinkaderappy@gmail.com
+- 🚀 [Deployment Guide](DOCUMENTATION.md#5-deployment-guide)
+- 📧 Email: salauddinkaderappy@gmail.com
+
+### 🔗 Quick Links
+- 🌐 [Live Demo](https://studyflow.salahuddin.codes)
+- 📦 [GitHub Repository](https://github.com/salahuddingfx/Study-Flow)
+- 📊 [API Documentation](DOCUMENTATION.md#14-api-documentation)
+- 🎯 [Performance Report](DOCUMENTATION.md#8-performance--optimization)
 
 ---
 

@@ -840,7 +840,7 @@ button:active {
     }
     
     /* Make floating button smaller on very small screens */
-    .fixed.bottom-4.right-4 button {
+    .fixed.bottom-4.right-4 > button {
         width: 3rem !important;
         height: 3rem !important;
     }
@@ -857,6 +857,82 @@ button:active {
     /* Smaller font for very small screens */
     body {
         font-size: 14px;
+    }
+}
+
+/* AI chat popup stability (especially on mobile/devtools emulation) */
+.ai-chat-popup {
+    width: min(92vw, 400px);
+    max-width: 400px;
+}
+
+.theme-modal-panel {
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+}
+
+.theme-modal-footer {
+    position: sticky;
+    bottom: 0;
+    padding-top: 0.75rem;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(6px);
+}
+
+.scroll-to-top-left {
+    left: 24px !important;
+    right: auto !important;
+    bottom: 24px !important;
+}
+
+.scroll-to-top-right {
+    right: 24px !important;
+    left: auto !important;
+    bottom: 24px !important;
+}
+
+@media (min-width: 640px) {
+    .scroll-to-top-left {
+        left: 32px !important;
+        bottom: 32px !important;
+    }
+    
+    .scroll-to-top-right {
+        right: 32px !important;
+        bottom: 32px !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .ai-chat-popup {
+        position: fixed !important;
+        left: 1rem !important;
+        right: 1rem !important;
+        width: auto !important;
+        max-width: none !important;
+        height: min(72vh, 560px) !important;
+        bottom: 5.25rem !important;
+    }
+
+    .theme-modal-panel {
+        padding: 1rem !important;
+        max-height: calc(100vh - 1.5rem);
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .scroll-to-top-left {
+        left: 140px !important;
+        right: auto !important;
+        bottom: 20px !important;
+    }
+    
+    .scroll-to-top-right {
+        right: 20px !important;
+        left: auto !important;
+        bottom: 20px !important;
     }
 }
 

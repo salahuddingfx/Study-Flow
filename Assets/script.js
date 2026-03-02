@@ -19,7 +19,7 @@ if (typeof Vue === 'undefined') {
 
 const { createApp } = Vue;
 
-createApp({
+const legacyVueApp = createApp({
     data() {
         return {
             // API Configuration (auto switch: local vs production)
@@ -282,6 +282,7 @@ createApp({
             subjectChart: null,
             leaderboardChart: null,
             updatingCharts: false,
+            analyticsTimeouts: [],
             chartKey: 0,
             chartJsReady: false,
             analyticsHasSessions: false,
@@ -410,6 +411,7 @@ createApp({
         // Attempt to detect Chart.js early
         if (typeof Chart !== 'undefined') {
             this.chartJsReady = true;
+            Chart.defaults.animation = false;
         }
 
         document.body.className = 'theme-dark';
@@ -571,9 +573,20 @@ createApp({
         this.dateTimeInterval = setInterval(this.updateDateTime, 1000);
 
         this._scrollHandler = () => {
-            this.showScrollTop = window.scrollY > 300;
+            const containerScrollTop = this.$refs.mainScrollContainer?.scrollTop || 0;
+            const pageScrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+            this.showScrollTop = Math.max(containerScrollTop, pageScrollTop) > 200;
         };
-        window.addEventListener('scroll', this._scrollHandler);
+        document.addEventListener('scroll', this._scrollHandler, true);
+        
+        // Also listen to scroll on mainScrollContainer (important!)
+        this.$nextTick(() => {
+            if (this.$refs.mainScrollContainer) {
+                this.$refs.mainScrollContainer.addEventListener('scroll', this._scrollHandler);
+            }
+        });
+        
+        this._scrollHandler();
 
         this._onlineHandler = () => {
             this.isOnline = true;
@@ -587,8 +600,12 @@ createApp({
         };
         window.addEventListener('online', this._onlineHandler);
         window.addEventListener('offline', this._offlineHandler);
+        this._hashChangeHandler = () => this.syncViewFromHash();
+        window.addEventListener('hashchange', this._hashChangeHandler);
 
         this.isOnline = navigator.onLine;
+        this.syncViewFromHash();
+        this.syncHashFromView();
 
         // --- OPTIMIZED LOADING LOGIC ---
         const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -679,10 +696,26 @@ createApp({
     },
 
     beforeUnmount() {
+        this.clearAnalyticsTimers();
+        this.destroyAnalyticsCharts();
+        if (this.calendarInstance) {
+            try {
+                this.calendarInstance.destroy();
+            } catch (e) {
+                console.warn('Calendar destroy warning:', e);
+            }
+            this.calendarInstance = null;
+        }
         if (this._mouseMoveHandler) document.removeEventListener('mousemove', this._mouseMoveHandler);
-        if (this._scrollHandler) window.removeEventListener('scroll', this._scrollHandler);
+        if (this._scrollHandler) {
+            document.removeEventListener('scroll', this._scrollHandler, true);
+            if (this.$refs.mainScrollContainer) {
+                this.$refs.mainScrollContainer.removeEventListener('scroll', this._scrollHandler);
+            }
+        }
         if (this._onlineHandler) window.removeEventListener('online', this._onlineHandler);
         if (this._offlineHandler) window.removeEventListener('offline', this._offlineHandler);
+        if (this._hashChangeHandler) window.removeEventListener('hashchange', this._hashChangeHandler);
         if (this.dateTimeInterval) clearInterval(this.dateTimeInterval);
         if (this._hoverChecker) document.removeEventListener('mouseover', this._hoverChecker);
     },
@@ -861,22 +894,57 @@ createApp({
                 avgSessionLength
             };
         },
+
+        todayStats() {
+            const now = new Date();
+            const today = now.toDateString();
+            
+            // Get today's sessions
+            const todaySessions = this.sessions.filter(s =>
+                new Date(s.timestamp).toDateString() === today
+            );
+            
+            // Calculate today's minutes
+            const minutes = todaySessions.reduce((sum, s) => sum + s.duration, 0);
+            const sessions = todaySessions.length;
+            
+            // Get today's completed tasks
+            const tasksCompleted = this.tasks.filter(t => {
+                if (!t.completed || !t.completedAt) return false;
+                return new Date(t.completedAt).toDateString() === today;
+            }).length;
+            
+            // Get current streak (from StreakTracker module)
+            const streak = (window.StreakTracker?.streakData?.currentStreak) || 0;
+            
+            return {
+                minutes,
+                sessions,
+                tasksCompleted,
+                streak
+            };
+        },
     },
 
     watch: {
         currentView(newView) {
+            this.syncHashFromView();
             if (newView === 'analytics') {
+                this.clearAnalyticsTimers();
                 this.$nextTick(() => {
                     this.$nextTick(() => {
-                        setTimeout(() => {
+                        const t1 = setTimeout(() => {
                             this.updateCharts();
                             this.loadLeaderboard();
                             this.loadAchievementStats();
                             this.loadAchievementLeaderboard();
-                            this.loadQuizStats();
-                        }, 500);
-                        setTimeout(() => this.updateCharts(), 1200);
-                        setTimeout(() => this.updateCharts(), 2200);
+                            if (this.isAuthenticated && this.authToken) {
+                                this.loadQuizStats();
+                            }
+                        }, 100);
+                        const t2 = setTimeout(() => this.updateCharts(), 800);
+                        const t3 = setTimeout(() => this.updateCharts(), 1500);
+                        this.analyticsTimeouts.push(t1, t2, t3);
                     });
                 });
             } else if (newView === 'calendar') {
@@ -885,21 +953,29 @@ createApp({
                         this.initCalendar();
                     }, 200);
                 });
+            } else {
+                this.clearAnalyticsTimers();
+                this.destroyAnalyticsCharts();
             }
         },
 
         analyticsView() {
             this.$nextTick(() => {
                 this.$nextTick(() => {
-                    setTimeout(() => {
+                    const t = setTimeout(() => {
                         this.updateCharts();
                     }, 500);
+                    this.analyticsTimeouts.push(t);
                 });
             });
         },
 
         leaderboardPeriod() {
             this.loadLeaderboard();
+        },
+
+        adminActiveTab(newTab) {
+            this.ensureAdminTabData(newTab);
         },
 
         sessions: {
@@ -911,10 +987,74 @@ createApp({
                 }
             },
             deep: true
+        },
+
+        tasks: {
+            handler() {
+                if (this.currentView === 'calendar') {
+                    this.$nextTick(() => {
+                        this.initCalendar();
+                    });
+                }
+            },
+            deep: true
         }
     },
 
     methods: {
+        getAllowedViews() {
+            return ['home', 'timer', 'tasks', 'calendar', 'quiz', 'goals', 'analytics', 'blog'];
+        },
+
+        syncViewFromHash() {
+            const hashView = (window.location.hash || '').replace('#', '').trim();
+            if (!hashView) return;
+            if (!this.getAllowedViews().includes(hashView)) return;
+            if (this.currentView !== hashView) {
+                this.currentView = hashView;
+            }
+        },
+
+        syncHashFromView() {
+            const view = this.currentView || 'home';
+            if (!this.getAllowedViews().includes(view)) return;
+            const nextHash = `#${view}`;
+            if (window.location.hash !== nextHash) {
+                history.replaceState(null, '', `${window.location.pathname}${window.location.search}${nextHash}`);
+            }
+        },
+
+        safeDestroyChart(chartRefName) {
+            try {
+                const chart = this[chartRefName];
+                if (!chart) return;
+                if (typeof chart.stop === 'function') chart.stop();
+                if (typeof chart.destroy === 'function') chart.destroy();
+            } catch (e) {
+                console.warn(`Chart destroy warning for ${chartRefName}:`, e);
+            } finally {
+                this[chartRefName] = null;
+            }
+        },
+
+        clearAnalyticsTimers() {
+            if (Array.isArray(this.analyticsTimeouts)) {
+                this.analyticsTimeouts.forEach((id) => clearTimeout(id));
+            }
+            this.analyticsTimeouts = [];
+        },
+
+        destroyAnalyticsCharts() {
+            try {
+                this.safeDestroyChart('studyTimeChart');
+                this.safeDestroyChart('subjectChart');
+                this.safeDestroyChart('leaderboardChart');
+            } catch (e) {
+                console.warn('Chart destroy warning:', e);
+            }
+            this.updatingCharts = false;
+        },
+
         // Translation Helper
         t(key) {
             if (this.translations && this.translations[this.currentLang] && this.translations[this.currentLang][key]) {
@@ -1415,7 +1555,17 @@ createApp({
         /* --- 1. Calendar Integration --- */
         initCalendar() {
             const calendarEl = document.getElementById('calendar');
-            if (!calendarEl || this.calendarInstance) return;
+            if (!calendarEl) return;
+
+            // Recreate safely on view re-entry (v-if destroys DOM)
+            if (this.calendarInstance) {
+                try {
+                    this.calendarInstance.destroy();
+                } catch (e) {
+                    console.warn('Calendar destroy warning:', e);
+                }
+                this.calendarInstance = null;
+            }
 
             // Map tasks to events
             const events = this.tasks.map(task => ({
@@ -1792,6 +1942,11 @@ createApp({
                      
                      // Refresh achievement stats
                      await this.loadAchievementStats();
+                     
+                     // Dispatch event for streak tracker
+                     document.dispatchEvent(new CustomEvent('sessionCompleted', {
+                         detail: { duration }
+                     }));
                 } catch (e) {
                     console.error("Failed to save session", e);
                 }
@@ -2139,7 +2294,9 @@ createApp({
                     if (result.status === 'fulfilled') {
                         this[def.key] = normalizeArray(result.value, def.key);
                     } else {
-                        this[def.key] = [];
+                        if (!Array.isArray(this[def.key])) {
+                            this[def.key] = [];
+                        }
                         console.warn(`Failed to load ${def.key}:`, result.reason);
                     }
                 });
@@ -2151,7 +2308,9 @@ createApp({
                         this.updateCharts();
                         this.loadLeaderboard();
                         this.loadAchievementLeaderboard();
-                        this.loadQuizStats();
+                        if (this.isAuthenticated && this.authToken) {
+                            this.loadQuizStats();
+                        }
                     });
                 }
 
@@ -2320,6 +2479,7 @@ createApp({
             
             const canvas = this.$refs.leaderboardChart;
             if (!canvas) return; // Silent fail if element missing (e.g. tabs switched)
+            if (!canvas.isConnected) return;
             
             if (!this.achievementLeaderboard || this.achievementLeaderboard.length === 0) return;
             
@@ -2327,17 +2487,19 @@ createApp({
 
             const chartRect = canvas.getBoundingClientRect();
             if (chartRect.width === 0 || chartRect.height === 0) {
-                setTimeout(() => this.renderLeaderboardChart(), 200);
+                const retry = setTimeout(() => {
+                    if (this.currentView === 'analytics') {
+                        this.renderLeaderboardChart();
+                    }
+                }, 200);
+                this.analyticsTimeouts.push(retry);
                 return;
             }
 
             const ctx = canvas.getContext('2d');
             
             // Destroy existing chart
-            if (this.leaderboardChart) {
-                this.leaderboardChart.destroy();
-                this.leaderboardChart = null;
-            }
+            this.safeDestroyChart('leaderboardChart');
             
             // Prepare data
             const labels = this.achievementLeaderboard.map((user, index) => 
@@ -2374,6 +2536,7 @@ createApp({
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: { duration: 0 },
                     plugins: {
                         legend: {
                             display: false
@@ -2426,6 +2589,9 @@ createApp({
             script.onload = () => {
                 window.__studyflowChartJsLoading = false;
                 this.chartJsReady = true;
+                if (typeof Chart !== 'undefined') {
+                    Chart.defaults.animation = false;
+                }
                 if (this.currentView === 'analytics') {
                     this.$nextTick(() => {
                         this.updateCharts();
@@ -2444,10 +2610,23 @@ createApp({
         },
 
         async loadQuizStats() {
+            if (!this.isAuthenticated || !this.authToken) {
+                return;
+            }
             try {
                 const res = await fetch(`${this.API_BASE_URL}/api/analytics/quiz-stats`, {
                     headers: { 'Authorization': `Bearer ${this.authToken}` }
                 });
+                if (res.status === 401) {
+                    this.quizStats = {
+                        totalQuizzes: 0,
+                        completedQuizzes: 0,
+                        averageScore: 0,
+                        highestScore: 0,
+                        quizzes: []
+                    };
+                    return;
+                }
                 if (!res.ok) return;
                 const data = await res.json();
                 this.quizStats = data;
@@ -2669,6 +2848,11 @@ createApp({
         },
 
         scrollToTop() {
+            const container = this.$refs.mainScrollContainer;
+            if (container && typeof container.scrollTo === 'function') {
+                container.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         },
 
@@ -2830,6 +3014,9 @@ createApp({
 
 updateCharts() {
             console.log('updateCharts called');
+            if (this.currentView !== 'analytics') {
+                return;
+            }
             if (this.updatingCharts) {
                 return;
             }
@@ -2896,8 +3083,11 @@ updateCharts() {
     this.$nextTick(() => {
         console.log('$nextTick in updateCharts');
         // Check if DOM elements exist
-        if (!this.$refs.studyTimeChart || !this.$refs.subjectChart) {
-            console.log('DOM refs not found:', this.$refs.studyTimeChart, this.$refs.subjectChart);
+        const studyRef = this.$refs.studyTimeChart;
+        const subjectRef = this.$refs.subjectChart;
+
+        if (!studyRef || !subjectRef || !studyRef.isConnected || !subjectRef.isConnected) {
+            console.log('DOM refs not ready:', studyRef, subjectRef);
             return;
         }
 
@@ -2906,15 +3096,20 @@ updateCharts() {
         if (!this.ensureChartJsLoaded()) {
             console.log('Chart.js not loaded, retrying');
             this.chartJsReady = typeof Chart !== 'undefined';
-            setTimeout(() => this.updateCharts(), 500);
+            const retry = setTimeout(() => {
+                if (this.currentView === 'analytics') {
+                    this.updateCharts();
+                }
+            }, 500);
+            this.analyticsTimeouts.push(retry);
             return;
         }
 
         this.chartJsReady = true;
 
         // Force canvas visibility/sizing before Chart init
-        const studyCanvas = this.$refs.studyTimeChart;
-        const subjectCanvas = this.$refs.subjectChart;
+        const studyCanvas = studyRef;
+        const subjectCanvas = subjectRef;
 
         studyCanvas.style.display = 'block';
         studyCanvas.style.width = '100%';
@@ -2936,14 +3131,12 @@ updateCharts() {
 
         try {
             // --- Chart 1: Study Time Trend ---
-            if (this.studyTimeChart) {
-                this.studyTimeChart.destroy();
-                this.studyTimeChart = null;
-            }
+            this.safeDestroyChart('studyTimeChart');
 
             // Always render chart, data or no data
             if (true) { 
                 const ctx1 = this.$refs.studyTimeChart.getContext('2d');
+                if (!ctx1) return;
                 let labels = [];
                 let data = [];
 
@@ -3048,6 +3241,7 @@ updateCharts() {
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: { duration: 0 },
                         devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
                         plugins: {
                             legend: { display: false },
@@ -3075,14 +3269,12 @@ updateCharts() {
             }
 
             // --- Chart 2: Subject Distribution ---
-            if (this.subjectChart) {
-                this.subjectChart.destroy();
-                this.subjectChart = null;
-            }
+            this.safeDestroyChart('subjectChart');
 
             // Always render donut chart too or empty state if needed
             if (true) {
                 const ctx2 = this.$refs.subjectChart.getContext('2d');
+                if (!ctx2) return;
                 let subjectData = [];
                 let sLabels = [];
 
@@ -3110,6 +3302,7 @@ updateCharts() {
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: { duration: 0 },
                         devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
                         cutout: '62%',
                         plugins: {
@@ -3127,9 +3320,6 @@ updateCharts() {
                     }
                 });
             }
-
-            this.studyTimeChart?.resize();
-            this.subjectChart?.resize();
 
         } catch (error) {
             console.error("🔥 Error updating charts:", error);
@@ -3558,133 +3748,323 @@ updateCharts() {
                 const doc = new jsPDF();
                 const pageWidth = doc.internal.pageSize.getWidth();
                 const pageHeight = doc.internal.pageSize.getHeight();
+                const margin = 15;
 
-                // Helper to add border
+                // Helper to add gradient-style border
                 const addBorder = () => {
-                    doc.setDrawColor(139, 92, 246); // Purple
-                    doc.setLineWidth(1);
+                    doc.setDrawColor(139, 92, 246);
+                    doc.setLineWidth(1.5);
                     doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
+                    
+                    // Corner accents
+                    doc.setFillColor(139, 92, 246);
+                    doc.rect(5, 5, 15, 2, 'F');
+                    doc.rect(5, 5, 2, 15, 'F');
+                    doc.rect(pageWidth - 20, 5, 15, 2, 'F');
+                    doc.rect(pageWidth - 7, 5, 2, 15, 'F');
+                };
+
+                // Helper for section headers
+                const addSectionHeader = (text, y, icon = '') => {
+                    doc.setFillColor(139, 92, 246);
+                    doc.rect(margin, y - 6, pageWidth - 2 * margin, 10, 'F');
+                    doc.setFontSize(14);
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(text, margin + 3, y);
+                    return y + 10;
                 };
 
                 // 1. Setup & Header
                 addBorder();
                 
-                // Header Background
-                doc.setFillColor(245, 245, 250);
-                doc.rect(6, 6, pageWidth - 12, 30, 'F');
+                // Header with gradient effect
+                doc.setFillColor(139, 92, 246);
+                doc.rect(6, 6, pageWidth - 12, 35, 'F');
+                
+                doc.setFillColor(118, 75, 162);
+                doc.rect(6, 20, pageWidth - 12, 21, 'F');
+
+                // Logo circle
+                doc.setFillColor(255, 255, 255);
+                doc.circle(margin + 7, 20, 6, 'F');
+                doc.setFillColor(139, 92, 246);
+                doc.circle(margin + 7, 20, 4, 'F');
 
                 // Title
-                doc.setFontSize(24);
-                doc.setTextColor(139, 92, 246);
+                doc.setFontSize(26);
+                doc.setTextColor(255, 255, 255);
                 doc.setFont('helvetica', 'bold');
-                doc.text(`StudyFlow Report`, 20, 25);
+                doc.text('StudyFlow Performance Report', margin + 18, 26);
 
-                // Date
-                doc.setFontSize(10);
-                doc.setTextColor(100, 100, 100);
+                // Subtitle
+                doc.setFontSize(11);
                 doc.setFont('helvetica', 'normal');
-                doc.text(new Date().toLocaleDateString(), pageWidth - 20, 25, { align: 'right' });
+                doc.text('Your Complete Productivity Analysis', margin + 15, 33);
 
-                // 2. User Box
-                doc.setDrawColor(220, 220, 220);
+                // Date Badge
                 doc.setFillColor(255, 255, 255);
-                doc.roundedRect(20, 45, pageWidth - 40, 25, 3, 3, 'S');
-
-                doc.setFontSize(12);
-                doc.setTextColor(0, 0, 0);
-                
-                doc.text(`User:`, 25, 55);
-                doc.setFont('helvetica', 'bold');
-                doc.text(`${this.currentUser}`, 50, 55);
-                
-                doc.setFont('helvetica', 'normal');
-                doc.text(`Email:`, 25, 63);
-                doc.setFont('helvetica', 'bold');
-                doc.text(`${this.userEmail}`, 50, 63);
-
-                // 3. Statistics Grid
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(16);
+                doc.roundedRect(pageWidth - 50, 13, 40, 10, 2, 2, 'F');
+                doc.setFontSize(9);
                 doc.setTextColor(139, 92, 246);
-                doc.text('Statistics', 20, 90);
-
-                const statsY = 100;
-                doc.setTextColor(50, 50, 50);
-                doc.setFontSize(10);
                 doc.setFont('helvetica', 'bold');
-                
-                // Labels
-                doc.text('FOCUS TIME', 25, statsY);
-                doc.text('TOTAL SESSIONS', 75, statsY);
-                doc.text('TASKS DONE', 125, statsY);
-                doc.text('STREAK', 175, statsY);
+                doc.text(new Date().toLocaleDateString(), pageWidth - 30, 20, { align: 'center' });
 
-                // Values
-                doc.setFontSize(14);
-                doc.setTextColor(0, 0, 0);
-                doc.setFont('helvetica', 'normal');
-                
-                doc.text(`${Math.floor(this.totalFocusTime / 60)}h ${this.totalFocusTime % 60}m`, 25, statsY + 8);
-                doc.text(`${this.totalSessions}`, 75, statsY + 8);
-                doc.text(`${this.completedTasksCount}`, 125, statsY + 8);
-                doc.text(`${this.currentStreak} d`, 175, statsY + 8);
-
-                // Divider
-                doc.setDrawColor(230, 230, 230);
+                // 2. User Info Card
+                let currentY = 50;
+                doc.setDrawColor(139, 92, 246);
                 doc.setLineWidth(0.5);
-                doc.line(20, statsY + 20, pageWidth - 20, statsY + 20);
+                doc.setFillColor(248, 248, 255);
+                doc.roundedRect(margin, currentY, pageWidth - 2 * margin, 20, 3, 3, 'FD');
 
-                // 4. Pending Tasks
+                doc.setFontSize(11);
+                doc.setTextColor(60, 60, 60);
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(16);
-                doc.setTextColor(139, 92, 246);
-                doc.text('Pending Tasks', 20, statsY + 35);
-
-                let y = statsY + 45;
-                const pendingTasks = this.tasks.filter(t => !t.completed);
+                doc.text('User:', margin + 5, currentY + 7);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`${this.currentUser}`, margin + 20, currentY + 7);
                 
-                if (pendingTasks.length > 0) {
-                    doc.setFontSize(11);
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFont('helvetica', 'normal');
+                doc.setFont('helvetica', 'bold');
+                doc.text('Email:', margin + 5, currentY + 14);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`${this.userEmail}`, margin + 20, currentY + 14);
+
+                // 3. Key Performance Indicators
+                currentY = addSectionHeader('Key Performance Indicators', 80, '');
+                
+                // Stats boxes with colored backgrounds
+                const stats = [
+                    { label: 'Focus Time', value: `${Math.floor(this.totalFocusTime / 60)}h ${this.totalFocusTime % 60}m`, color: [79, 70, 229] },
+                    { label: 'Sessions', value: `${this.totalSessions}`, color: [16, 185, 129] },
+                    { label: 'Tasks Done', value: `${this.completedTasksCount}`, color: [245, 158, 11] },
+                    { label: 'Streak', value: `${this.currentStreak}d`, color: [239, 68, 68] }
+                ];
+
+                const boxWidth = (pageWidth - 2 * margin - 15) / 4;
+                const boxHeight = 25;
+                
+                stats.forEach((stat, index) => {
+                    const x = margin + index * (boxWidth + 5);
                     
-                    pendingTasks.forEach((task, index) => {
-                        if (y > pageHeight - 30) {
+                    // Colored box
+                    doc.setFillColor(stat.color[0], stat.color[1], stat.color[2]);
+                    doc.roundedRect(x, currentY, boxWidth, boxHeight, 2, 2, 'F');
+                    
+                    // Label
+                    doc.setFontSize(8);
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(stat.label.toUpperCase(), x + boxWidth / 2, currentY + 8, { align: 'center' });
+                    
+                    // Value
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(stat.value, x + boxWidth / 2, currentY + 18, { align: 'center' });
+                });
+
+                currentY += boxHeight + 15;
+
+                // 4. Subject Performance
+                if (this.subjects && this.subjects.length > 0) {
+                    currentY = addSectionHeader('Subject Performance', currentY, '');
+                    
+                    this.subjects.slice(0, 8).forEach((subject, index) => {
+                        if (currentY > pageHeight - 40) {
                             doc.addPage();
                             addBorder();
-                            y = 20;
+                            currentY = 20;
                         }
                         
-                        // Bullet
-                        doc.setFillColor(139, 92, 246);
-                        doc.circle(25, y - 1.5, 1, 'F');
+                        const subjectHours = Math.floor((subject.totalTime || 0) / 60);
+                        const subjectMins = (subject.totalTime || 0) % 60;
                         
-                        doc.text(`${task.text}`, 30, y);
-                        y += 10;
+                        // Subject name
+                        doc.setFontSize(10);
+                        doc.setTextColor(60, 60, 60);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(`${subject.name}`, margin + 5, currentY + 5);
+                        
+                        // Time badge
+                        doc.setFillColor(139, 92, 246);
+                        doc.roundedRect(pageWidth - margin - 35, currentY, 30, 7, 1, 1, 'F');
+                        doc.setFontSize(9);
+                        doc.setTextColor(255, 255, 255);
+                        doc.text(`${subjectHours}h ${subjectMins}m`, pageWidth - margin - 20, currentY + 5, { align: 'center' });
+                        
+                        // Progress bar
+                        const maxTime = Math.max(...this.subjects.map(s => s.totalTime || 0));
+                        const barWidth = ((subject.totalTime || 0) / (maxTime || 1)) * (pageWidth - 2 * margin - 50);
+                        
+                        doc.setFillColor(230, 230, 235);
+                        doc.roundedRect(margin + 5, currentY + 8, pageWidth - 2 * margin - 45, 4, 1, 1, 'F');
+                        
+                        doc.setFillColor(139, 92, 246);
+                        doc.roundedRect(margin + 5, currentY + 8, barWidth, 4, 1, 1, 'F');
+                        
+                        currentY += 17;
+                    });
+                    
+                    currentY += 5;
+                }
+
+                // 5. Completed Tasks Showcase
+                const completedTasks = this.tasks.filter(t => t.completed);
+                if (completedTasks.length > 0) {
+                    if (currentY > pageHeight - 50) {
+                        doc.addPage();
+                        addBorder();
+                        currentY = 20;
+                    }
+                    
+                    currentY = addSectionHeader('Completed Tasks', currentY, '');
+                    
+                    completedTasks.slice(0, 10).forEach((task, index) => {
+                        if (currentY > pageHeight - 30) {
+                            doc.addPage();
+                            addBorder();
+                            currentY = 20;
+                        }
+                        
+                        // Checkmark
+                        doc.setFillColor(16, 185, 129);
+                        doc.circle(margin + 5, currentY + 2, 2, 'F');
+                        
+                        doc.setFontSize(10);
+                        doc.setTextColor(60, 60, 60);
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(task.text, margin + 10, currentY + 4);
+                        
+                        currentY += 8;
+                    });
+                    
+                    if (completedTasks.length > 10) {
+                        doc.setFontSize(9);
+                        doc.setTextColor(120, 120, 120);
+                        doc.setFont('helvetica', 'italic');
+                        doc.text(`+${completedTasks.length - 10} more completed tasks`, margin + 10, currentY + 4);
+                        currentY += 8;
+                    }
+                    
+                    currentY += 5;
+                }
+
+                // 6. Pending Tasks
+                const pendingTasks = this.tasks.filter(t => !t.completed);
+                if (currentY > pageHeight - 50) {
+                    doc.addPage();
+                    addBorder();
+                    currentY = 20;
+                }
+                
+                currentY = addSectionHeader('Pending Tasks', currentY, '');
+                
+                if (pendingTasks.length > 0) {
+                    pendingTasks.slice(0, 8).forEach((task, index) => {
+                        if (currentY > pageHeight - 30) {
+                            doc.addPage();
+                            addBorder();
+                            currentY = 20;
+                        }
+                        
+                        // Priority indicator
+                        const priorityColors = {
+                            high: [239, 68, 68],
+                            medium: [245, 158, 11],
+                            low: [139, 92, 246]
+                        };
+                        const color = priorityColors[task.priority] || [139, 92, 246];
+                        doc.setFillColor(color[0], color[1], color[2]);
+                        doc.circle(margin + 5, currentY + 2, 2, 'F');
+                        
+                        doc.setFontSize(10);
+                        doc.setTextColor(60, 60, 60);
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(task.text, margin + 10, currentY + 4);
+                        
+                        // Priority badge
+                        if (task.priority) {
+                            doc.setFillColor(color[0], color[1], color[2]);
+                            doc.roundedRect(pageWidth - margin - 30, currentY - 1, 25, 6, 1, 1, 'F');
+                            doc.setFontSize(7);
+                            doc.setTextColor(255, 255, 255);
+                            doc.setFont('helvetica', 'bold');
+                            doc.text(task.priority.toUpperCase(), pageWidth - margin - 17.5, currentY + 3, { align: 'center' });
+                        }
+                        
+                        currentY += 8;
                     });
                 } else {
                     doc.setFontSize(11);
-                    doc.setTextColor(150, 150, 150);
-                    doc.setFont('helvetica', 'italic');
-                    doc.text('No pending tasks! Great job!', 25, y);
+                    doc.setTextColor(16, 185, 129);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('No pending tasks! You\'re all caught up!', margin + 5, currentY + 4);
+                    currentY += 10;
                 }
 
-                // 5. Footer (Page Numbers)
+                // 7. Achievements & Progress
+                if (currentY > pageHeight - 50) {
+                    doc.addPage();
+                    addBorder();
+                    currentY = 20;
+                }
+                
+                currentY = addSectionHeader('Achievements & Progress', currentY, '');
+                
+                // Tier badge
+                doc.setFillColor(245, 158, 11);
+                doc.roundedRect(margin + 5, currentY, 50, 15, 2, 2, 'F');
+                doc.setFontSize(11);
+                doc.setTextColor(255, 255, 255);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Tier: ${this.tier || 'Bronze'}`, margin + 30, currentY + 10, { align: 'center' });
+                
+                // Points
+                doc.setFillColor(139, 92, 246);
+                doc.roundedRect(margin + 60, currentY, 50, 15, 2, 2, 'F');
+                doc.text(`${this.points || 0} pts`, margin + 85, currentY + 10, { align: 'center' });
+                
+                // Achievement count
+                const achievementCount = this.achievements ? this.achievements.filter(a => a.unlocked).length : 0;
+                doc.setFillColor(16, 185, 129);
+                doc.roundedRect(margin + 115, currentY, 50, 15, 2, 2, 'F');
+                doc.text(`${achievementCount} Badges`, margin + 140, currentY + 10, { align: 'center' });
+                
+                currentY += 20;
+
+                // 8. Footer with Team Attribution
                 const pageCount = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= pageCount; i++) {
                     doc.setPage(i);
+                    
+                    // Footer line
+                    doc.setDrawColor(220, 220, 220);
+                    doc.setLineWidth(0.3);
+                    doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+                    
+                    // Page number
                     doc.setFontSize(8);
+                    doc.setTextColor(120, 120, 120);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+                    
+                    // Attribution
+                    doc.setFontSize(7);
+                    doc.text('Generated by StudyFlow', margin, pageHeight - 10);
+                    doc.text('studyflow.salahuddin.codes', pageWidth - margin, pageHeight - 10, { align: 'right' });
+                    
+                    // Team credit
+                    doc.setFontSize(6);
                     doc.setTextColor(150, 150, 150);
-                    doc.text(`Page ${i} of ${pageCount} • Generated by StudyFlow`, pageWidth / 2, pageHeight - 7, { align: 'center' });
+                    doc.text('Developed by Salah Uddin Kader • Admin: Sohana Rahman', pageWidth / 2, pageHeight - 6, { align: 'center' });
                 }
 
                 // Save
                 doc.save(`StudyFlow_Report_${this.currentUser}.pdf`);
-                this.showInlineMessage('Report downloaded as PDF! 📄');
+                this.showInlineMessage('📊 Performance report downloaded successfully!');
                 
             } catch (error) {
                 console.error("PDF Export Error:", error);
-                this.showInlineMessage('Failed to generate PDF');
+                this.showInlineMessage('Failed to generate PDF report');
             }
         },
 
@@ -4417,9 +4797,7 @@ updateCharts() {
                 const ctx = this.$refs.adminSessionsChart?.getContext('2d');
                 if (!ctx) return;
 
-                if (this.adminSessionsChart) {
-                    this.adminSessionsChart.destroy();
-                }
+                this.safeDestroyChart('adminSessionsChart');
 
                 const perUser = this.adminSessionsSummary?.perUser || [];
                 const labels = perUser.map(u => u?.username || 'Unknown');
@@ -4438,6 +4816,7 @@ updateCharts() {
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: { duration: 0 },
                         plugins: { legend: { display: false } },
                         scales: {
                             y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } },
@@ -4458,14 +4837,15 @@ updateCharts() {
             this.showAdminPanel = true;
             this.loadAdminData();
         }
-    },
-
-    watch: {
-        adminActiveTab(newTab) {
-            this.ensureAdminTabData(newTab);
-        }
     }
-}).mount('#app');
+});
+
+// Export app instance for external modules
+window.StudyFlowLegacyApp = legacyVueApp;
+window.legacyVue = legacyVueApp;
+
+// Mount the app
+legacyVueApp.mount('#app');
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {

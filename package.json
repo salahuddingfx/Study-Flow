@@ -6,7 +6,6 @@
   "scripts": {
     "start": "cd Backend && npm start",
     "dev": "cd Backend && npm run dev",
-    "build": "echo 'StudyFlow v1.0.0 build complete'",
     "deploy": "git push origin main"
   },
   "keywords": [
@@ -28,5 +27,8 @@
     "type": "git",
     "url": "https://github.com/salahuddin/StudyFlow.git"
   },
-  "homepage": "https://studyflow.salahuddin.codes"
+  "homepage": "https://studyflow.salahuddin.codes",
+  "dependencies": {
+    "chart.js": "^4.5.1"
+  }
 }

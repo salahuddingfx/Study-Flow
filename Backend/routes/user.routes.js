@@ -407,4 +407,107 @@ router.delete('/data', protect, async (req, res) => {
     }
 });
 
+// =====================
+// Report Generation Routes
+// =====================
+
+// @desc    Send progress report via email
+// @route   POST /api/user/send-report
+// @access  Private
+router.post('/send-report', protect, async (req, res) => {
+    try {
+        const { sendReportEmail } = require('../utils/generatePDFReport');
+        
+        // Gather user statistics
+        const [sessions, tasks, subjects, goals, achievements] = await Promise.all([
+            Session.find({ user: req.user.id }),
+            Task.find({ user: req.user.id, completed: true }),
+            Subject.find({ user: req.user.id }),
+            Goal.find({ user: req.user.id }),
+            Achievement.find({ user: req.user.id })
+        ]);
+
+        const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+        const user = await User.findById(req.user.id);
+
+        const userData = {
+            name: user.name,
+            email: user.email,
+            totalSessions: sessions.length,
+            totalMinutes: totalMinutes,
+            completedTasks: tasks.length,
+            achievements: achievements.length,
+            subjects: subjects.map(s => ({
+                name: s.name,
+                hours: Math.floor(s.totalTime / 60) || 0
+            })),
+            tier: user.tier || 'Bronze'
+        };
+
+        await sendReportEmail(userData, {
+            subject: req.body.subject || undefined,
+            heading: req.body.heading || undefined,
+            dashboardUrl: `${process.env.FRONTEND_URL || 'http://127.0.0.1:5500'}#dashboard`
+        });
+
+        res.json({
+            success: true,
+            message: 'Progress report sent to your email successfully!'
+        });
+    } catch (error) {
+        console.error('❌ Send report error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to send report: ' + error.message 
+        });
+    }
+});
+
+// @desc    Get report data (without sending email)
+// @route   GET /api/user/report-data
+// @access  Private
+router.get('/report-data', protect, async (req, res) => {
+    try {
+        const { generateReportHTML } = require('../utils/generatePDFReport');
+        
+        // Gather user statistics
+        const [sessions, tasks, subjects, goals, achievements] = await Promise.all([
+            Session.find({ user: req.user.id }),
+            Task.find({ user: req.user.id, completed: true }),
+            Subject.find({ user: req.user.id }),
+            Goal.find({ user: req.user.id }),
+            Achievement.find({ user: req.user.id })
+        ]);
+
+        const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+        const user = await User.findById(req.user.id);
+
+        const userData = {
+            name: user.name,
+            email: user.email,
+            totalSessions: sessions.length,
+            totalMinutes: totalMinutes,
+            completedTasks: tasks.length,
+            achievements: achievements.length,
+            subjects: subjects.map(s => ({
+                name: s.name,
+                hours: Math.floor(s.totalTime / 60) || 0
+            })),
+            tier: user.tier || 'Bronze'
+        };
+
+        res.json({
+            success: true,
+            data: userData,
+            html: generateReportHTML(userData)
+        });
+    } catch (error) {
+        console.error('❌ Get report data error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to generate report: ' + error.message 
+        });
+    }
+});
+
 module.exports = router;
