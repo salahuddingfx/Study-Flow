@@ -59,6 +59,14 @@ function openDB() {
   });
 }
 
+// Helper to promisify IDB Request
+function idbRequest(request) {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
 // Add to offline queue
 async function addToOfflineQueue(request) {
   try {
@@ -74,7 +82,7 @@ async function addToOfflineQueue(request) {
       timestamp: Date.now()
     };
     
-    await store.add(queueItem);
+    await idbRequest(store.add(queueItem));
     console.log('📥 Added to offline queue:', request.url);
   } catch (error) {
     console.error('Failed to add to queue:', error);
@@ -87,8 +95,10 @@ async function processOfflineQueue() {
     const db = await openDB();
     const tx = db.transaction('offlineQueue', 'readwrite');
     const store = tx.objectStore('offlineQueue');
-    const items = await store.getAll();
+    const items = await idbRequest(store.getAll());
     
+    if (!items || !items.length) return;
+
     for (const item of items) {
       try {
         const response = await fetch(item.url, {
@@ -98,7 +108,9 @@ async function processOfflineQueue() {
         });
         
         if (response.ok) {
-          await store.delete(item.id);
+          // Re-open transaction for delete (transactions auto-close)
+          const delTx = db.transaction('offlineQueue', 'readwrite');
+          await idbRequest(delTx.objectStore('offlineQueue').delete(item.id));
           console.log('✅ Synced offline request:', item.url);
         }
       } catch (error) {

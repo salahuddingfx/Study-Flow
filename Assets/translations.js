@@ -16,6 +16,7 @@ window.translations = {
         "nav_music": "Music",
         "nav_data": "Data Management",
         "nav_admin": "Admin Panel",
+        "nav_notes": "Smart Notes",
         "nav_logout": "Logout",
         "nav_login": "Login",
         
@@ -106,6 +107,7 @@ window.translations = {
         "nav_music": "মিউজিক",
         "nav_data": "ডেটা ম্যানেজমেন্ট",
         "nav_admin": "অ্যাডমিন প্যানেল",
+        "nav_notes": "স্মার্ট নোটস",
         "nav_logout": "লগআউট",
         "nav_login": "লগইন",
         

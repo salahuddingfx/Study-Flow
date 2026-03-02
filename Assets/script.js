@@ -55,6 +55,15 @@ const legacyVueApp = createApp({
             showMusicModal: false,
             showAchievementModal: false,
             showLanguageModal: false,
+            // Notes System
+            notes: [],
+            currentNote: null,
+            searchNotes: '',
+            showNoteEditor: false,
+            isZenMode: false,
+            // PWA Install
+            deferredPrompt: null,
+            showInstallModal: false,
 
             // Auth
             isAuthenticated: false,
@@ -408,6 +417,27 @@ const legacyVueApp = createApp({
     }, 
 
     async mounted() {
+        // Initialize Notes Manager
+        if (typeof NotesManager !== 'undefined') {
+            this.notesManager = new NotesManager(this.API_BASE_URL);
+            const token = localStorage.getItem('jwt');
+            if (token) {
+                this.notesManager.setToken(token);
+                await this.notesManager.loadNotes();
+            }
+            this.notes = this.notesManager.notes;
+        }
+
+        // PWA Install Prompt Listener
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            this.deferredPrompt = e;
+            // Update UI notify the user they can install the PWA
+            this.showInstallModal = true;
+        });
+
         // Attempt to detect Chart.js early
         if (typeof Chart !== 'undefined') {
             this.chartJsReady = true;
@@ -573,9 +603,10 @@ const legacyVueApp = createApp({
         this.dateTimeInterval = setInterval(this.updateDateTime, 1000);
 
         this._scrollHandler = () => {
-            const containerScrollTop = this.$refs.mainScrollContainer?.scrollTop || 0;
-            const pageScrollTop = window.scrollY || document.documentElement.scrollTop || 0;
-            this.showScrollTop = Math.max(containerScrollTop, pageScrollTop) > 200;
+            const containerScrollTop = this.$refs.mainScrollContainer ? this.$refs.mainScrollContainer.scrollTop : 0;
+            const pageScrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            // console.log('ScrollTop:', pageScrollTop, containerScrollTop); // Debug
+            this.showScrollTop = Math.max(containerScrollTop, pageScrollTop) > 100; // Lower threshold to 100
         };
         document.addEventListener('scroll', this._scrollHandler, true);
         
@@ -1063,6 +1094,80 @@ const legacyVueApp = createApp({
     },
 
     methods: {
+        // --- Note Management Methods ---
+        async createNote(title = '', content = '') {
+            if (this.notesManager) {
+                const note = await this.notesManager.createNote(title, content);
+                this.notes = this.notesManager.notes;
+                
+                // Select the note and open the editor
+                this.currentNote = note;
+                this.showNoteEditor = true;
+                
+                // Focus on title input if on desktop (optional)
+                this.$nextTick(() => {
+                    const titleInput = document.querySelector('input[placeholder="Note Title"]');
+                    if (titleInput) titleInput.focus();
+                });
+
+                return note;
+            }
+        },
+
+        async updateNote() {
+            if (this.currentNote && this.notesManager) {
+                await this.notesManager.updateNote(this.currentNote.id || this.currentNote._id, {
+                    title: this.currentNote.title,
+                    content: this.currentNote.content,
+                    subject: this.currentNote.subject
+                });
+                // No need to reload notes as manager mutates the array reference inside component
+                this.notes = [...this.notesManager.notes];
+            }
+        },
+
+        async deleteNote(id) {
+            // Guard against undefined ID to prevent API errors
+            if (!id || id === 'undefined') {
+                console.warn('Cannot delete note: Invalid ID');
+                return;
+            }
+            if (this.notesManager) {
+                if (confirm('Are you sure you want to delete this note?')) {
+                    await this.notesManager.deleteNote(id);
+                    this.notes = this.notesManager.notes;
+                    if (this.currentNote && (this.currentNote.id === id || this.currentNote._id === id)) {
+                        this.currentNote = null;
+                        this.showNoteEditor = false;
+                    }
+                }
+            }
+        },
+        
+        selectNote(note) {
+            this.currentNote = { ...note }; // Clone to avoid direct mutation
+            this.showNoteEditor = true;
+        },
+
+        resetNoteEditor() {
+            this.currentNote = null;
+            this.showNoteEditor = false;
+            this.isZenMode = false;
+        },
+        
+        async installApp() {
+            if (this.deferredPrompt) {
+                // Show the install prompt
+                this.deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await this.deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                // release the deferred prompt
+                this.deferredPrompt = null;
+                // close modal
+                this.showInstallModal = false;
+            }
+        },
         getAllowedViews() {
             return ['home', 'timer', 'tasks', 'calendar', 'quiz', 'goals', 'analytics', 'blog'];
         },
@@ -1164,8 +1269,11 @@ const legacyVueApp = createApp({
         },
 
         createParticles() {
+            // Disable on small screens
+            if (window.innerWidth < 768 || !this.effectsEnabled) return;
+
             const container = this.$refs.particleContainer;
-            if (!container || !this.effectsEnabled) return;
+            if (!container) return;
 
             // আগের কোনো কণা থাকলে পরিষ্কার করা
             container.innerHTML = '';
@@ -1459,6 +1567,11 @@ const legacyVueApp = createApp({
 
                 localStorage.setItem('jwt', data.token);
                 this.authToken = data.token;
+                if (this.notesManager) {
+                    this.notesManager.setToken(data.token);
+                    await this.notesManager.loadNotes();
+                    this.notes = this.notesManager.notes;
+                }
 
                 this.currentUser = data.user?.username || data.username || '';
                 this.userEmail = data.user?.email || data.email || '';
@@ -1572,6 +1685,10 @@ const legacyVueApp = createApp({
                 this.userProfileImage = '';
                 this.authToken = null;
                 this.userId = null;
+                if (this.notesManager) {
+                    this.notesManager.setToken(null);
+                    this.notes = [];
+                }
                 localStorage.removeItem('jwt'); 
                 this.authMode = 'login';
                 this.showOutro = false;
@@ -2597,6 +2714,7 @@ const legacyVueApp = createApp({
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    aspectRatio: window.innerWidth < 640 ? 1 : 1.5,
                     animation: { duration: 0 },
                     plugins: {
                         legend: {
@@ -2909,12 +3027,18 @@ const legacyVueApp = createApp({
         },
 
         scrollToTop() {
+            // Scroll to top for all possible scrollable elements
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Also try documentElement and body just in case
+            if (document.documentElement) document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+            if (document.body) document.body.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // And the main container if it exists
             const container = this.$refs.mainScrollContainer;
             if (container && typeof container.scrollTo === 'function') {
                 container.scrollTo({ top: 0, behavior: 'smooth' });
-                return;
             }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         },
 
         changeTheme(themeName) {
@@ -3302,6 +3426,7 @@ updateCharts() {
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        aspectRatio: window.innerWidth < 640 ? 1 : 2,
                         animation: { duration: 0 },
                         devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
                         plugins: {
@@ -3363,6 +3488,7 @@ updateCharts() {
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        aspectRatio: window.innerWidth < 640 ? 1 : 2,
                         animation: { duration: 0 },
                         devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
                         cutout: '62%',
@@ -4902,11 +5028,10 @@ updateCharts() {
 });
 
 // Export app instance for external modules
-window.StudyFlowLegacyApp = legacyVueApp;
-window.legacyVue = legacyVueApp;
-
-// Mount the app
-legacyVueApp.mount('#app');
+// Needs to capture the MOUNTED instance (vm)
+const mountedApp = legacyVueApp.mount('#app');
+window.StudyFlowLegacyApp = mountedApp;
+window.app = mountedApp; // Alias for modules expecting 'app'
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {

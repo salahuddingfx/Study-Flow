@@ -9,17 +9,23 @@ const StreakTracker = {
     
     // Get API base URL from Vue app
     getApiUrl() {
-        if (window.StudyFlowLegacyApp && window.StudyFlowLegacyApp.API_BASE_URL) {
-            return window.StudyFlowLegacyApp.API_BASE_URL;
+        if (window.app && window.app.API_BASE_URL) {
+            return window.app.API_BASE_URL;
         }
         // Fallback
-        return (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+        return (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
             ? 'http://localhost:5000'
             : 'https://study-flow-nfym.onrender.com';
     },
     
     // Initialize streak tracker
     async init() {
+        // Wait for DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+            return;
+        }
+
         try {
             await this.loadStreak();
             this.render();

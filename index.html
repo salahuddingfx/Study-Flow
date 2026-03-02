@@ -327,61 +327,123 @@
       </div>
     </div>
     <div v-if="showDeveloperModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop overflow-y-auto"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop"
       @click="showDeveloperModal = false">
       <div
-        class="glass-strong rounded-3xl p-4 sm:p-6 md:p-8 max-w-2xl w-full my-8 animate-slideUp max-h-[90vh] overflow-y-auto"
+        class="glass-strong rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col animate-slideUp relative"
         @click.stop>
-        <div class="text-center mb-6 sm:mb-8">
-          <div
-            class="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-4xl sm:text-5xl font-bold overflow-hidden">
-            <img src="https://avatars.githubusercontent.com/salahuddingfx" alt="Salah Uddin Kader"
-              class="w-full h-full object-cover rounded-full">
-          </div>
-          <h3 class="text-2xl sm:text-3xl font-bold mb-2">Salah Uddin Kader</h3>
-          <p class="text-sm sm:text-base text-purple-400 font-medium">Full Stack Developer &amp; UI/UX Designer</p>
-        </div>
-        <div class="glass p-4 sm:p-6 rounded-xl mb-4 sm:mb-6">
-          <div class="flex items-center gap-2 mb-3"><i
-              class="ph-bold ph-user-circle text-xl sm:text-2xl text-purple-400"></i>
-            <h4 class="text-lg sm:text-xl font-bold">About</h4>
-          </div>
-          <p class="text-sm sm:text-base leading-relaxed">Passionate developer focused on creating beautiful, functional
-            applications that enhance productivity. Specialized in building intuitive user experiences with modern web
-            technologies.</p>
-        </div>
-        <div class="glass p-4 sm:p-6 rounded-xl mb-4 sm:mb-6">
-          <div class="flex items-center gap-2 mb-4"><i class="ph-bold ph-code text-xl sm:text-2xl text-purple-400"></i>
-            <h4 class="text-lg sm:text-xl font-bold">Skills</h4>
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
-            <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
-                class="ph-bold ph-file-vue text-lg sm:text-xl text-green-400"></i> <span
-                class="text-xs sm:text-sm font-medium">Vue.js</span>
+        
+        <!-- Close Button -->
+        <button @click="showDeveloperModal = false" class="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors">
+            <i class="ph-bold ph-x text-lg"></i>
+        </button>
+
+        <!-- Scrollable Content -->
+        <div class="overflow-y-auto p-4 sm:p-6 md:p-8 custom-scrollbar">
+            <div class="text-center mb-6 sm:mb-8 mt-2">
+            <div
+                class="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-4xl sm:text-5xl font-bold overflow-hidden border-4 border-white/10 shadow-lg">
+                <img src="https://avatars.githubusercontent.com/salahuddingfx" alt="Salah Uddin Kader"
+                class="w-full h-full object-cover">
             </div>
-            <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
-                class="ph-bold ph-file-js text-lg sm:text-xl text-yellow-400"></i> <span
-                class="text-xs sm:text-sm font-medium">JavaScript</span>
+            <h3 class="text-2xl sm:text-3xl font-bold mb-2 text-white">Salah Uddin Kader</h3>
+            <p class="text-sm sm:text-base text-purple-300 font-medium bg-purple-500/10 py-1 px-4 rounded-full inline-block">Full Stack Developer &amp; UI/UX Designer</p>
             </div>
-            <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
-                class="ph-bold ph-file-css text-lg sm:text-xl text-blue-400"></i> <span
-                class="text-xs sm:text-sm font-medium">CSS/Tailwind</span>
+            <div class="glass p-4 sm:p-6 rounded-xl mb-4 sm:mb-6 text-left">
+            <div class="flex items-center gap-2 mb-3"><i
+                class="ph-bold ph-user-circle text-xl sm:text-2xl text-purple-400"></i>
+                <h4 class="text-lg sm:text-xl font-bold">About</h4>
             </div>
-            <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
-                class="ph-bold ph-file-html text-lg sm:text-xl text-orange-400"></i> <span
-                class="text-xs sm:text-sm font-medium">HTML5</span>
+            <p class="text-sm sm:text-base leading-relaxed text-gray-200">Passionate developer focused on creating beautiful, functional
+                applications that enhance productivity. Specialized in building intuitive user experiences with modern web
+                technologies.</p>
             </div>
-            <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
-                class="ph-bold ph-figma-logo text-lg sm:text-xl text-purple-400"></i> <span
-                class="text-xs sm:text-sm font-medium">Figma</span>
+            <div class="glass p-4 sm:p-6 rounded-xl mb-4 sm:mb-6 text-left">
+            <div class="flex items-center gap-2 mb-4"><i class="ph-bold ph-code text-xl sm:text-2xl text-purple-400"></i>
+                <h4 class="text-lg sm:text-xl font-bold">Skills</h4>
             </div>
-            <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
-                class="ph-bold ph-git-branch text-lg sm:text-xl text-red-400"></i> <span
-                class="text-xs sm:text-sm font-medium">Git</span>
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-file-vue text-lg sm:text-xl text-green-400"></i> <span
+                    class="text-xs sm:text-sm font-medium">Vue.js</span>
+                </div>
+                <!-- Added Skills -->
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-atom text-lg sm:text-xl text-cyan-400"></i> <span
+                    class="text-xs sm:text-sm font-medium">React.js</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-triangle text-lg sm:text-xl text-white"></i> <span
+                    class="text-xs sm:text-sm font-medium">Next.js</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-file-js text-lg sm:text-xl text-yellow-400"></i> <span
+                    class="text-xs sm:text-sm font-medium">JavaScript</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-file-code text-lg sm:text-xl text-blue-400"></i> <span
+                    class="text-xs sm:text-sm font-medium">TypeScript</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-terminal-window text-lg sm:text-xl text-green-500"></i> <span
+                    class="text-xs sm:text-sm font-medium">Node.js</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-brackets-curly text-lg sm:text-xl text-gray-300"></i> <span
+                    class="text-xs sm:text-sm font-medium">Express.js</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-file-code text-lg sm:text-xl text-yellow-300"></i> <span
+                    class="text-xs sm:text-sm font-medium">Python</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-rows text-lg sm:text-xl text-green-600"></i> <span
+                    class="text-xs sm:text-sm font-medium">Django</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-database text-lg sm:text-xl text-green-400"></i> <span
+                    class="text-xs sm:text-sm font-medium">MongoDB</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-database text-lg sm:text-xl text-blue-500"></i> <span
+                    class="text-xs sm:text-sm font-medium">MySQL</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-rocket-launch text-lg sm:text-xl text-orange-500"></i> <span
+                    class="text-xs sm:text-sm font-medium">Astro</span>
+                </div>
+                <!-- End Added Skills -->
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-file-css text-lg sm:text-xl text-blue-400"></i> <span
+                    class="text-xs sm:text-sm font-medium">CSS/Tailwind</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-file-html text-lg sm:text-xl text-orange-400"></i> <span
+                    class="text-xs sm:text-sm font-medium">HTML5</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-figma-logo text-lg sm:text-xl text-purple-400"></i> <span
+                    class="text-xs sm:text-sm font-medium">Figma</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-git-branch text-lg sm:text-xl text-red-400"></i> <span
+                    class="text-xs sm:text-sm font-medium">Git</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-image text-lg sm:text-xl text-blue-500"></i> <span
+                    class="text-xs sm:text-sm font-medium">Photoshop</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-pen-nib text-lg sm:text-xl text-orange-500"></i> <span
+                    class="text-xs sm:text-sm font-medium">Illustrator</span>
+                </div>
+                <div class="glass-strong p-2 sm:p-3 rounded-lg flex items-center gap-2"><i
+                    class="ph-bold ph-copyright text-lg sm:text-xl text-blue-600"></i> <span
+                    class="text-xs sm:text-sm font-medium">C</span>
+                </div>
             </div>
-          </div>
-        </div>
-        <div class="glass p-4 sm:p-6 rounded-xl mb-4 sm:mb-6">
+            </div>
+            <div class="glass p-4 sm:p-6 rounded-xl mb-4 sm:mb-6">
           <div class="flex items-center gap-2 mb-4"><i
               class="ph-bold ph-share-network text-xl sm:text-2xl text-purple-400"></i>
             <h4 class="text-lg sm:text-xl font-bold">Connect</h4>
@@ -403,10 +465,13 @@
                 class="ph-bold ph-envelope text-lg sm:text-xl text-purple-400"></i> <span
                 class="text-xs sm:text-sm font-medium">Email</span> </a>
           </div>
-        </div><button @click="showDeveloperModal = false"
-          class="w-full btn-primary px-6 py-3 rounded-xl font-semibold text-white"> Close </button>
-      </div>
-    </div>
+        </div>
+        <!-- Close Button (Bottom) -->
+        <button @click="showDeveloperModal = false"
+          class="w-full btn-primary px-6 py-3 rounded-xl font-semibold text-white mb-2 sm:hidden"> Close </button>
+      </div> <!-- Close overflow-y-auto -->
+      </div> <!-- Close glass-strong -->
+    </div> <!-- Close backdrop -->
 
     <!-- Achievement Level Modal -->
     <div v-if="showAchievementModal"
@@ -516,55 +581,95 @@
       </div>
     </div>
 
+    <!-- PWA Install Modal -->
+    <div v-if="showInstallModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop"
+      @click="showInstallModal = false">
+      <div
+        class="glass-strong rounded-3xl p-1 max-w-sm w-full animate-slideUp overflow-hidden transform scale-100 transition-all border border-purple-500/30 shadow-2xl shadow-purple-900/50"
+        @click.stop>
+        <div class="bg-gradient-to-br from-purple-900/80 to-indigo-900/80 p-8 text-center relative overflow-hidden">
+          <!-- Decorative Background Elements -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
+          <div class="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl -ml-16 -mb-16"></div>
+
+          <div class="relative z-10">
+            <div class="w-20 h-20 mx-auto bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-purple-500/30 rotate-3 hover:rotate-6 transition-transform duration-500">
+              <i class="ph-bold ph-download-simple text-4xl text-white"></i>
+            </div>
+            
+            <h2 class="text-2xl font-bold gradient-text mb-2">Install App</h2>
+            <p class="text-gray-300 text-sm mb-8 leading-relaxed">
+              Install StudyFlow for the best experience. Get offline access, smoother performance, and quick access from your home screen.
+            </p>
+
+            <div class="space-y-3">
+              <button @click="installApp"
+                class="w-full btn-primary py-3.5 rounded-xl font-bold text-white shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 group transform hover:scale-[1.02] transition-all">
+                <i class="ph-bold ph-download-simple group-hover:animate-bounce"></i>
+                Install Now
+              </button>
+              
+              <button @click="showInstallModal = false"
+                class="w-full py-3 rounded-xl font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-sm">
+                Maybe Later
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div v-if="showDataModal"
       class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop overflow-y-auto"
       @click="showDataModal = false">
-      <div class="glass-strong rounded-3xl p-1 max-w-2xl w-full my-8 animate-slideUp overflow-hidden" @click.stop>
-        <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 p-6 sm:p-8">
+      <div class="glass-strong rounded-3xl p-1 max-w-2xl w-full my-4 sm:my-8 animate-slideUp overflow-hidden" @click.stop>
+        <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 p-4 sm:p-8">
 
-          <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center justify-between mb-6 sm:mb-8">
             <div>
-              <h3 class="text-2xl font-bold flex items-center gap-2"><i class="ph-bold ph-database text-purple-400"></i>
+              <h3 class="text-xl sm:text-2xl font-bold flex items-center gap-2"><i class="ph-bold ph-database text-purple-400"></i>
                 Data Center</h3>
-              <p class="text-sm opacity-60">Manage your progress and backups</p>
+              <p class="text-xs sm:text-sm opacity-60">Manage your progress and backups</p>
             </div>
             <button @click="showDataModal = false"
               class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"><i
                 class="ph-bold ph-x"></i></button>
           </div>
 
-          <div class="grid grid-cols-3 gap-3 mb-8">
-            <div class="glass p-3 rounded-xl text-center">
-              <i class="ph-bold ph-clock text-purple-400 text-xl mb-1"></i>
-              <div class="text-lg font-bold">{{ Math.floor(totalFocusTime / 60) }}h</div>
-              <div class="text-xs opacity-60">Focus Time</div>
+          <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-6 sm:mb-8">
+            <div class="glass p-2 sm:p-3 rounded-xl text-center">
+              <i class="ph-bold ph-clock text-purple-400 text-lg sm:text-xl mb-1"></i>
+              <div class="text-base sm:text-lg font-bold">{{ Math.floor(totalFocusTime / 60) }}h</div>
+              <div class="text-[10px] sm:text-xs opacity-60">Focus Time</div>
             </div>
-            <div class="glass p-3 rounded-xl text-center">
-              <i class="ph-bold ph-check-circle text-green-400 text-xl mb-1"></i>
-              <div class="text-lg font-bold">{{ completedTasksCount }}</div>
-              <div class="text-xs opacity-60">Tasks Done</div>
+            <div class="glass p-2 sm:p-3 rounded-xl text-center">
+              <i class="ph-bold ph-check-circle text-green-400 text-lg sm:text-xl mb-1"></i>
+              <div class="text-base sm:text-lg font-bold">{{ completedTasksCount }}</div>
+              <div class="text-[10px] sm:text-xs opacity-60">Tasks Done</div>
             </div>
-            <div class="glass p-3 rounded-xl text-center">
-              <i class="ph-bold ph-fire text-orange-400 text-xl mb-1"></i>
-              <div class="text-lg font-bold">{{ currentStreak }}</div>
-              <div class="text-xs opacity-60">Day Streak</div>
+            <div class="glass p-2 sm:p-3 rounded-xl text-center">
+              <i class="ph-bold ph-fire text-orange-400 text-lg sm:text-xl mb-1"></i>
+              <div class="text-base sm:text-lg font-bold">{{ currentStreak }}</div>
+              <div class="text-[10px] sm:text-xs opacity-60">Day Streak</div>
             </div>
           </div>
 
-          <div class="grid md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div
-              class="glass p-5 rounded-2xl hover:bg-white/5 transition-colors border border-purple-500/20 relative overflow-hidden group">
+              class="glass p-4 sm:p-5 rounded-2xl hover:bg-white/5 transition-colors border border-purple-500/20 relative overflow-hidden group">
               <div
                 class="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
               </div>
               <div class="relative z-10">
-                <div
-                  class="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center mb-4 text-purple-400">
-                  <i class="ph-bold ph-file-pdf text-2xl"></i>
+                <div class="flex items-center gap-3 mb-3">
+                    <div
+                    class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-600/20 flex items-center justify-center text-purple-400">
+                    <i class="ph-bold ph-file-pdf text-xl sm:text-2xl"></i>
+                    </div>
+                    <h4 class="text-base sm:text-lg font-bold">Performance Report</h4>
                 </div>
-                <h4 class="text-lg font-bold mb-1">Performance Report</h4>
-                <p class="text-xs opacity-70 mb-4 h-8">Download a beautifully designed PDF summary of your study
-                  journey.</p>
+                
+                <p class="text-xs opacity-70 mb-4 min-h-[2rem] sm:h-8">Download a beautifully designed PDF summary.</p>
                 <button @click="exportUserData"
                   class="w-full btn-primary py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2">
                   <i class="ph-bold ph-download-simple"></i> Download PDF
@@ -573,16 +678,19 @@
             </div>
 
             <div
-              class="glass p-5 rounded-2xl hover:bg-white/5 transition-colors border border-blue-500/20 relative overflow-hidden group">
+              class="glass p-4 sm:p-5 rounded-2xl hover:bg-white/5 transition-colors border border-blue-500/20 relative overflow-hidden group">
               <div
                 class="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110">
               </div>
               <div class="relative z-10">
-                <div class="w-12 h-12 rounded-xl bg-blue-600/20 flex items-center justify-center mb-4 text-blue-400">
-                  <i class="ph-bold ph-cloud-arrow-up text-2xl"></i>
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-600/20 flex items-center justify-center text-blue-400">
+                    <i class="ph-bold ph-cloud-arrow-up text-xl sm:text-2xl"></i>
+                    </div>
+                     <h4 class="text-base sm:text-lg font-bold">System Backup</h4>
                 </div>
-                <h4 class="text-lg font-bold mb-1">System Backup</h4>
-                <p class="text-xs opacity-70 mb-4 h-8">Save raw data to restore later or transfer to another device.</p>
+                
+                <p class="text-xs opacity-70 mb-4 min-h-[2rem] sm:h-8">Save raw data to restore later or transfer.</p>
                 <div class="flex gap-2">
                   <button @click="downloadBackup"
                     class="flex-1 glass-strong py-2.5 rounded-xl font-semibold text-sm hover:bg-white/10 flex items-center justify-center gap-1">
@@ -648,16 +756,16 @@
     <div v-if="showThemeModal"
       class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop overflow-y-auto"
       @click="showThemeModal = false">
-      <div class="theme-modal-panel glass-strong rounded-3xl p-8 max-w-2xl w-full my-8 animate-slideUp" @click.stop>
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-2xl font-bold flex items-center gap-2"><i class="ph-bold ph-palette text-purple-400"></i>
+      <div class="theme-modal-panel glass-strong rounded-3xl p-6 md:p-8 max-w-2xl w-full my-8 animate-slideUp max-h-[85vh] flex flex-col" @click.stop>
+        <div class="flex items-center justify-between mb-4 shrink-0">
+          <h3 class="text-2xl font-bold flex items-center gap-2"><i class="ph-bold ph-paint-brush-broad text-purple-400"></i>
             Choose Your Theme</h3>
           <button @click="showThemeModal = false" class="w-10 h-10 rounded-xl hover:bg-white/10 flex items-center justify-center"
             aria-label="Close theme selector" title="Close">
             <i class="ph-bold ph-x text-xl"></i>
           </button>
         </div>
-        <div class="theme-grid grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"><button @click="changeTheme('dark')"
+        <div class="theme-grid grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-4 overflow-y-auto custom-scrollbar p-1"><button @click="changeTheme('dark')"
             :class="currentTheme === 'dark' ? 'ring-4 ring-purple-500' : ''"
             class="relative overflow-hidden rounded-xl h-32 transition-all hover:scale-105"
             style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)">
@@ -739,7 +847,7 @@
             class="relative overflow-hidden rounded-xl h-32 transition-all hover:scale-105"
             style="background: linear-gradient(135deg, #667db6 0%, #0082c8 50%, #667db6 100%)">
             <div class="absolute inset-0 flex items-center justify-center">
-              <div class="text-center"><i class="ph-bold ph-waves text-3xl mb-2"></i>
+              <div class="text-center"><i class="ph-bold ph-drop text-3xl mb-2"></i>
                 <div class="font-semibold">
                   Ocean
                 </div>
@@ -1586,16 +1694,13 @@
     </div>
 
     <!-- Scroll to Top Button - Left Side -->
-    <button v-show="isAuthenticated" @click="scrollToTop" class="scroll-to-top scroll-to-top-left"
+    <button @click="scrollToTop" class="scroll-to-top scroll-to-top-left"
       :class="{ 'visible': showScrollTop }" aria-label="Scroll to top left" title="Back to top (left)">
       <i class="ph-bold ph-arrow-up text-2xl text-white"></i>
     </button>
 
-    <!-- Scroll to Top Button - Right Side (for symmetry) -->
-    <button v-show="isAuthenticated" @click="scrollToTop" class="scroll-to-top scroll-to-top-right"
-      :class="{ 'visible': showScrollTop }" aria-label="Scroll to top right" title="Back to top (right)">
-      <i class="ph-bold ph-arrow-up text-2xl text-white"></i>
-    </button>
+   <!-- Scroll to Top Button - Right Side (Removed as per request) -->
+
 
     <div v-if="!showLoader && isAuthenticated" class="min-h-screen flex">
       <aside class="hidden lg:flex flex-col w-64 glass-strong border-r border-gray-700 p-6 sidebar transition-all">
@@ -1645,6 +1750,12 @@
             <span
               class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1s_infinite]"></span>
             <i class="ph-bold ph-article text-xl"></i> {{ t('nav_blog') }}
+          </button>
+          <button @click="currentView = 'notes'" :class="currentView === 'notes' ? 'bg-purple-600' : 'hover:bg-white/10'"
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium relative overflow-hidden group">
+            <span
+              class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1s_infinite]"></span>
+            <i class="ph-bold ph-notepad text-xl"></i> {{ t('nav_notes') || 'Notes & Journal' }}
           </button>
           <div class="pt-4 border-t border-gray-700">
             <button @click="showLanguageModal = true"
@@ -1729,6 +1840,10 @@
               :class="currentView === 'blog' ? 'bg-purple-600 text-white' : ''"
               class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-xl font-medium"> <i
                 class="ph-bold ph-article text-lg"></i> {{ t('nav_blog') }} </button>
+            <button @click="currentView = 'notes'; mobileMenuOpen = false"
+              :class="currentView === 'notes' ? 'bg-purple-600 text-white' : ''"
+              class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-xl font-medium"> <i
+                class="ph-bold ph-notepad text-lg"></i> {{ t('nav_notes') || 'Notes' }} </button>
             <div class="pt-4 mt-2 border-t border-gray-700 space-y-2">
               <button @click="showLanguageModal = true; mobileMenuOpen = false"
                 class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-xl font-medium hover:bg-white/5 text-cyan-300">
@@ -1760,6 +1875,158 @@
           </nav>
         </div>
         <div ref="mainScrollContainer" class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8 pb-24">
+
+          <div v-if="currentView === 'notes'" class="max-w-6xl mx-auto animate-fadeIn p-4 md:p-6 flex flex-col h-[calc(100vh-100px)]">
+            <h2 class="text-3xl font-bold mb-6 flex items-center gap-3 shrink-0"><i class="ph-bold ph-notepad text-purple-400"></i> Smart Notes</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0 bg-transparent">
+              <!-- Sidebar / List (Hidden on mobile if editor open) -->
+              <div class="md:col-span-1 flex flex-col gap-4 h-full min-h-0" v-show="!isMobile || !showNoteEditor">
+                 <button @click="createNote()" 
+                   class="w-full btn-primary px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-purple-900/40 shrink-0 hover:scale-[1.02] transition-transform text-white">
+                   <i class="ph-bold ph-plus-circle text-xl"></i> New Note
+                 </button>
+                 
+                 <div class="glass-strong p-3 rounded-xl flex items-center gap-2 border border-white/10 shrink-0 focus-within:border-purple-500/50 transition-colors">
+                   <i class="ph-bold ph-magnifying-glass text-gray-400 ml-1"></i>
+                   <input v-model="searchNotes" type="text" placeholder="Search title or content..." 
+                     class="bg-transparent border-none outline-none text-sm w-full py-1 text-white placeholder-white/30">
+                 </div>
+
+                 <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3 min-h-0">
+                   <div v-if="notes.length === 0" class="text-center py-12 opacity-50 flex flex-col items-center justify-center h-full">
+                     <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                       <i class="ph-bold ph-pencil-simple-slash text-3xl"></i>
+                     </div>
+                     <p>No notes yet.</p>
+                     <p class="text-xs mt-2">Create your first note above!</p>
+                   </div>
+                   
+                   <div v-for="note in notes.filter(n => (n.title || '').toLowerCase().includes(searchNotes.toLowerCase()) || (n.content || '').toLowerCase().includes(searchNotes.toLowerCase()))" 
+                     :key="note.id" 
+                     @click="selectNote(note)"
+                     class="p-4 rounded-xl cursor-pointer transition-all border border-transparent hover:border-purple-500/30 group relative overflow-hidden"
+                     :class="currentNote && currentNote.id === note.id ? 'glass-strong border-purple-500/50 bg-purple-500/10' : 'glass hover:bg-white/5'">
+                     
+                     <div class="flex justify-between items-start mb-2 relative z-10">
+                        <h4 class="font-bold truncate pr-6 text-white text-base">{{ note.title || 'Untitled Note' }}</h4>
+                        <!-- Pin indicator -->
+                        <span v-if="note.pinned" class="absolute right-0 top-0 text-yellow-400 text-xs bg-yellow-400/10 p-1 rounded"><i class="ph-fill ph-push-pin"></i></span>
+                     </div>
+                     
+                     <p class="text-xs opacity-60 line-clamp-2 mb-3 h-8 text-gray-300 font-light">{{ note.content || 'No content...' }}</p>
+                     
+                     <div class="flex items-center justify-between pt-3 border-t border-white/5 relative z-10">
+                        <span class="text-[10px] opacity-40 font-mono">{{ formatDate(note.updatedAt) }}</span>
+                        
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <!-- Delete Button -->
+                         <button @click.stop="deleteNote(note.id || note._id)" 
+                            class="w-6 h-6 rounded-lg hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center transition-colors"
+                            title="Delete note">
+                            <i class="ph-bold ph-trash"></i>
+                          </button>
+                        </div>
+                     </div>
+                   </div>
+                 </div>
+              </div>
+
+              <!-- Editor (Desktop) -->
+              <div class="hidden md:flex md:col-span-2 flex-col h-full min-h-0 bg-transparent" 
+                   :class="{ 'fixed inset-0 z-50 p-0 bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900': isZenMode }">
+                   <div v-if="currentNote" class="glass-strong rounded-2xl h-full flex flex-col relative overflow-hidden border border-white/10 shadow-2xl transition-all duration-500" 
+                      :class="{ 'rounded-none border-none': isZenMode }">
+                    <!-- Editor Toolbar -->
+                    <div class="p-4 border-b border-white/10 flex items-center justify-between bg-black/20 backdrop-blur-md" 
+                         :class="{ 'px-[15%] py-6': isZenMode }">
+                       <input v-model="currentNote.title" @input="updateNote" type="text" 
+                         class="bg-transparent text-xl font-bold outline-none w-full placeholder-white/20 text-white transition-all" 
+                         :class="{ 'text-3xl text-center': isZenMode }"
+                         placeholder="Note Title">
+                         
+                       <div class="flex items-center gap-4 shrink-0">
+                         <span class="text-xs px-2 py-1 bg-white/5 rounded text-gray-400 border border-white/5 font-mono" v-if="!isZenMode">
+                           {{ (currentNote.content || '').split(/\s+/).filter(Boolean).length }} words
+                         </span>
+                         
+                         <!-- Zen Mode Toggle -->
+                         <button @click="isZenMode = !isZenMode" 
+                            class="w-8 h-8 rounded-lg hover:bg-purple-500/20 text-gray-400 hover:text-purple-400 flex items-center justify-center transition-colors"
+                            :title="isZenMode ? 'Exit Zen Mode' : 'Enter Zen Mode'">
+                            <i :class="isZenMode ? 'ph-bold ph-arrows-in-simple' : 'ph-bold ph-arrows-out-simple'"></i>
+                         </button>
+
+                         <!-- Export PDF -->
+                         <button @click="notesManager.exportToPDF(currentNote.id || currentNote._id)" 
+                            class="w-8 h-8 rounded-lg hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 flex items-center justify-center transition-colors"
+                            title="Export PDF">
+                            <i class="ph-bold ph-file-pdf"></i>
+                         </button>
+
+                         <!-- Delete Note -->
+                         <button @click="deleteNote(currentNote.id || currentNote._id)" 
+                            class="w-8 h-8 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 flex items-center justify-center transition-colors"
+                            title="Delete Note">
+                            <i class="ph-bold ph-trash"></i>
+                         </button>
+
+                         <!-- Desktop Close/Deselect -->
+                         <button @click="resetNoteEditor" 
+                           class="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center transition-colors text-gray-400 hover:text-white"
+                           title="Close Editor">
+                           <i class="ph-bold ph-x"></i>
+                         </button>
+                       </div>
+                    </div>
+                    
+                    <!-- Text Area -->
+                    <textarea v-model="currentNote.content" @input="updateNote"
+                       class="flex-1 w-full bg-transparent outline-none resize-none leading-relaxed font-light text-lg text-gray-100 custom-scrollbar placeholder-white/10 mx-auto"
+                       :class="isZenMode ? 'max-w-3xl p-10 text-xl' : 'p-6'"
+                       placeholder="Start typing your thoughts here..."></textarea>
+                       
+                    <!-- Bottom Status Bar -->
+                    <div class="px-4 py-2 bg-black/20 border-t border-white/5 text-[10px] text-gray-500 flex justify-between items-center">
+                      <span>Last saved: {{ formatDate(currentNote.updatedAt) }}</span>
+                      <span>Markdown supported</span>
+                    </div>
+                 </div>
+                 
+                 <!-- Empty State -->
+                 <div v-else class="glass rounded-2xl h-full flex flex-col items-center justify-center opacity-70 p-8 text-center border-2 border-dashed border-white/10">
+                    <div class="w-24 h-24 rounded-full bg-purple-500/10 flex items-center justify-center mb-6 animate-pulse">
+                      <i class="ph-duotone ph-notebook text-6xl text-purple-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-white">Select a note to view</h3>
+                    <p class="max-w-xs mx-auto text-gray-300 leading-relaxed">Click on an existing note from the sidebar or create a new one to start writing.</p>
+                    <button @click="createNote()" class="mt-8 btn-secondary px-6 py-3 rounded-xl font-semibold">Create New Note</button>
+                 </div>
+              </div>
+            </div>
+            
+            <!-- Mobile Editor Overlay (Full Screen) -->
+            <div v-if="showNoteEditor && isMobile" class="fixed inset-0 z-50 bg-[#0f0c29] flex flex-col animate-slideUp">
+               <div class="p-4 border-b border-white/10 flex items-center gap-3 bg-black/40 backdrop-blur-md pt-safe-top">
+                  <button @click="showNoteEditor = false" class="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-white/10">
+                    <i class="ph-bold ph-caret-left text-xl text-purple-400"></i>
+                  </button> 
+                  <input v-model="currentNote.title" @input="updateNote" type="text" 
+                         class="bg-transparent text-lg font-bold outline-none flex-1 placeholder-white/30 text-white" 
+                         placeholder="Note Title">
+                  <button @click="notesManager.exportToPDF(currentNote.id || currentNote._id)" class="text-blue-400 p-2 w-10 h-10 rounded-xl hover:bg-white/5 flex items-center justify-center">
+                    <i class="ph-bold ph-file-pdf text-xl"></i>
+                  </button>
+                  <button @click="deleteNote(currentNote.id || currentNote._id)" class="text-red-400 p-2 w-10 h-10 rounded-xl hover:bg-white/5 flex items-center justify-center">
+                    <i class="ph-bold ph-trash text-xl"></i>
+                  </button>
+               </div>
+               <textarea v-model="currentNote.content" @input="updateNote"
+                       class="flex-1 w-full bg-transparent p-5 outline-none resize-none leading-relaxed text-base font-light text-gray-100"
+                       placeholder="Start typing..."></textarea>
+            </div>
+          </div>
+
           <div v-if="currentView === 'home'" class="max-w-6xl mx-auto animate-fadeIn">
             <div class="text-center mb-12">
               <div class="mb-6"><i class="ph-bold ph-brain text-7xl text-purple-400 animate-pulse"></i>
@@ -3053,7 +3320,7 @@
             </div>
           </div>
 
-          <footer v-if="isAuthenticated" class="mt-16 border-t border-white/10 bg-gradient-to-b from-transparent to-black/20">
+          <footer v-if="isAuthenticated" class="mt-16 border-t border-white/10 bg-gradient-to-b from-transparent to-black/20 rounded-t-3xl mx-4 lg:mx-8">
             <div class="max-w-7xl mx-auto px-6 sm:px-8 py-12">
               <!-- Top Grid -->
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
@@ -3168,9 +3435,18 @@
                   
                   <!-- Tech Stack -->
                   <div class="flex items-center justify-center md:justify-end gap-2 flex-wrap">
-                    <span class="text-xs px-3 py-1.5 bg-purple-500/10 rounded-lg border border-purple-500/20">Vue.js</span>
-                    <span class="text-xs px-3 py-1.5 bg-purple-500/10 rounded-lg border border-purple-500/20">Node.js</span>
-                    <span class="text-xs px-3 py-1.5 bg-purple-500/10 rounded-lg border border-purple-500/20">MongoDB</span>
+                    <span class="text-xs px-3 py-1.5 bg-purple-500/10 rounded-lg border border-purple-500/20 flex items-center gap-1.5">
+                      <i class="ph-bold ph-file-vue text-green-400"></i> Vue.js
+                    </span>
+                    <span class="text-xs px-3 py-1.5 bg-purple-500/10 rounded-lg border border-purple-500/20 flex items-center gap-1.5">
+                      <i class="ph-bold ph-terminal-window text-green-500"></i> Node.js
+                    </span>
+                    <span class="text-xs px-3 py-1.5 bg-purple-500/10 rounded-lg border border-purple-500/20 flex items-center gap-1.5">
+                      <i class="ph-bold ph-database text-green-400"></i> MongoDB
+                    </span>
+                    <span class="text-xs px-3 py-1.5 bg-purple-500/10 rounded-lg border border-purple-500/20 flex items-center gap-1.5">
+                      <i class="ph-bold ph-paint-brush-broad text-cyan-400"></i> Tailwind
+                    </span>
                   </div>
                 </div>
                 
@@ -3206,12 +3482,12 @@
     </div>
   </div>
 
+  <!-- v2.5 Features -->
+  <script src="Assets/notes.js"></script>
   <!-- Main Application Script -->
   <script src="Assets/script.js"></script>
   <script src="Assets/streak.js"></script>
   
-  <!-- v2.5 Features -->
-  <script src="Assets/notes.js"></script>
   <script src="Assets/export.js"></script>
   <script src="Assets/v25-integration.js"></script>
   

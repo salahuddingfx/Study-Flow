@@ -15,7 +15,21 @@ html, body {
     height: 100%;
 }
 
-/* Theme Backgrounds */
+/* Chart canvas touch fix */
+.chart-container canvas {
+    touch-action: pan-y !important; /* Allow vertical scrolling on charts */
+    max-width: 100%;
+    height: auto !important; /* Ensure canvas scales */
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        height: auto !important; /* Allow auto height on mobile */
+        min-height: 200px;
+        position: relative;
+    }
+}
+
 body.theme-dark {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     color: #e0e0e0;
@@ -430,7 +444,8 @@ input:focus, textarea:focus, select:focus {
 .scroll-to-top {
     position: fixed !important;
     bottom: 90px !important;
-    right: 30px !important;
+    left: 24px !important; /* Default to left */
+    right: auto !important;
     width: 55px;
     height: 55px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -444,7 +459,7 @@ input:focus, textarea:focus, select:focus {
         0 8px 25px rgba(102, 126, 234, 0.5),
         inset 0 0 15px rgba(255, 255, 255, 0.1);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 9999 !important;
+    z-index: 100000 !important;
     opacity: 0;
     visibility: hidden;
     transform: translateY(20px) scale(0.8);
@@ -454,6 +469,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .scroll-to-top.visible {
+    display: flex !important;
     opacity: 1 !important;
     visibility: visible !important;
     transform: translateY(0) scale(1) !important;
@@ -462,10 +478,11 @@ input:focus, textarea:focus, select:focus {
 }
 
 .scroll-to-top:hover {
-    transform: translateY(-8px) scale(1.1);
+    transform: scale(1.1);
     box-shadow: 
         0 12px 35px rgba(102, 126, 234, 0.7),
         inset 0 0 20px rgba(255, 255, 255, 0.3);
+
     background: linear-gradient(135deg, rgba(118, 75, 162, 0.9), rgba(102, 126, 234, 0.9));
     backdrop-filter: blur(15px);
 }
@@ -477,7 +494,8 @@ input:focus, textarea:focus, select:focus {
 @media (max-width: 768px) {
     .scroll-to-top {
         bottom: 90px !important;
-        right: 20px;
+        left: 20px !important;
+        right: auto !important;
         width: 48px;
         height: 48px;
     }
@@ -924,9 +942,9 @@ button:active {
 
 @media (max-width: 768px) {
     .scroll-to-top-left {
-        left: 140px !important;
+        left: 24px !important;
         right: auto !important;
-        bottom: 20px !important;
+        bottom: 90px !important; /* Adjusted to avoid bottom nav if present, or just be accessible */
     }
     
     .scroll-to-top-right {
@@ -1232,15 +1250,15 @@ button:active {
     }
 
     .chart-container {
-        height: 240px !important;
-        min-height: 240px !important;
+        height: auto !important;
+        min-height: 200px !important;
     }
 }
 
 @media (max-width: 420px) {
     .chart-container {
-        height: 220px !important;
-        min-height: 220px !important;
+        height: auto !important;
+        min-height: 180px !important;
     }
 
     .analytics-period-insight .glass-strong {
@@ -1306,9 +1324,9 @@ button:active {
         min-height: 400px !important;
     }
     
-    /* Dashboard stats */
+    /* Dashboard stats - optimized spacing */
     .analytics-stats-grid {
-       /* Reduced from 6 */
+        gap: 2rem !important;
     }
 }
 

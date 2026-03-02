@@ -279,6 +279,9 @@ app.use('/api/blogs', blogRoutes);
 const songRoutes = require('./routes/song.routes');
 songRoutes.setIo(io);
 app.use('/api/songs', songRoutes);
+
+// Note Routes
+app.use('/api/notes', require('./routes/note.routes'));
 // Catch-all Route
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../index.html'));
