@@ -1,7 +1,7 @@
 {
-  "name": "StudyFlow - Focus & Productivity Timer",
+  "name": "StudyFlow v2.5 - Focus & Productivity",
   "short_name": "StudyFlow",
-  "description": "Boost your productivity with StudyFlow - a beautiful focus timer app featuring Pomodoro technique, task management, study analytics, and ambient music. Perfect for students and professionals.",
+  "description": "Boost your productivity with StudyFlow v2.5 - featuring Pomodoro timer, task management, smart notes, study analytics, offline mode, and data export. Perfect for students and professionals.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",

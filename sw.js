@@ -13,6 +13,110 @@ const urlsToCache = [
   './Assets/style.css',
   './Assets/script.js',
   './Assets/critical.css',
+  './Assets/notes.js',
+  './Assets/export.js',
+  './manifest.json',
+  './Assets/brain-duotone.png',
+  './Assets/chart.umd.min.js'
+];
+
+// CDN resources to cache (with longer TTL)
+const cdnUrls = [
+  'https://cdn.tailwindcss.com',
+  'https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.15/vue.global.prod.min.js',
+  'https://cdn.jsdelivr.net/npm/@phosphor-icons/web',
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
+];
+
+// IndexedDB helpers
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(IDB_NAME, IDB_VERSION);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      
+      // Create object stores
+      if (!db.objectStoreNames.contains('notes')) {
+        db.createObjectStore('notes', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('offlineQueue')) {
+        const queueStore = db.createObjectStore('offlineQueue', { keyPath: 'id', autoIncrement: true });
+        queueStore.createIndex('timestamp', 'timestamp', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('sessions')) {
+        db.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains('tasks')) {
+        db.createObjectStore('tasks', { keyPath: 'id', autoIncrement: true });
+      }
+      
+      console.log('✅ IndexedDB stores created');
+    };
+  });
+}
+
+// Add to offline queue
+async function addToOfflineQueue(request) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction('offlineQueue', 'readwrite');
+    const store = tx.objectStore('offlineQueue');
+    
+    const queueItem = {
+      url: request.url,
+      method: request.method,
+      headers: Array.from(request.headers.entries()),
+      body: await request.clone().text(),
+      timestamp: Date.now()
+    };
+    
+    await store.add(queueItem);
+    console.log('📥 Added to offline queue:', request.url);
+  } catch (error) {
+    console.error('Failed to add to queue:', error);
+  }
+}
+
+// Process offline queue when online
+async function processOfflineQueue() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction('offlineQueue', 'readwrite');
+    const store = tx.objectStore('offlineQueue');
+    const items = await store.getAll();
+    
+    for (const item of items) {
+      try {
+        const response = await fetch(item.url, {
+          method: item.method,
+          headers: new Headers(item.headers),
+          body: item.body || undefined
+        });
+        
+        if (response.ok) {
+          await store.delete(item.id);
+          console.log('✅ Synced offline request:', item.url);
+        }
+      } catch (error) {
+        console.warn('Failed to sync:', item.url, error);
+      }
+    }
+  } catch (error) {
+    console.error('Queue processing error:', error);
+  }
+}
+
+// Static assets to cache immediately
+const urlsToCache = [
+  './',
+  './index.html',
+  './Assets/style.css',
+  './Assets/script.js',
+  './Assets/critical.css',
   './manifest.json',
   './Assets/brain-duotone.png',
   './Assets/chart.umd.min.js'
@@ -66,7 +170,32 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(async (error) => {
+          // For POST/PUT/DELETE, add to offline queue
+          if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
+            await addToOfflineQueue(request);
+            return new Response(JSON.stringify({
+              offline: true,
+              message: 'Request queued for sync when online'
+            }), {
+              status: 202,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+          
+          // For GET, try cache
+          const cachedResponse = await caches.match(request);
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          
+          return new Response(JSON.stringify({
+            error: 'Offline - No cached version available'
+          }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        })
     );
     return;
   }
@@ -138,16 +267,36 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('activate', (event) => {
   const cacheWhitelist = [CACHE_NAME, RUNTIME_CACHE, CDN_CACHE];
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('🗑️  Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    Promise.all([
+      // Clean old caches
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheWhitelist.indexOf(cacheName) === -1) {
+              console.log('🗑️  Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      // Process offline queue
+      processOfflineQueue()
+    ])
   );
   self.clients.claim();
+  console.log('✅ Service Worker v2.5 activated, offline queue processed');
+});
+
+// Listen for online event to sync
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SYNC_OFFLINE_QUEUE') {
+    processOfflineQueue();
+  }
+});
+
+// Background sync
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-offline-data') {
+    event.waitUntil(processOfflineQueue());
+  }
 });

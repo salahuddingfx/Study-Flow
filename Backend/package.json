@@ -1,7 +1,7 @@
 {
   "name": "study-flow-backend",
-  "version": "1.0.0",
-  "description": "StudyFlow Backend API",
+  "version": "2.5.0",
+  "description": "StudyFlow Backend API v2.5",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

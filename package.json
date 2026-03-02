@@ -1,6 +1,6 @@
 {
   "name": "studyflow",
-  "version": "1.0.0",
+  "version": "2.5.0",
   "description": "StudyFlow - Focus, Learn, Achieve. A productivity and learning companion with Pomodoro timer, task management, study analytics, AI assistance, and music.",
   "main": "Backend/server.js",
   "scripts": {
