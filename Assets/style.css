@@ -1208,112 +1208,84 @@ button:active {
 @media (min-width: 1280px) {
     /* XL Screens - Better use of space */
     .max-w-7xl {
-        max-width: 90rem !important; /* 1440px */
+        max-width: 80rem !important; /* 1280px - reduced from 90rem */
     }
     
     /* Larger cards with better spacing */
     .glass, .glass-strong, .card-hover {
-        border-radius: 24px;
+        border-radius: 20px; /* Standardize radius */
     }
     
-    /* Better grid layouts */
-    .grid-cols-1.md\\:grid-cols-2 {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    }
-    
-    .grid-cols-2.md\\:grid-cols-3 {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    }
-    
-    /* Dashboard cards */
+    /* Dashboard cards - adjusted for better proportions */
     .analytics-stats-grid {
-        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important; /* Reduced from 5 */
         gap: 1.5rem !important;
     }
     
-    /* Larger font sizes for readability */
-    h1 { font-size: 3.5rem !important; }
-    h2 { font-size: 2.5rem !important; }
-    h3 { font-size: 2rem !important; }
+    /* Chart container height */
+    .chart-container {
+        height: 350px !important; /* Slightly reduced */
+        min-height: 350px !important;
+    }
     
-    /* Better chart sizes */
+    /* Sidebar width */
+    .sidebar {
+        width: 260px !important; /* Slightly reduced */
+    }
+    
+    /* Main content padding */
+    .main-content {
+        padding: 2rem 2.5rem !important;
+    }
+}
+
+@media (min-width: 1536px) {
+    /* 2XL Screens */
+    .max-w-7xl {
+        max-width: 90rem !important;
+    }
+    
+    /* Better spacing */
+    .gap-4 { gap: 1.5rem !important; }
+    .gap-6 { gap: 2rem !important; }
+    
+    /* Chart height */
     .chart-container {
         height: 400px !important;
         min-height: 400px !important;
     }
     
-    /* Sidebar width optimization */
-    .sidebar {
-        width: 280px !important;
-    }
-    
-    /* Main content padding */
-    .main-content {
-        padding: 2.5rem 3rem !important;
-    }
-}
-
-@media (min-width: 1536px) {
-    /* 2XL Screens - Ultra-wide support */
-    .max-w-7xl {
-        max-width: 100rem !important; /* 1600px */
-    }
-    
-    /* Even larger cards */
-    .glass, .glass-strong, .card-hover {
-        padding: 2rem !important;
-    }
-    
-    /* 4-column layouts */
-    .grid-cols-1.md\\:grid-cols-2 {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    }
-    
-    /* Better spacing */
-    .gap-4 { gap: 2rem !important; }
-    .gap-6 { gap: 2.5rem !important; }
-    
-    /* Larger chart */
-    .chart-container {
-        height: 480px !important;
-        min-height: 480px !important;
-    }
-    
-    /* Dashboard stats - 6 columns */
+    /* Dashboard stats */
     .analytics-stats-grid {
-        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important; /* Reduced from 6 */
     }
 }
 
 @media (min-width: 1920px) {
     /* Full HD+ Screens */
     .max-w-7xl {
-        max-width: 110rem !important; /* 1760px */
+        max-width: 100rem !important;
     }
     
-    /* Ultra-wide chart */
+    /* Chart height */
     .chart-container {
-        height: 520px !important;
-        min-height: 520px !important;
+        height: 450px !important;
+        min-height: 450px !important;
     }
     
-    /* Sidebar ultra-wide */
+    /* Sidebar width */
     .sidebar {
-        width: 320px !important;
+        width: 280px !important;
     }
-    
-    /* Even larger text */
-    h1 { font-size: 4rem !important; }
-    h2 { font-size: 3rem !important; }
 }
 
 /* ================================
    PERFORMANCE OPTIMIZATIONS
    ================================ */
 
-/* Use GPU acceleration for animations */
+/* Use GPU acceleration only for specific interactive elements */
 .glass, .glass-strong, .card-hover, 
-.btn, button, a {
+.modal-content, .floating-btn {
     will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;

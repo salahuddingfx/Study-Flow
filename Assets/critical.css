@@ -1,5 +1,5 @@
 /* Critical CSS - Inline in <head> for First Paint */
-*{margin:0;padding:0;box-sizing:border-box;transform:translateZ(0);backface-visibility:hidden}
+*{margin:0;padding:0;box-sizing:border-box}
 :root{--primary:#8b5cf6;--bg-dark:#0f172a;--bg-card:rgba(30,41,59,.5);--text-primary:#f8fafc}
 body{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);color:var(--text-primary);overflow-x:hidden;min-height:100vh;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 [v-cloak]{display:none!important}

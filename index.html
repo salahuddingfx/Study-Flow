@@ -1598,13 +1598,13 @@
     </button>
 
     <div v-if="!showLoader && isAuthenticated" class="min-h-screen flex">
-      <aside class="hidden lg:flex flex-col w-64 glass-strong border-r border-gray-700 p-6">
+      <aside class="hidden lg:flex flex-col w-64 glass-strong border-r border-gray-700 p-6 sidebar transition-all">
         <div class="mb-8"><button @click="reloadApp"
             class="flex items-center gap-3 mb-2 hover:opacity-80 transition-opacity"> <i
               class="ph-bold ph-brain text-3xl text-purple-400"></i>
             <h1 class="text-2xl font-bold gradient-text">StudyFlow</h1>
           </button>
-          <p class="text-sm opacity-70">Hello, {{ userFullName }}!</p>
+          <p class="text-sm opacity-70 truncate max-w-[200px]" :title="'Hello, ' + userFullName + '!'">Hello, {{ userFullName }}!</p>
           <div class="flex items-center gap-2 mt-2">
             <div :class="isOnline ? 'bg-green-500' : 'bg-red-500'" class="w-2 h-2 rounded-full animate-pulse"></div>
             <span class="text-xs opacity-60">{{ isOnline ? 'Online' : 'Offline' }}</span>
