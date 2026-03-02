@@ -863,7 +863,7 @@ button:active {
 /* AI chat popup stability (especially on mobile/devtools emulation) */
 .ai-chat-popup {
     width: min(92vw, 400px);
-    max-width: 400px;
+    max-width: 400px !important;
 }
 
 .theme-modal-panel {
@@ -1167,6 +1167,34 @@ button:active {
     display: block !important;
 }
 
+.analytics-view-tabs button {
+    min-height: 42px;
+}
+
+.analytics-period-insight .glass-strong {
+    min-height: 68px;
+}
+
+.analytics-stats-grid {
+    align-items: stretch;
+}
+
+.analytics-stat-card {
+    min-height: 130px;
+}
+
+.analytics-stat-card .stat-card-value {
+    line-height: 1;
+}
+
+.analytics-stat-card .stat-card-label {
+    min-height: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
 @media (max-width: 640px) {
     .analytics-view-tabs {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -1186,6 +1214,19 @@ button:active {
         padding: 0.75rem 0.5rem !important;
     }
 
+    .analytics-stat-card {
+        min-height: 100px;
+    }
+
+    .analytics-period-insight .glass-strong {
+        min-height: 60px;
+        padding: 0.75rem !important;
+    }
+
+    .analytics-period-insight .text-right {
+        max-width: 52%;
+    }
+
     .quiz-stats-grid > div {
         padding: 0.875rem 0.5rem !important;
     }
@@ -1200,6 +1241,17 @@ button:active {
     .chart-container {
         height: 220px !important;
         min-height: 220px !important;
+    }
+
+    .analytics-period-insight .glass-strong {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .analytics-period-insight .text-right {
+        text-align: left;
+        max-width: 100%;
     }
 }
 /* ================================
@@ -1218,7 +1270,6 @@ button:active {
     
     /* Dashboard cards - adjusted for better proportions */
     .analytics-stats-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important; /* Reduced from 5 */
         gap: 1.5rem !important;
     }
     
@@ -1257,7 +1308,7 @@ button:active {
     
     /* Dashboard stats */
     .analytics-stats-grid {
-        grid-template-columns: repeat(5, minmax(0, 1fr)) !important; /* Reduced from 6 */
+       /* Reduced from 6 */
     }
 }
 
@@ -1367,8 +1418,3 @@ canvas {
     contain: layout style paint;
 }
 
-/* Prefetch critical assets */
-link[rel="preload"] {
-    as: style;
-    importance: high;
-}

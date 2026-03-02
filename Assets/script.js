@@ -895,6 +895,63 @@ const legacyVueApp = createApp({
             };
         },
 
+        periodInsight() {
+            const now = new Date();
+            let periodDays = 1;
+
+            if (this.analyticsView === 'weekly') {
+                periodDays = 7;
+            } else if (this.analyticsView === 'monthly') {
+                periodDays = 30;
+            }
+
+            const periodStart = new Date(now.getTime() - (periodDays - 1) * 24 * 60 * 60 * 1000);
+
+            const periodSessions = this.sessions.filter((session) => {
+                const sessionTime = new Date(session.timestamp);
+                return sessionTime >= periodStart && sessionTime <= now;
+            });
+
+            if (!periodSessions.length) {
+                return {
+                    label: 'No sessions in this period',
+                    details: 'Start a focus session to unlock insights'
+                };
+            }
+
+            const minutesPerDay = new Map();
+            let totalMinutes = 0;
+
+            periodSessions.forEach((session) => {
+                const rawDate = new Date(session.timestamp);
+                const dayKeyDate = new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate());
+                const dayKey = dayKeyDate.getTime();
+                const sessionMinutes = Number(session.duration) || 0;
+                totalMinutes += sessionMinutes;
+                minutesPerDay.set(dayKey, (minutesPerDay.get(dayKey) || 0) + sessionMinutes);
+            });
+
+            let bestDayKey = null;
+            let bestDayMinutes = 0;
+
+            minutesPerDay.forEach((minutes, dayKey) => {
+                if (minutes > bestDayMinutes) {
+                    bestDayMinutes = minutes;
+                    bestDayKey = dayKey;
+                }
+            });
+
+            const avgPerDay = Math.round(totalMinutes / periodDays);
+            const formattedBestDay = bestDayKey
+                ? new Date(Number(bestDayKey)).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+                : 'N/A';
+
+            return {
+                label: `${avgPerDay} min/day average`,
+                details: `Best day: ${formattedBestDay} (${bestDayMinutes} min)`
+            };
+        },
+
         todayStats() {
             const now = new Date();
             const today = now.toDateString();
@@ -927,8 +984,11 @@ const legacyVueApp = createApp({
     },
 
     watch: {
-        currentView(newView) {
+        currentView(newView, oldView) {
             this.syncHashFromView();
+            if (newView !== oldView) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
             if (newView === 'analytics') {
                 this.clearAnalyticsTimers();
                 this.$nextTick(() => {
@@ -961,10 +1021,11 @@ const legacyVueApp = createApp({
 
         analyticsView() {
             this.$nextTick(() => {
+                this.updateCharts();
                 this.$nextTick(() => {
                     const t = setTimeout(() => {
                         this.updateCharts();
-                    }, 500);
+                    }, 150);
                     this.analyticsTimeouts.push(t);
                 });
             });
