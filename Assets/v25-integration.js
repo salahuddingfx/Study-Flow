@@ -38,10 +38,12 @@
     const exportMenu = document.createElement('div');
     exportMenu.id = 'v25-export-menu';
     exportMenu.className = 'fixed bottom-20 right-6 z-50';
+    exportMenu.style.cssText = 'will-change: transform; transform: translateZ(0);';
     exportMenu.innerHTML = `
       <div class="relative">
         <button id="export-toggle" 
                 class="bg-purple-600 hover:bg-purple-700 text-white rounded-full p-4 shadow-lg transition-all hover:scale-110"
+                style="will-change: transform; transform: translateZ(0);"
                 title="Export Data (v2.5)">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -50,7 +52,7 @@
         
         <div id="export-dropdown" 
              class="hidden absolute bottom-full right-0 mb-2 bg-slate-800 rounded-lg shadow-xl border border-white/10 overflow-hidden"
-             style="min-width: 200px;">
+             style="min-width: 200px; will-change: opacity; contain: layout style paint;">
           <div class="p-2 border-b border-white/10 bg-purple-600/20">
             <p class="text-xs font-bold text-purple-300">📊 Export Data (v2.5)</p>
           </div>
@@ -85,13 +87,17 @@
     
     document.body.appendChild(exportMenu);
 
-    // Toggle dropdown
+    // Toggle dropdown with debounce for performance
     const toggleBtn = document.getElementById('export-toggle');
     const dropdown = document.getElementById('export-dropdown');
     
+    let toggleTimeout;
     toggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      dropdown.classList.toggle('hidden');
+      clearTimeout(toggleTimeout);
+      toggleTimeout = setTimeout(() => {
+        dropdown.classList.toggle('hidden');
+      }, 10);
     });
 
     // Close dropdown when clicking outside
@@ -107,9 +113,11 @@
 
     const notesBtn = document.createElement('div');
     notesBtn.className = 'mb-3';
+    notesBtn.style.cssText = 'will-change: transform; transform: translateZ(0);';
     notesBtn.innerHTML = `
       <button id="notes-toggle" 
               class="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all hover:scale-110"
+              style="will-change: transform; transform: translateZ(0);"
               title="Quick Notes (v2.5)">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -119,8 +127,12 @@
     
     exportMenu.querySelector('.relative').prepend(notesBtn);
 
-    // Notes modal
-    document.getElementById('notes-toggle').addEventListener('click', showNotesModal);
+    // Notes modal with debounce
+    let notesTimeout;
+    document.getElementById('notes-toggle').addEventListener('click', () => {
+      clearTimeout(notesTimeout);
+      notesTimeout = setTimeout(showNotesModal, 10);
+    });
   }
 
   // Show notes modal

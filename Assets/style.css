@@ -1202,3 +1202,201 @@ button:active {
         min-height: 220px !important;
     }
 }
+/* ================================
+   LARGE SCREEN OPTIMIZATIONS (1280px+)
+   ================================ */
+@media (min-width: 1280px) {
+    /* XL Screens - Better use of space */
+    .max-w-7xl {
+        max-width: 90rem !important; /* 1440px */
+    }
+    
+    /* Larger cards with better spacing */
+    .glass, .glass-strong, .card-hover {
+        border-radius: 24px;
+    }
+    
+    /* Better grid layouts */
+    .grid-cols-1.md\\:grid-cols-2 {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+    
+    .grid-cols-2.md\\:grid-cols-3 {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+    
+    /* Dashboard cards */
+    .analytics-stats-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        gap: 1.5rem !important;
+    }
+    
+    /* Larger font sizes for readability */
+    h1 { font-size: 3.5rem !important; }
+    h2 { font-size: 2.5rem !important; }
+    h3 { font-size: 2rem !important; }
+    
+    /* Better chart sizes */
+    .chart-container {
+        height: 400px !important;
+        min-height: 400px !important;
+    }
+    
+    /* Sidebar width optimization */
+    .sidebar {
+        width: 280px !important;
+    }
+    
+    /* Main content padding */
+    .main-content {
+        padding: 2.5rem 3rem !important;
+    }
+}
+
+@media (min-width: 1536px) {
+    /* 2XL Screens - Ultra-wide support */
+    .max-w-7xl {
+        max-width: 100rem !important; /* 1600px */
+    }
+    
+    /* Even larger cards */
+    .glass, .glass-strong, .card-hover {
+        padding: 2rem !important;
+    }
+    
+    /* 4-column layouts */
+    .grid-cols-1.md\\:grid-cols-2 {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+    
+    /* Better spacing */
+    .gap-4 { gap: 2rem !important; }
+    .gap-6 { gap: 2.5rem !important; }
+    
+    /* Larger chart */
+    .chart-container {
+        height: 480px !important;
+        min-height: 480px !important;
+    }
+    
+    /* Dashboard stats - 6 columns */
+    .analytics-stats-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (min-width: 1920px) {
+    /* Full HD+ Screens */
+    .max-w-7xl {
+        max-width: 110rem !important; /* 1760px */
+    }
+    
+    /* Ultra-wide chart */
+    .chart-container {
+        height: 520px !important;
+        min-height: 520px !important;
+    }
+    
+    /* Sidebar ultra-wide */
+    .sidebar {
+        width: 320px !important;
+    }
+    
+    /* Even larger text */
+    h1 { font-size: 4rem !important; }
+    h2 { font-size: 3rem !important; }
+}
+
+/* ================================
+   PERFORMANCE OPTIMIZATIONS
+   ================================ */
+
+/* Use GPU acceleration for animations */
+.glass, .glass-strong, .card-hover, 
+.btn, button, a {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Optimize backdrop-filter performance */
+.glass, .glass-strong {
+    contain: layout style paint;
+}
+
+/* Reduce animation complexity on lower-end devices */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .card-hover::after {
+        display: none;
+    }
+}
+
+/* Optimize scrollbar rendering */
+::-webkit-scrollbar {
+    contain: strict;
+}
+
+/* Performance: Debounce expensive effects */
+.card-hover:hover {
+    will-change: transform, box-shadow;
+}
+
+.card-hover:not(:hover) {
+    will-change: auto;
+}
+
+/* Lazy load background images */
+[style*="background-image"] {
+    background-attachment: scroll;
+}
+
+/* Optimize glassmorphism for performance */
+@supports (backdrop-filter: blur(16px)) {
+    .glass {
+        background: rgba(255, 255, 255, 0.03);
+    }
+}
+
+@supports not (backdrop-filter: blur(16px)) {
+    .glass {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
+/* Container query support for responsive cards */
+@container (min-width: 768px) {
+    .card-hover {
+        padding: 2rem;
+    }
+}
+
+/* Optimize particle system container */
+#particles-js {
+    will-change: opacity;
+    contain: layout style paint;
+}
+
+/* Better image performance */
+img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* Optimize chart canvas */
+canvas {
+    will-change: contents;
+    contain: layout style paint;
+}
+
+/* Prefetch critical assets */
+link[rel="preload"] {
+    as: style;
+    importance: high;
+}

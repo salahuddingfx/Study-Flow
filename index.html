@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
   <title>StudyFlow - Focus &amp; Productivity Timer | Pomodoro Study App</title>
   <meta name="title" content="StudyFlow - Focus &amp; Productivity Timer | Pomodoro Study App">
   <meta name="description"
@@ -42,11 +42,27 @@
   <meta name="application-name" content="StudyFlow">
   <meta name="msapplication-TileColor" content="#8b5cf6">
   <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+  
+  <!-- Performance: Preload critical assets -->
+  <link rel="preload" href="Assets/critical.css" as="style">
   <link rel="preload" href="Assets/style.css" as="style">
   <link rel="preload" href="Assets/script.js" as="script">
+  
+  <!-- Performance: DNS prefetch for external resources -->
   <link rel="dns-prefetch" href="//cdn.tailwindcss.com">
   <link rel="dns-prefetch" href="//unpkg.com">
   <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+  
+  <!-- Performance: Preconnect to critical origins -->
+  <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  
+  <!-- Performance: Resource hints -->
+  <link rel="prefetch" href="Assets/notes.js" as="script">
+  <link rel="prefetch" href="Assets/export.js" as="script">
+  <link rel="prefetch" href="Assets/v25-integration.js" as="script">
+  
   <link rel="icon" type="image/png" sizes="32x32" href="Assets/brain-duotone.png">
   <link rel="icon" type="image/png" sizes="16x16" href="Assets/brain-duotone.png">
   <link rel="apple-touch-icon" sizes="180x180" href="Assets/brain-duotone.png">

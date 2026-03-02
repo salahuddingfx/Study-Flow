@@ -109,27 +109,6 @@ async function processOfflineQueue() {
     console.error('Queue processing error:', error);
   }
 }
-
-// Static assets to cache immediately
-const urlsToCache = [
-  './',
-  './index.html',
-  './Assets/style.css',
-  './Assets/script.js',
-  './Assets/critical.css',
-  './manifest.json',
-  './Assets/brain-duotone.png',
-  './Assets/chart.umd.min.js'
-];
-
-// CDN resources to cache (with longer TTL)
-const cdnUrls = [
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.15/vue.global.prod.min.js',
-  'https://cdn.jsdelivr.net/npm/@phosphor-icons/web',
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
-];
-
 // Install Service Worker
 self.addEventListener('install', (event) => {
   event.waitUntil(
