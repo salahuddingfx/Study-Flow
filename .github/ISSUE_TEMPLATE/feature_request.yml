@@ -1,0 +1,54 @@
+name: Feature Request
+description: Suggest an idea or improvement for Study Flow
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing your idea. Please explain the use case clearly.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Feature summary
+      placeholder: One-line summary of the requested feature
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Motivation
+      description: What problem are you trying to solve?
+      placeholder: Describe the user pain point.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      placeholder: Describe your ideal solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: Any alternative approaches you considered.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      placeholder: Mockups, references, or examples.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and did not find a duplicate request.
+          required: true
