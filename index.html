@@ -1723,7 +1723,7 @@
    <!-- Scroll to Top Button - Right Side (Removed as per request) -->
 
 
-    <div v-if="!showLoader && isAuthenticated" class="min-h-screen flex">
+    <div v-if="!showLoader && isAuthenticated" class="h-screen flex overflow-hidden">
       <aside class="hidden lg:flex flex-col w-64 glass-strong border-r border-gray-700 p-6 sidebar transition-all">
         <div class="mb-8"><button @click="reloadApp"
             class="flex items-center gap-3 mb-2 hover:opacity-80 transition-opacity"> <i
@@ -1808,7 +1808,7 @@
           </div>
         </nav>
       </aside>
-      <main class="flex-1 flex flex-col">
+      <main class="flex-1 flex flex-col min-h-0">
         <header class="lg:hidden glass-strong border-b border-gray-700 p-4 flex items-center justify-between"><button
             @click="mobileMenuOpen = !mobileMenuOpen" class="text-xl text-purple-400"> <i
               :class="mobileMenuOpen ? 'ph-bold ph-x' : 'ph-bold ph-list'" class="text-2xl"></i> </button> <button
@@ -1895,7 +1895,7 @@
               <i class="ph-bold ph-sign-out text-lg"></i> {{ t('nav_logout') }} </button>
           </nav>
         </div>
-        <div ref="mainScrollContainer" class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8 pb-24" style="-webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y; will-change: scroll-position; transform: translateZ(0); contain: layout style;">
+        <div ref="mainScrollContainer" class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 lg:p-8 pb-24" style="-webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y;">
 
           <div v-if="currentView === 'notes'" class="max-w-6xl mx-auto animate-fadeIn p-4 md:p-6 flex flex-col h-[calc(100vh-100px)]">
             <h2 class="text-3xl font-bold mb-6 flex items-center gap-3 shrink-0"><i class="ph-bold ph-notepad text-purple-400"></i> Smart Notes</h2>

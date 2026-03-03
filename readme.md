@@ -589,6 +589,7 @@ Automated weekly/monthly reports delivered to your inbox:
 - ✅ **API Request Smarter Retry**: Port fallback now only triggers on network failures (TypeError/ERR_CONNECTION_REFUSED), not on HTTP errors (401/500)
 - ✅ **Canvas Always Visible**: Charts now render even with zero sessions — shows empty axes instead of hiding the canvas
 - ✅ **Achievement Level Safe Access**: Fixed potential crash when `achievement.level` is undefined
+- ✅ **Main Content Scroll Restored**: Fixed flex/height layout constraints so authenticated pages scroll correctly on both small and large screens
 
 ### 🤖 AI System v2.0
 - ⚡ **Unlimited AI Models**: Now using `gemini-2.0-flash-exp` (no rate limits!)
@@ -1420,7 +1421,10 @@ A: 30 days - then you need to re-login.
 ### Common Issues
 
 **Scroll button not showing?**  
-✅ Scroll past 300px - it appears with bounce animation
+✅ Scroll past 100px - it appears with bounce animation
+
+**Page content not scrolling (only nav visible)?**  
+✅ Hard refresh (`Ctrl+F5`) after pulling latest changes; main layout scroll container is now fixed for desktop + mobile
 
 **Service Worker not updating?**  
 ✅ DevTools → Application → Unregister SW → Hard reload
@@ -1443,14 +1447,14 @@ Bundle Size:          198 KB (first load)
 Cached Load:          < 10 KB
 Service Worker:       v5 (Active)
 Chart Load Time:      < 100ms (optimized)
-Scroll Performance:   200px threshold
+Scroll Performance:   100px threshold
 ```
 
 ### 🚀 Recent Performance Optimizations
 - ✅ **Faster Chart Loading**: Reduced from 500ms to 100ms initial load
 - ✅ **Smart Scroll Detection**: Container-specific scroll listener added
 - ✅ **Optimized Analytics**: Charts render with retry mechanism (100ms/800ms/1500ms)
-- ✅ **Improved Scroll Buttons**: Now visible at 200px (was 300px)
+- ✅ **Improved Scroll Buttons**: Now visible at 100px (was 300px)
 - ✅ **Better Memory Management**: Proper cleanup of event listeners
 
 ---
