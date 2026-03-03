@@ -1874,7 +1874,7 @@
               <i class="ph-bold ph-sign-out text-lg"></i> {{ t('nav_logout') }} </button>
           </nav>
         </div>
-        <div ref="mainScrollContainer" class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8 pb-24" style="-webkit-overflow-scrolling: touch; overscroll-behavior-y: auto;">
+        <div ref="mainScrollContainer" class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8 pb-24" style="-webkit-overflow-scrolling: touch; overscroll-behavior-y: auto; touch-action: pan-y;">
 
           <div v-if="currentView === 'notes'" class="max-w-6xl mx-auto animate-fadeIn p-4 md:p-6 flex flex-col h-[calc(100vh-100px)]">
             <h2 class="text-3xl font-bold mb-6 flex items-center gap-3 shrink-0"><i class="ph-bold ph-notepad text-purple-400"></i> Smart Notes</h2>

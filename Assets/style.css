@@ -751,9 +751,31 @@ html, body {
         touch-action: pan-y !important;
     }
 
-    /* Subject progress, leaderboard cards - ensure scrollability */
+    /* ALL glass cards must allow vertical scroll pass-through */
+    .glass,
+    .glass-strong,
+    .card-hover,
     .glass-strong.rounded-2xl,
-    .glass-strong.rounded-xl {
+    .glass-strong.rounded-xl,
+    .glass.rounded-2xl,
+    .glass.rounded-xl {
+        touch-action: pan-y !important;
+        -webkit-transform: none !important;
+        transform: none !important;
+        will-change: auto !important;
+        contain: none !important;
+    }
+
+    /* Achievement cards grid specifically */
+    .grid .glass-strong,
+    .grid .glass {
+        touch-action: pan-y !important;
+        pointer-events: auto;
+    }
+
+    /* Gradient/decorated divs inside sections */
+    .bg-gradient-to-r,
+    .bg-gradient-to-br {
         touch-action: pan-y !important;
     }
 }
@@ -896,8 +918,12 @@ button:active {
         margin-top: 0.5rem;
     }
     
-    /* Improve button tap targets */
-    button, a {
+    /* Improve button tap targets - only standalone buttons, not inside cards */
+    .fixed button, 
+    nav button, 
+    nav a,
+    .sidebar button,
+    .sidebar a {
         min-height: 44px;
         min-width: 44px;
     }
@@ -1405,7 +1431,6 @@ button:active {
    ================================ */
 
 /* Use GPU acceleration only for specific interactive elements */
-.glass, .glass-strong, .card-hover, 
 .modal-content, .floating-btn {
     will-change: transform;
     transform: translateZ(0);
@@ -1413,9 +1438,19 @@ button:active {
     -webkit-font-smoothing: antialiased;
 }
 
-/* Optimize backdrop-filter performance */
-.glass, .glass-strong {
-    contain: layout style paint;
+/* GPU acceleration for cards - desktop only to avoid scroll blocking on mobile */
+@media (min-width: 769px) {
+    .glass, .glass-strong, .card-hover {
+        will-change: transform;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* Optimize backdrop-filter performance - desktop only */
+    .glass, .glass-strong {
+        contain: layout style paint;
+    }
 }
 
 /* Reduce animation complexity on lower-end devices */
