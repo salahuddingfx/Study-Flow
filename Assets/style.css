@@ -706,6 +706,20 @@ html, body {
     overflow-x: hidden;
 }
 
+/* Prevent overflow on all glass cards */
+.glass, .glass-strong {
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Profile section mobile fix */
+@media (max-width: 640px) {
+    .glass-strong input[readonly] {
+        font-size: 10px !important;
+        min-width: 0 !important;
+    }
+}
+
 /* Loading spinner */
 .loading-spinner {
     border: 3px solid rgba(139, 92, 246, 0.3);

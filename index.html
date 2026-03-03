@@ -1034,7 +1034,7 @@
             :class="musicTab === 'youtube' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300'"
             class="px-4 py-2 rounded-xl font-medium transition-all">YouTube Music</button>
         </div>
-        <div v-if="currentTrack" class="glass rounded-2xl p-6 mb-6">
+        <div v-if="currentTrack" class="glass rounded-2xl p-4 sm:p-6 mb-6">
           <div class="flex items-center gap-4 mb-4">
             <div
               class="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
@@ -1109,7 +1109,7 @@
             <h4 class="text-xl font-semibold">YouTube Music</h4>
           </div>
 
-          <div class="glass rounded-2xl p-6 mb-6">
+          <div class="glass rounded-2xl p-4 sm:p-6 mb-6">
             <h5 class="text-lg font-semibold mb-4 flex items-center gap-2"><i class="ph-bold ph-link text-red-400"></i>
               Play Custom YouTube Video</h5>
             <div class="flex gap-2">
@@ -1142,7 +1142,7 @@
             </div>
           </div>
         </div>
-        <div v-if="editingPlaylist && musicTab === 'playlists'" class="glass rounded-2xl p-6 mb-6">
+        <div v-if="editingPlaylist && musicTab === 'playlists'" class="glass rounded-2xl p-4 sm:p-6 mb-6">
           <h4 class="text-lg font-semibold mb-4">{{ editingPlaylist.id ? 'Edit Playlist' : 'Create New Playlist' }}</h4>
           <div class="mb-4"><label class="block text-sm font-medium mb-2">Playlist Name</label> <input
               v-model="editingPlaylist.name" type="text" class="w-full px-4 py-3 rounded-xl glass"
@@ -1179,7 +1179,7 @@
             </button>
           </div>
         </div>
-        <div v-if="showYouTubePlayer" class="glass rounded-2xl p-6 mb-6">
+        <div v-if="showYouTubePlayer" class="glass rounded-2xl p-4 sm:p-6 mb-6">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
               <div class="w-12 h-12 rounded-xl bg-red-600 flex items-center justify-center">
@@ -2044,42 +2044,42 @@
             <div class="mb-12">
               <h2 class="text-3xl font-bold mb-8 text-center">{{ t('powerful_features') }}</h2>
               <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="glass rounded-2xl p-6 card-hover">
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover">
                   <div class="w-14 h-14 rounded-xl bg-purple-600/20 flex items-center justify-center mb-4"><i
                       class="ph-bold ph-timer text-3xl text-purple-400"></i>
                   </div>
                   <h3 class="text-xl font-bold mb-2">{{ t('pomodoro_timer') }}</h3>
                   <p class="opacity-70">{{ t('pomodoro_timer_desc') }}</p>
                 </div>
-                <div class="glass rounded-2xl p-6 card-hover">
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover">
                   <div class="w-14 h-14 rounded-xl bg-green-600/20 flex items-center justify-center mb-4"><i
                       class="ph-bold ph-check-square text-3xl text-green-400"></i>
                   </div>
                   <h3 class="text-xl font-bold mb-2">{{ t('task_mgmt') }}</h3>
                   <p class="opacity-70">{{ t('task_mgmt_desc') }}</p>
                 </div>
-                <div class="glass rounded-2xl p-6 card-hover">
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover">
                   <div class="w-14 h-14 rounded-xl bg-blue-600/20 flex items-center justify-center mb-4"><i
                       class="ph-bold ph-chart-bar text-3xl text-blue-400"></i>
                   </div>
                   <h3 class="text-xl font-bold mb-2">{{ t('study_analytics') }}</h3>
                   <p class="opacity-70">{{ t('study_analytics_desc') }}</p>
                 </div>
-                <div class="glass rounded-2xl p-6 card-hover">
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover">
                   <div class="w-14 h-14 rounded-xl bg-pink-600/20 flex items-center justify-center mb-4"><i
                       class="ph-bold ph-palette text-3xl text-pink-400"></i>
                   </div>
                   <h3 class="text-xl font-bold mb-2">{{ t('beautiful_themes') }}</h3>
                   <p class="opacity-70">{{ t('beautiful_themes_desc') }}</p>
                 </div>
-                <div class="glass rounded-2xl p-6 card-hover">
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover">
                   <div class="w-14 h-14 rounded-xl bg-yellow-600/20 flex items-center justify-center mb-4"><i
                       class="ph-bold ph-music-notes text-3xl text-yellow-400"></i>
                   </div>
                   <h3 class="text-xl font-bold mb-2">{{ t('focus_music') }}</h3>
                   <p class="opacity-70">{{ t('focus_music_desc') }}</p>
                 </div>
-                <div class="glass rounded-2xl p-6 card-hover">
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover">
                   <div class="w-14 h-14 rounded-xl bg-red-600/20 flex items-center justify-center mb-4"><i
                       class="ph-bold ph-bell text-3xl text-red-400"></i>
                   </div>
@@ -2120,7 +2120,7 @@
             <div v-if="totalSessions > 0" class="mb-12">
               <h2 class="text-3xl font-bold mb-8 text-center">{{ t('progress_today') }}</h2>
               <div class="grid md:grid-cols-4 gap-6">
-                <div class="glass rounded-2xl p-6 text-center card-hover"><i
+                <div class="glass rounded-2xl p-4 sm:p-6 text-center card-hover"><i
                     class="ph-bold ph-clock text-5xl text-purple-400 mb-3"></i>
                   <div class="text-4xl font-bold mb-2">
                     {{ totalFocusTime }}
@@ -2129,7 +2129,7 @@
                     {{ t('mins_focused') }}
                   </div>
                 </div>
-                <div class="glass rounded-2xl p-6 text-center card-hover"><i
+                <div class="glass rounded-2xl p-4 sm:p-6 text-center card-hover"><i
                     class="ph-bold ph-fire text-5xl text-orange-400 mb-3"></i>
                   <div class="text-4xl font-bold mb-2">
                     {{ totalSessions }}
@@ -2138,7 +2138,7 @@
                     {{ t('sessions_completed') }}
                   </div>
                 </div>
-                <div class="glass rounded-2xl p-6 text-center card-hover"><i
+                <div class="glass rounded-2xl p-4 sm:p-6 text-center card-hover"><i
                     class="ph-bold ph-check-circle text-5xl text-green-400 mb-3"></i>
                   <div class="text-4xl font-bold mb-2">
                     {{ completedTasksCount }}
@@ -2147,7 +2147,7 @@
                     {{ t('tasks_completed') }}
                   </div>
                 </div>
-                <div class="glass rounded-2xl p-6 text-center card-hover"><i
+                <div class="glass rounded-2xl p-4 sm:p-6 text-center card-hover"><i
                     class="ph-bold ph-book text-5xl text-blue-400 mb-3"></i>
                   <div class="text-4xl font-bold mb-2">
                     {{ subjects.length }}
@@ -2449,7 +2449,7 @@
               </div>
             </div>
           </div>
-          <div v-if="currentView === 'analytics'" class="max-w-6xl mx-auto animate-fadeIn">
+          <div v-if="currentView === 'analytics'" class="max-w-6xl mx-auto animate-fadeIn overflow-x-hidden">
             <h2 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Analytics &amp; Profile</h2>
             <div class="glass rounded-2xl p-3 sm:p-6 mb-6">
               <div class="analytics-view-tabs grid grid-cols-3 gap-2 sm:gap-3"><button @click="analyticsView = 'daily'"
@@ -2609,29 +2609,29 @@
                 <div v-for="(stats, subject) in subjectStats" :key="subject"
                   class="glass-strong p-3 sm:p-4 rounded-2xl border border-white/5 hover:bg-white/5 transition-all group">
 
-                  <div class="flex justify-between items-center mb-3">
-                    <div class="flex items-center gap-3">
+                  <div class="flex justify-between items-center mb-3 gap-2">
+                    <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                       <div
-                        class="w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center text-xl font-bold text-white shadow-lg border border-white/10"
+                        class="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center text-lg sm:text-xl font-bold text-white shadow-lg border border-white/10"
                         :class="getSubjectIconClass(subject.length)">
                         {{ subject.charAt(0).toUpperCase() }}
                       </div>
-                      <div>
-                        <h4 class="font-bold text-white text-base">{{ subject }}</h4>
+                      <div class="min-w-0">
+                        <h4 class="font-bold text-white text-sm sm:text-base truncate">{{ subject }}</h4>
                         <div class="text-xs opacity-50">Active Subject</div>
                       </div>
                     </div>
 
-                    <div class="flex gap-2">
+                    <div class="flex gap-1 sm:gap-2 shrink-0">
                       <div
-                        class="flex flex-col items-center justify-center w-14 h-12 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                        <i class="ph-bold ph-clock text-purple-400 text-xs mb-0.5"></i>
-                        <span class="text-xs font-bold text-white">{{ stats.time }}m</span>
+                        class="flex flex-col items-center justify-center w-12 sm:w-14 h-10 sm:h-12 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                        <i class="ph-bold ph-clock text-purple-400 text-[10px] sm:text-xs mb-0.5"></i>
+                        <span class="text-[10px] sm:text-xs font-bold text-white">{{ stats.time }}m</span>
                       </div>
                       <div
-                        class="flex flex-col items-center justify-center w-14 h-12 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                        <i class="ph-bold ph-check-circle text-blue-400 text-xs mb-0.5"></i>
-                        <span class="text-xs font-bold text-white">{{ stats.sessions }}</span>
+                        class="flex flex-col items-center justify-center w-12 sm:w-14 h-10 sm:h-12 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <i class="ph-bold ph-check-circle text-blue-400 text-[10px] sm:text-xs mb-0.5"></i>
+                        <span class="text-[10px] sm:text-xs font-bold text-white">{{ stats.sessions }}</span>
                       </div>
                     </div>
                   </div>
@@ -2651,7 +2651,7 @@
               </div>
 
             </div>
-            <div class="glass rounded-2xl p-6 mb-6">
+            <div class="glass rounded-2xl p-4 sm:p-6 mb-6">
               <h3 class="text-xl font-semibold mb-4 flex items-center gap-2"><i
                   class="ph-bold ph-trophy text-yellow-400"></i> Achievements</h3>
 
@@ -2680,22 +2680,22 @@
                 <p>No achievements data found.</p>
               </div>
 
-              <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div v-for="achievement in achievements" :key="achievement._id"
-                  class="glass-strong p-4 rounded-xl flex items-center gap-4 transition-all border"
+                  class="glass-strong p-3 sm:p-4 rounded-xl flex items-center gap-3 sm:gap-4 transition-all border overflow-hidden"
                   :class="achievement.unlocked ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-white/5 opacity-60 grayscale hover:opacity-100 hover:grayscale-0'">
 
-                  <div class="w-14 h-14 shrink-0 rounded-full flex items-center justify-center text-2xl shadow-lg"
+                  <div class="w-11 h-11 sm:w-14 sm:h-14 shrink-0 rounded-full flex items-center justify-center text-xl sm:text-2xl shadow-lg"
                     :class="achievement.unlocked ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-orange-500/20' : 'bg-white/10 text-gray-400'">
                     <i :class="'ph-bold ph-' + (achievement.icon || 'star')"></i>
                   </div>
 
-                  <div class="flex-1">
+                  <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-start gap-2">
-                      <div class="flex-1">
-                        <h4 class="font-bold text-white" :class="{'text-yellow-100': achievement.unlocked}">{{
+                      <div class="flex-1 min-w-0">
+                        <h4 class="font-bold text-sm sm:text-base text-white truncate" :class="{'text-yellow-100': achievement.unlocked}">{{
                           achievement.title }}</h4>
-                        <p class="text-xs opacity-70 mt-0.5">{{ achievement.description }}</p>
+                        <p class="text-[10px] sm:text-xs opacity-70 mt-0.5 line-clamp-2">{{ achievement.description }}</p>
                       </div>
                       <div class="flex items-center gap-1 shrink-0">
                         <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold"
@@ -2722,7 +2722,7 @@
                 </div>
               </div>
             </div>
-            <div class="glass rounded-2xl p-6 mb-6">
+            <div class="glass rounded-2xl p-4 sm:p-6 mb-6">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-semibold">Leaderboard</h3>
                 <select v-model="leaderboardPeriod" class="glass-strong px-3 py-2 rounded-lg text-sm">
@@ -2736,18 +2736,18 @@
               </div>
               <div v-else class="space-y-4">
                 <div v-for="item in leaderboardResults" :key="item.rank"
-                  class="glass-strong p-3 rounded-xl flex items-center justify-between">
-                  <div class="flex items-center gap-3">
+                  class="glass-strong p-3 rounded-xl flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <div
-                      class="w-8 h-8 rounded-full bg-purple-600/20 flex items-center justify-center text-sm font-bold">
+                      class="w-8 h-8 shrink-0 rounded-full bg-purple-600/20 flex items-center justify-center text-sm font-bold">
                       #{{ item.rank }}</div>
-                    <div>
-                      <div class="font-semibold">{{ item.fullName }}</div>
-                      <div class="text-xs opacity-70">@{{ item.username }}</div>
+                    <div class="min-w-0">
+                      <div class="font-semibold text-sm sm:text-base truncate">{{ item.fullName }}</div>
+                      <div class="text-xs opacity-70 truncate">@{{ item.username }}</div>
                     </div>
                   </div>
-                  <div class="text-right">
-                    <div class="font-semibold text-purple-400">{{ item.totalMinutes }} min</div>
+                  <div class="text-right shrink-0">
+                    <div class="font-semibold text-sm sm:text-base text-purple-400">{{ item.totalMinutes }} min</div>
                     <div class="text-xs opacity-60">{{ item.sessions }} sessions</div>
                   </div>
                 </div>
@@ -2755,7 +2755,7 @@
             </div>
 
             <!-- Achievement Leaderboard -->
-            <div class="glass rounded-2xl p-6 mb-6">
+            <div class="glass rounded-2xl p-4 sm:p-6 mb-6">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-semibold flex items-center gap-2"><i
                     class="ph-bold ph-medal text-yellow-400"></i>
@@ -2775,31 +2775,31 @@
                 <!-- Leaderboard List -->
                 <div class="space-y-2">
                   <div v-for="(user, index) in achievementLeaderboard" :key="user._id"
-                    class="glass-strong p-4 rounded-xl">
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-3 flex-1">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
+                    class="glass-strong p-3 sm:p-4 rounded-xl overflow-hidden">
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-full flex items-center justify-center text-sm sm:text-lg font-bold"
                           :style="{ backgroundColor: (levelTiers[Math.max(0,(user.achievementLevel||1)-1)]||levelTiers[0]).color + '40', color: (levelTiers[Math.max(0,(user.achievementLevel||1)-1)]||levelTiers[0]).color }">
                           #{{ index + 1 }}
                         </div>
-                        <div class="flex-1">
-                          <div class="font-semibold">{{ user.firstName }} {{ user.lastName }}</div>
-                          <div class="text-xs opacity-70">@{{ user.username }}</div>
+                        <div class="min-w-0 flex-1">
+                          <div class="font-semibold text-sm sm:text-base truncate">{{ user.firstName }} {{ user.lastName }}</div>
+                          <div class="text-xs opacity-70 truncate">@{{ user.username }}</div>
                         </div>
                       </div>
-                      <div class="text-right flex items-center gap-3">
+                      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                         <div class="text-center">
-                          <div class="text-2xl font-bold"
+                          <div class="text-lg sm:text-2xl font-bold"
                             :style="{ color: (levelTiers[Math.max(0,(user.achievementLevel||1)-1)]||levelTiers[0]).color }">
                             {{ user.achievementLevel }}/5
                           </div>
-                          <div class="text-xs opacity-60">{{ user.achievementLevelName || "Bronze" }}</div>
+                          <div class="text-[10px] sm:text-xs opacity-60">{{ user.achievementLevelName || "Bronze" }}</div>
                         </div>
-                        <div class="text-center">
+                        <div class="text-center hidden sm:block">
                           <div class="text-lg font-semibold text-purple-400">{{ user.achievementPoints }}</div>
                           <div class="text-xs opacity-60">points</div>
                         </div>
-                        <div class="text-center">
+                        <div class="text-center hidden sm:block">
                           <div class="text-lg font-semibold text-green-400">{{ user.totalAchievementsUnlocked }}</div>
                           <div class="text-xs opacity-60">unlocked</div>
                         </div>
@@ -2810,9 +2810,9 @@
               </div>
             </div>
 
-            <div class="glass rounded-2xl p-6 mb-6">
-              <h3 class="text-xl font-semibold mb-4">Profile</h3>
-              <div class="flex items-center gap-4 mb-6">
+            <div class="glass rounded-2xl p-4 sm:p-6 mb-6 overflow-hidden">
+              <h3 class="text-xl font-semibold mb-3 sm:mb-4">Profile</h3>
+              <div class="flex items-center gap-3 sm:gap-4 mb-6">
                 <div class="relative shrink-0">
                   <div v-if="userProfileImage" class="w-20 h-20 rounded-full overflow-hidden"><img
                       :src="userProfileImage" alt="Profile" class="w-full h-full object-cover"
@@ -2826,19 +2826,19 @@
                     <i class="ph-bold ph-camera text-sm"></i> </button> <input ref="profileImageInput" type="file"
                     accept="image" class="hidden" @change="handleProfileImageUpload">
                 </div>
-                <div>
-                  <div class="text-2xl font-bold">
+                <div class="min-w-0 flex-1">
+                  <div class="text-xl sm:text-2xl font-bold truncate">
                     {{ userFullName }}
                   </div>
-                  <div class="opacity-70">
+                  <div class="opacity-70 text-sm sm:text-base truncate">
                     {{ userEmail }}
                   </div>
-                  <div class="text-sm text-purple-400">
+                  <div class="text-sm text-purple-400 truncate">
                     @{{ currentUser }}
                   </div>
                 </div>
               </div>
-              <div class="grid grid-cols-2 gap-4 text-center mb-6">
+              <div class="grid grid-cols-2 gap-3 sm:gap-4 text-center mb-6">
                 <div class="glass-strong p-4 rounded-xl">
                   <div class="text-2xl font-bold text-purple-400">
                     {{ subjects.length }}
@@ -2857,19 +2857,19 @@
                 </div>
               </div><button @click="showChangeCredentials = true"
                 class="w-full btn-primary px-6 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2">
-                <i class="ph-bold ph-user-gear text-xl"></i> Change Username &amp; Password </button>
-              <div class="grid md:grid-cols-2 gap-4 mt-6">
-                <div class="glass-strong p-4 rounded-xl">
+                <i class="ph-bold ph-user-gear text-xl"></i> <span class="hidden sm:inline">Change Username &amp; Password</span><span class="sm:hidden">Account Settings</span> </button>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-6">
+                <div class="glass-strong p-3 sm:p-4 rounded-xl">
                   <div class="text-sm opacity-70 mb-1">Current Streak</div>
-                  <div class="text-2xl font-bold text-purple-400">{{ streakCurrent }} days</div>
+                  <div class="text-xl sm:text-2xl font-bold text-purple-400">{{ streakCurrent }} days</div>
                   <div class="text-xs opacity-60">Longest: {{ streakLongest }} days</div>
                 </div>
-                <div class="glass-strong p-4 rounded-xl flex items-center justify-between">
+                <div class="glass-strong p-3 sm:p-4 rounded-xl flex items-center justify-between">
                   <div>
-                    <div class="text-sm opacity-70">Daily Email Summary</div>
+                    <div class="text-sm opacity-70">Daily Email</div>
                     <div class="text-xs opacity-60">Get daily progress updates</div>
                   </div>
-                  <label class="relative inline-flex items-center cursor-pointer">
+                  <label class="relative inline-flex items-center cursor-pointer shrink-0">
                     <input type="checkbox" class="sr-only" v-model="dailySummaryEnabled" @change="toggleDailySummary">
                     <div
                       class="w-11 h-6 bg-gray-600 rounded-full peer-focus:ring-2 peer-focus:ring-purple-500 transition-all"
@@ -2880,10 +2880,10 @@
                 </div>
                 <div class="glass-strong p-4 rounded-xl flex items-center justify-between">
                   <div>
-                    <div class="text-sm opacity-70">Weekly Email Summary</div>
+                    <div class="text-sm opacity-70">Weekly Email</div>
                     <div class="text-xs opacity-60">Get weekly progress updates</div>
                   </div>
-                  <label class="relative inline-flex items-center cursor-pointer">
+                  <label class="relative inline-flex items-center cursor-pointer shrink-0">
                     <input type="checkbox" class="sr-only" v-model="weeklySummaryEnabled" @change="toggleWeeklySummary">
                     <div
                       class="w-11 h-6 bg-gray-600 rounded-full peer-focus:ring-2 peer-focus:ring-purple-500 transition-all"
@@ -2894,10 +2894,10 @@
                 </div>
                 <div class="glass-strong p-4 rounded-xl flex items-center justify-between">
                   <div>
-                    <div class="text-sm opacity-70">Monthly Email Summary</div>
+                    <div class="text-sm opacity-70">Monthly Email</div>
                     <div class="text-xs opacity-60">Get monthly progress updates</div>
                   </div>
-                  <label class="relative inline-flex items-center cursor-pointer">
+                  <label class="relative inline-flex items-center cursor-pointer shrink-0">
                     <input type="checkbox" class="sr-only" v-model="monthlySummaryEnabled"
                       @change="toggleMonthlySummary">
                     <div
@@ -2917,7 +2917,7 @@
                 </div>
                 <div class="text-xs opacity-70 mb-2">Subscribe to your StudyFlow calendar</div>
                 <div class="flex gap-2">
-                  <input type="text" class="flex-1 px-3 py-2 rounded-lg glass-strong text-xs" :value="calendarUrl"
+                  <input type="text" class="flex-1 min-w-0 px-3 py-2 rounded-lg glass-strong text-xs" :value="calendarUrl"
                     readonly>
                   <button @click="copyText(calendarUrl)"
                     class="btn-secondary px-3 py-2 rounded-lg text-xs">Copy</button>
@@ -2933,7 +2933,7 @@
                 </div>
                 <div class="text-xs opacity-70 mb-2">Share your stats with a public link</div>
                 <div class="flex gap-2 mb-2" v-if="publicProfileEnabled">
-                  <input type="text" class="flex-1 px-3 py-2 rounded-lg glass-strong text-xs" :value="publicProfileUrl"
+                  <input type="text" class="flex-1 min-w-0 px-3 py-2 rounded-lg glass-strong text-xs" :value="publicProfileUrl"
                     readonly>
                   <button @click="copyText(publicProfileUrl)"
                     class="btn-secondary px-3 py-2 rounded-lg text-xs">Copy</button>
@@ -2946,7 +2946,7 @@
                 </div>
               </div>
             </div>
-            <div class="glass rounded-2xl p-6">
+            <div class="glass rounded-2xl p-4 sm:p-6">
               <h3 class="text-xl font-semibold mb-4 text-red-400">Danger Zone</h3>
               <p class="opacity-70 mb-4">Clear all your study data and start fresh.</p><button @click="clearAllData"
                 class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-xl font-semibold text-white"> Clear All Data
@@ -2959,7 +2959,7 @@
                 class="ph-bold ph-target text-purple-400"></i>
               Goals</h2>
 
-            <div class="glass rounded-2xl p-6 mb-6">
+            <div class="glass rounded-2xl p-4 sm:p-6 mb-6">
               <div class="grid md:grid-cols-2 gap-4 mb-4">
                 <input v-model="newGoal.title" type="text" class="w-full px-4 py-3 rounded-xl glass-strong"
                   placeholder="Goal title (e.g., Read 5 Books)">
@@ -3002,7 +3002,7 @@
             </div>
 
             <div v-else class="grid md:grid-cols-2 gap-4">
-              <div v-for="goal in goals" :key="goal._id" class="glass rounded-2xl p-6 border-l-4" :class="{
+              <div v-for="goal in goals" :key="goal._id" class="glass rounded-2xl p-4 sm:p-6 border-l-4" :class="{
              'border-green-400': goal.priority === 'low', 
              'border-yellow-400': goal.priority === 'medium', 
              'border-red-400': goal.priority === 'high' 
@@ -3263,7 +3263,7 @@
 
           <div v-if="currentView === 'calendar'" class="max-w-6xl mx-auto animate-fadeIn">
             <h2 class="text-3xl font-bold mb-6">Study Schedule</h2>
-            <div class="glass rounded-2xl p-6">
+            <div class="glass rounded-2xl p-4 sm:p-6">
               <div id="calendar" class="text-white"></div>
             </div>
           </div>
@@ -3273,7 +3273,7 @@
               <i class="ph-bold ph-brain text-purple-400"></i> AI Quiz Generator
             </h2>
 
-            <div class="glass rounded-2xl p-6 mb-8">
+            <div class="glass rounded-2xl p-4 sm:p-6 mb-8">
               <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">What do you want to learn?</label>
                 <div class="flex flex-col sm:flex-row gap-4">
@@ -3291,7 +3291,7 @@
             </div>
 
             <div v-if="quizQuestions.length > 0" class="space-y-6">
-              <div v-for="(q, index) in quizQuestions" :key="index" class="glass rounded-2xl p-6">
+              <div v-for="(q, index) in quizQuestions" :key="index" class="glass rounded-2xl p-4 sm:p-6">
                 <h3 class="text-lg font-bold mb-4">{{ index + 1 }}. {{ q.question }}</h3>
                 <div class="space-y-3">
                   <button v-for="(opt, optIndex) in q.options" :key="optIndex" @click="checkAnswer(index, optIndex)"
