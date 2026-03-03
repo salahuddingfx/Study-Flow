@@ -18,6 +18,9 @@ const Session = require('../models/Session');
 const Subject = require('../models/Subject');
 const Goal = require('../models/Goal');
 const Achievement = require('../models/Achievement');
+const Note = require('../models/Note');
+const Streak = require('../models/Streak');
+const Quiz = require('../models/Quiz');
 
 // =====================
 // User Profile Routes
@@ -397,6 +400,9 @@ router.delete('/data', protect, async (req, res) => {
         await Subject.deleteMany({ user: req.user.id });
         await Goal.deleteMany({ user: req.user.id });
         await Achievement.deleteMany({ user: req.user.id }); 
+        await Note.deleteMany({ user: req.user.id });
+        await Streak.deleteMany({ userId: req.user.id });
+        await Quiz.deleteMany({ user: req.user.id });
 
         res.json({ 
             success: true,

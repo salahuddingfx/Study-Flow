@@ -412,7 +412,15 @@ const legacyVueApp = createApp({
             aiReply: '',
             showAIChat: false, // Controls visibility of the floating AI chat
             aiLoading: false,
-            aiChatHistory: [], // New Chat History Array
+            aiChatHistory: JSON.parse(localStorage.getItem('sf_ai_chat') || '[]'), // Persisted chat history
+            aiSuggestions: [
+                { icon: '📝', label: 'Add a task for me', text: 'Add task: review my notes today' },
+                { icon: '🎯', label: 'Set a study goal', text: 'Set a goal to study 2 hours today' },
+                { icon: '🧠', label: 'What should I study?', text: 'Based on my subjects and goals, what should I study right now?' },
+                { icon: '⏰', label: 'Best study schedule', text: 'Create an optimal study schedule for today based on my tasks' },
+                { icon: '📚', label: 'Add a subject', text: 'Add subject: ' },
+                { icon: '🔥', label: 'Productivity tips', text: 'Give me 3 tips to double my study productivity today' },
+            ],
             isTouchDevice: false, // New touch detection
             prefersReducedMotion: false,
             effectsEnabled: true,
@@ -2989,8 +2997,22 @@ const legacyVueApp = createApp({
                     this.subjects = [];
                     this.sessions = [];
                     this.tasks = [];
+                    this.notes = [];
+                    this.goals = [];
+                    this.achievements = [];
+                    this.currentStreak = 0;
+                    this.streakCurrent = 0;
+                    this.quizStats = {
+                        totalQuizzes: 0,
+                        completedQuizzes: 0,
+                        averageScore: 0,
+                        highestScore: 0,
+                        quizzes: []
+                    };
+                    
                     this.showInlineMessage('All data cleared successfully');
                 } catch(e) {
+                    console.error(e);
                     this.showInlineMessage('Failed to clear data');
                 }
                 messageDiv.remove();
@@ -4946,6 +4968,12 @@ updateCharts() {
             } finally {
                 this.aiLoading = false;
                 
+                // Persist chat history (keep last 50 messages to avoid quota)
+                try {
+                    const toSave = this.aiChatHistory.filter(m => !m.isTyping).slice(-50);
+                    localStorage.setItem('sf_ai_chat', JSON.stringify(toSave));
+                } catch(e) { /* ignore storage errors */ }
+                
                 // Smooth scroll to bottom
                 this.$nextTick(() => {
                     setTimeout(() => {
@@ -4961,15 +4989,47 @@ updateCharts() {
             }
         },
 
+        clearAIChat() {
+            this.aiChatHistory = [];
+            localStorage.removeItem('sf_ai_chat');
+        },
+
+        async copyAIMessage(content) {
+            try {
+                await navigator.clipboard.writeText(content);
+                this.showInlineMessage('✅ Copied to clipboard!');
+            } catch (e) {
+                // fallback
+                const ta = document.createElement('textarea');
+                ta.value = content;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                this.showInlineMessage('✅ Copied!');
+            }
+        },
+
+        async sendQuickPrompt(text) {
+            if (this.aiLoading) return;
+            this.aiPrompt = text;
+            await this.askAI();
+        },
+
+        async getDailyFocus() {
+            if (this.aiLoading) return;
+            await this.sendQuickPrompt('Based on my pending tasks, goals, and study history, what ONE thing should I focus on today and why? Give me a clear, motivating action plan.');
+        },
+
         async generateStudyPlan() {
             if (this.aiLoading) return;
 
-            const focusArea = prompt('Focus area (optional):', '') || '';
-            const timeframe = prompt('Timeframe (e.g., 7 days):', '7 days') || '7 days';
-            const dailyHours = parseFloat(prompt('Daily hours (e.g., 2):', '2') || '2');
+            const focusArea = '';
+            const timeframe = '7 days';
+            const dailyHours = 2;
 
             this.aiLoading = true;
-            this.aiChatHistory.push({ role: 'assistant', content: 'Generating a study plan...', isTyping: true });
+            this.aiChatHistory.push({ role: 'assistant', content: 'Generating your personalized study plan...', isTyping: true });
 
             try {
                 const data = await this.apiRequest('/api/ai/study-plan', {
