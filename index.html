@@ -151,6 +151,7 @@
   <noscript>
     <link rel="stylesheet" href="Assets/style.css">
   </noscript>
+  <link rel="stylesheet" href="Assets/custom-ai-fix.css">
 
   <!-- Load Tailwind CSS -->
   <script>
@@ -2571,6 +2572,7 @@
                     <div class="text-xs opacity-70">{{ new Date(quiz.createdAt).toLocaleDateString() }}</div>
                   </div>
                 </div>
+              </div>
             </div>
 
             <!-- Today's Progress Card -->
@@ -3048,108 +3050,6 @@
             </div>
           </div>
 
-          <!-- AI Floating Button and Popup -->
-          <div v-if="isAuthenticated && !showLoader" class="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-40">
-            <!-- Floating Trigger Button -->
-            <button @click="showAIChat = !showAIChat"
-              class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/30 flex items-center justify-center hover:scale-110 transition-transform duration-300 group">
-              <i :class="showAIChat ? 'ph-bold ph-x' : 'ph-bold ph-robot'"
-                class="text-xl sm:text-3xl text-white group-hover:rotate-12 transition-transform"></i>
-              <!-- Notification Dot -->
-              <span
-                class="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full animate-pulse border-2 border-gray-900"
-                v-if="!showAIChat"></span>
-            </button>
-
-            <!-- AI Chat Popup Modal -->
-            <div v-if="showAIChat"
-              class="ai-chat-popup absolute bottom-16 sm:bottom-20 right-0 w-[calc(100vw-2rem)] sm:w-[400px] h-[500px] sm:h-[600px] glass-strong rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-slideUp border border-purple-500/30">
-              <!-- Header -->
-              <div
-                class="p-4 bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-b border-white/10 flex justify-between items-center backdrop-blur-md">
-                <div class="flex items-center gap-3">
-                  <div class="relative">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 p-0.5">
-                      <img src="https://api.dicebear.com/7.x/bottts/svg?seed=StudyFlow"
-                        class="w-full h-full rounded-full bg-black/20" alt="AI">
-                    </div>
-                    <span
-                      class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-gray-900 rounded-full"></span>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-white leading-tight">StudyFlow AI</h3>
-                    <p class="text-xs text-purple-200">Online • Helpful Assistant</p>
-                  </div>
-                </div>
-                <button @click="showAIChat = false" class="hover:bg-white/10 p-2 rounded-lg transition-colors">
-                  <i class="ph-bold ph-minus text-white"></i>
-                </button>
-              </div>
-
-              <!-- Messages Area -->
-              <div class="flex-1 overflow-y-auto p-4 space-y-4" id="ai-chat-container">
-                <!-- Welcome Message -->
-                <div class="flex gap-3">
-                  <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
-                    <i class="ph-bold ph-robot text-white text-sm"></i>
-                  </div>
-                  <div class="glass p-3 rounded-2xl rounded-tl-none max-w-[85%]">
-                    <p class="text-sm text-gray-200">Hello {{ userFullName }}! 👋 I'm your deeper study assistant. I can
-                      see
-                      your tasks and goals. How can I help you today?</p>
-                  </div>
-                </div>
-
-                <!-- Chat Loop -->
-                <div v-for="(msg, index) in aiChatHistory" :key="index" class="flex gap-3"
-                  :class="msg.role === 'user' ? 'flex-row-reverse' : ''">
-                  <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                    :class="msg.role === 'user' ? 'bg-blue-600' : 'bg-purple-600'">
-                    <i :class="msg.role === 'user' ? 'ph-bold ph-user' : 'ph-bold ph-robot'"
-                      class="text-white text-sm"></i>
-                  </div>
-                  <div class="p-3 rounded-2xl max-w-[85%] text-sm"
-                    :class="msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'glass text-gray-200 rounded-tl-none'">
-                    <p class="whitespace-pre-wrap">{{ msg.content }}</p>
-                  </div>
-                </div>
-
-                <!-- Loading Typing Indicator -->
-                <div v-if="aiLoading" class="flex gap-3">
-                  <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
-                    <i class="ph-bold ph-robot text-white text-sm"></i>
-                  </div>
-                  <div class="glass p-3 rounded-2xl rounded-tl-none">
-                    <div class="flex gap-1.5 p-1">
-                      <div class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"></div>
-                      <div class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce delay-75"></div>
-                      <div class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce delay-150"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Input Area -->
-              <div class="p-4 border-t border-white/10 bg-black/20 backdrop-blur-md">
-                <div class="flex items-center gap-2 mb-3">
-                  <button @click="generateStudyPlan" class="btn-secondary px-3 py-2 rounded-lg text-xs">Study
-                    Plan</button>
-                  <button @click="getWeeklySummary" class="btn-secondary px-3 py-2 rounded-lg text-xs">Weekly
-                    Summary</button>
-                </div>
-                <div class="relative">
-                  <input v-model="aiPrompt" @keyup.enter="askAI" type="text"
-                    class="w-full pl-4 pr-12 py-3 rounded-xl bg-gray-800/50 border border-white/10 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-sm transition-all"
-                    placeholder="Ask something...">
-                  <button @click="askAI" :disabled="aiLoading || !aiPrompt.trim()"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-purple-600 hover:bg-purple-500 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="ph-bold ph-paper-plane-right text-white"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div v-if="currentView === 'blog'" class="max-w-6xl mx-auto animate-fadeIn">
             <div class="text-center mb-10">
               <h2 class="text-4xl font-bold mb-2 flex items-center justify-center gap-3"><i
@@ -3497,11 +3397,98 @@
               </div>
             </div>
           </footer>
+        </div>
+
+        <!-- AI Floating Button - outside scroll container so position:fixed works on iOS -->
+        <div v-if="isAuthenticated && !showLoader" class="fixed bottom-4 right-4 z-[9999] isolate floating-ai-btn">
+          <!-- Floating Trigger Button -->
+          <button @click="showAIChat = !showAIChat"
+            class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/30 flex items-center justify-center hover:scale-110 transition-transform duration-300 group">
+            <i :class="showAIChat ? 'ph-bold ph-x' : 'ph-bold ph-robot'"
+              class="text-xl sm:text-3xl text-white group-hover:rotate-12 transition-transform"></i>
+            <span class="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full animate-pulse border-2 border-gray-900" v-if="!showAIChat"></span>
+          </button>
+
+          <!-- AI Chat Popup Modal -->
+          <div v-if="showAIChat"
+            class="ai-chat-popup absolute bottom-16 sm:bottom-20 right-0 w-[calc(100vw-2rem)] sm:w-[400px] h-[500px] sm:h-[600px] glass-strong rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-slideUp border border-purple-500/30">
+            <!-- Header -->
+            <div class="p-4 bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-b border-white/10 flex justify-between items-center backdrop-blur-md">
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 p-0.5">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=StudyFlow" class="w-full h-full rounded-full bg-black/20" alt="AI">
+                  </div>
+                  <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-gray-900 rounded-full"></span>
+                </div>
+                <div>
+                  <h3 class="font-bold text-white leading-tight">StudyFlow AI</h3>
+                  <p class="text-xs text-purple-200">Online • Helpful Assistant</p>
+                </div>
+              </div>
+              <button @click="showAIChat = false" class="hover:bg-white/10 p-2 rounded-lg transition-colors">
+                <i class="ph-bold ph-minus text-white"></i>
+              </button>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-4" id="ai-chat-container">
+              <div class="flex gap-3">
+                <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                  <i class="ph-bold ph-robot text-white text-sm"></i>
+                </div>
+                <div class="glass p-3 rounded-2xl rounded-tl-none max-w-[85%]">
+                  <p class="text-sm text-gray-200">Hello {{ userFullName }}! 👋 I'm your study assistant. I can see your tasks and goals. How can I help?</p>
+                </div>
+              </div>
+
+              <div v-for="(msg, index) in aiChatHistory" :key="index" class="flex gap-3" :class="msg.role === 'user' ? 'flex-row-reverse' : ''">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" :class="msg.role === 'user' ? 'bg-blue-600' : 'bg-purple-600'">
+                  <i :class="msg.role === 'user' ? 'ph-bold ph-user' : 'ph-bold ph-robot'" class="text-white text-sm"></i>
+                </div>
+                <div class="p-3 rounded-2xl max-w-[85%] text-sm" :class="msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'glass text-gray-200 rounded-tl-none'">
+                  <p class="whitespace-pre-wrap">{{ msg.content }}</p>
+                </div>
+              </div>
+
+              <div v-if="aiLoading" class="flex gap-3">
+                <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                  <i class="ph-bold ph-robot text-white text-sm"></i>
+                </div>
+                <div class="glass p-3 rounded-2xl rounded-tl-none">
+                  <div class="flex gap-1.5 p-1">
+                    <div class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"></div>
+                    <div class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce delay-75"></div>
+                    <div class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce delay-150"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 border-t border-white/10 bg-black/20 backdrop-blur-md">
+              <div class="flex items-center gap-2 mb-3">
+                <button @click="generateStudyPlan" class="btn-secondary px-3 py-2 rounded-lg text-xs">Study Plan</button>
+                <button @click="getWeeklySummary" class="btn-secondary px-3 py-2 rounded-lg text-xs">Weekly Summary</button>
+              </div>
+              <div class="relative">
+                <input v-model="aiPrompt" @keyup.enter="askAI" type="text"
+                  class="w-full pl-4 pr-12 py-3 rounded-xl bg-gray-800/50 border border-white/10 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-sm transition-all"
+                  placeholder="Ask something...">
+                <button @click="askAI" :disabled="aiLoading || !aiPrompt.trim()"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-purple-600 hover:bg-purple-500 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  <i class="ph-bold ph-paper-plane-right text-white"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </main>
     </div>
   </div>
 
-  <!-- v2.5 Features -->
+          <!-- v2.5 Features -->
   <script src="Assets/notes.js"></script>
   <!-- Main Application Script -->
   <script src="Assets/script.js"></script>
