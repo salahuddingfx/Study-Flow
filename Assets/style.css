@@ -24,19 +24,25 @@ html, body {
 
 .chart-container {
     touch-action: pan-y !important;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
 }
 
 /* On mobile, make chart canvas not block scroll */
 @media (max-width: 768px) {
     .chart-container canvas {
-        pointer-events: none; /* Prevent canvas from blocking scroll on mobile */
+        pointer-events: none !important; /* Prevent canvas from blocking scroll on mobile */
+        touch-action: pan-y !important;
+    }
+    .chart-container {
+        overscroll-behavior: none !important;
+        -webkit-overflow-scrolling: auto !important; /* Kill legacy momentum scroll that swallows touch events */
+        overflow: hidden !important;
     }
 }
 
 @media (max-width: 768px) {
     .chart-container {
-        height: auto !important; /* Allow auto height on mobile */
+        height: 260px !important; /* Fixed height so Chart.js can render properly */
         min-height: 200px;
         position: relative;
     }
@@ -130,8 +136,8 @@ body.theme-light .text-gray-500 {
 /* --- Enhanced Glassmorphism Styles --- */
 .glass {
     background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(4px); /* Reduced from 16px — blur²  = GPU cost, 4px is 16× cheaper */
+    -webkit-backdrop-filter: blur(4px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
     border-radius: 20px;
@@ -140,8 +146,8 @@ body.theme-light .text-gray-500 {
 
 .glass-strong {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(6px); /* Reduced from 24px */
+    -webkit-backdrop-filter: blur(6px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
     border-radius: 16px;
@@ -738,20 +744,34 @@ html, body {
 
 /* Mobile scroll fix - prevent elements from blocking scroll */
 @media (max-width: 768px) {
-    /* Ensure main content area scrolls smoothly */
+    /* ── CORE FIX: disable backdrop-filter entirely on mobile ──────────────────
+       backdrop-filter creates ONE GPU compositing layer per element.
+       40+ achievement cards × blur = dozens of layers → scroll jank on all browsers.
+       Replace with solid semi-transparent backgrounds — visually identical. */
+    .glass,
+    .glass-strong,
+    .card-hover,
+    [class*="glass"] {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    .glass {
+        background: rgba(22, 20, 48, 0.88) !important;
+    }
+    .glass-strong {
+        background: rgba(28, 24, 58, 0.94) !important;
+    }
+
+    /* ── Ensure main content area scrolls smoothly ── */
     .flex-1.overflow-y-auto {
         -webkit-overflow-scrolling: touch;
         scroll-behavior: smooth;
-        overscroll-behavior-y: auto;
+        overscroll-behavior-y: contain;
+        will-change: scroll-position;
+        transform: translateZ(0); /* Promote to its own compositor layer */
     }
 
-    /* Make all card interiors not block touch scrolling */
-    .glass canvas,
-    .glass-strong canvas {
-        touch-action: pan-y !important;
-    }
-
-    /* ALL glass cards must allow vertical scroll pass-through */
+    /* ── Cards must not intercept touch scroll ── */
     .glass,
     .glass-strong,
     .card-hover,
@@ -760,20 +780,21 @@ html, body {
     .glass.rounded-2xl,
     .glass.rounded-xl {
         touch-action: pan-y !important;
-        -webkit-transform: none !important;
-        transform: none !important;
         will-change: auto !important;
         contain: none !important;
     }
 
-    /* Achievement cards grid specifically */
+    .glass canvas,
+    .glass-strong canvas {
+        touch-action: pan-y !important;
+    }
+
     .grid .glass-strong,
     .grid .glass {
         touch-action: pan-y !important;
         pointer-events: auto;
     }
 
-    /* Gradient/decorated divs inside sections */
     .bg-gradient-to-r,
     .bg-gradient-to-br {
         touch-action: pan-y !important;
@@ -1519,7 +1540,7 @@ img {
 
 /* Optimize chart canvas */
 canvas {
-    will-change: contents;
-    contain: layout style paint;
+    will-change: auto; /* Don't pre-promote every canvas — only promoted when actually animating */
+    contain: layout style;
 }
 
