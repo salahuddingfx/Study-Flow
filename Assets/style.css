@@ -22,6 +22,18 @@ html, body {
     height: auto !important; /* Ensure canvas scales */
 }
 
+.chart-container {
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* On mobile, make chart canvas not block scroll */
+@media (max-width: 768px) {
+    .chart-container canvas {
+        pointer-events: none; /* Prevent canvas from blocking scroll on mobile */
+    }
+}
+
 @media (max-width: 768px) {
     .chart-container {
         height: auto !important; /* Allow auto height on mobile */
@@ -459,7 +471,7 @@ input:focus, textarea:focus, select:focus {
         0 8px 25px rgba(102, 126, 234, 0.5),
         inset 0 0 15px rgba(255, 255, 255, 0.1);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 100000 !important;
+    z-index: 39 !important; /* Below AI chat (z-40) but above content */
     opacity: 0;
     visibility: hidden;
     transform: translateY(20px) scale(0.8);
@@ -494,14 +506,18 @@ input:focus, textarea:focus, select:focus {
 @media (max-width: 768px) {
     .scroll-to-top {
         bottom: 90px !important;
-        left: 20px !important;
+        left: 16px !important;
         right: auto !important;
-        width: 48px;
-        height: 48px;
+        width: 40px;
+        height: 40px;
     }
     
     .scroll-to-top.visible {
         display: flex !important;
+    }
+
+    .scroll-to-top i {
+        font-size: 1rem !important;
     }
 }
 
@@ -717,6 +733,28 @@ html, body {
     .glass-strong input[readonly] {
         font-size: 10px !important;
         min-width: 0 !important;
+    }
+}
+
+/* Mobile scroll fix - prevent elements from blocking scroll */
+@media (max-width: 768px) {
+    /* Ensure main content area scrolls smoothly */
+    .flex-1.overflow-y-auto {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        overscroll-behavior-y: auto;
+    }
+
+    /* Make all card interiors not block touch scrolling */
+    .glass canvas,
+    .glass-strong canvas {
+        touch-action: pan-y !important;
+    }
+
+    /* Subject progress, leaderboard cards - ensure scrollability */
+    .glass-strong.rounded-2xl,
+    .glass-strong.rounded-xl {
+        touch-action: pan-y !important;
     }
 }
 
@@ -956,15 +994,15 @@ button:active {
 
 @media (max-width: 768px) {
     .scroll-to-top-left {
-        left: 24px !important;
+        left: 16px !important;
         right: auto !important;
-        bottom: 90px !important; /* Adjusted to avoid bottom nav if present, or just be accessible */
+        bottom: 16px !important;
     }
     
     .scroll-to-top-right {
-        right: 20px !important;
+        right: 16px !important;
         left: auto !important;
-        bottom: 20px !important;
+        bottom: 16px !important;
     }
 }
 
