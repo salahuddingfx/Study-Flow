@@ -296,6 +296,9 @@ const legacyVueApp = createApp({
             chartJsReady: false,
             analyticsHasSessions: false,
             analyticsHasSubjects: false,
+            
+            // Note debounce
+            noteUpdateTimeout: null,
 
             // Online/Offline status
             isOnline: navigator.onLine,
@@ -426,6 +429,13 @@ const legacyVueApp = createApp({
                 await this.notesManager.loadNotes();
             }
             this.notes = this.notesManager.notes;
+            
+            // Re-sync view if we are on a note permalink
+            if (window.location.hash.includes('notes/')) {
+                this.$nextTick(() => {
+                    this.syncViewFromHash();
+                });
+            }
         }
 
         // PWA Install Prompt Listener
@@ -1116,13 +1126,18 @@ const legacyVueApp = createApp({
 
         async updateNote() {
             if (this.currentNote && this.notesManager) {
-                await this.notesManager.updateNote(this.currentNote.id || this.currentNote._id, {
-                    title: this.currentNote.title,
-                    content: this.currentNote.content,
-                    subject: this.currentNote.subject
-                });
-                // No need to reload notes as manager mutates the array reference inside component
-                this.notes = [...this.notesManager.notes];
+                // Debounce the update to prevent server overload
+                if (this.noteUpdateTimeout) clearTimeout(this.noteUpdateTimeout);
+
+                this.noteUpdateTimeout = setTimeout(async () => {
+                    await this.notesManager.updateNote(this.currentNote.id || this.currentNote._id, {
+                        title: this.currentNote.title,
+                        content: this.currentNote.content,
+                        subject: this.currentNote.subject
+                    });
+                    // Only update list references, don't overwrite currentNote to avoid cursor jumping
+                    this.notes = [...this.notesManager.notes];
+                }, 1000); 
             }
         },
 
@@ -1143,16 +1158,18 @@ const legacyVueApp = createApp({
                 }
             }
         },
-        
-        selectNote(note) {
+
+        selectNote(note, updateHash = true) {
             this.currentNote = { ...note }; // Clone to avoid direct mutation
             this.showNoteEditor = true;
+            if (updateHash) this.syncHashFromView();
         },
 
         resetNoteEditor() {
             this.currentNote = null;
             this.showNoteEditor = false;
             this.isZenMode = false;
+            this.syncHashFromView();
         },
         
         async installApp() {
@@ -1169,22 +1186,49 @@ const legacyVueApp = createApp({
             }
         },
         getAllowedViews() {
-            return ['home', 'timer', 'tasks', 'calendar', 'quiz', 'goals', 'analytics', 'blog'];
+            return ['home', 'timer', 'tasks', 'calendar', 'quiz', 'goals', 'analytics', 'blog', 'notes'];
         },
 
         syncViewFromHash() {
-            const hashView = (window.location.hash || '').replace('#', '').trim();
+            let hashView = (window.location.hash || '').replace('#', '').trim();
             if (!hashView) return;
-            if (!this.getAllowedViews().includes(hashView)) return;
-            if (this.currentView !== hashView) {
-                this.currentView = hashView;
+            
+            // Handle params like notes/123
+            const parts = hashView.split('/');
+            const mainView = parts[0];
+            const param = parts[1];
+
+            if (!this.getAllowedViews().includes(mainView)) return;
+            
+            if (this.currentView !== mainView) {
+                this.currentView = mainView;
+            }
+
+            // Specific logic for notes permalinks
+            if (mainView === 'notes') {
+                if (param) {
+                    const found = this.notes.find(n => (n.id === param || n._id === param));
+                    if (found) {
+                        this.selectNote(found, false); // false = don't update hash again
+                    }
+                } else {
+                    this.showNoteEditor = false;
+                    this.currentNote = null;
+                }
             }
         },
 
         syncHashFromView() {
             const view = this.currentView || 'home';
             if (!this.getAllowedViews().includes(view)) return;
-            const nextHash = `#${view}`;
+            
+            let nextHash = `#${view}`;
+            
+            // Append ID for notes
+            if (view === 'notes' && this.currentNote && (this.currentNote.id || this.currentNote._id)) {
+                nextHash = `#notes/${this.currentNote.id || this.currentNote._id}`;
+            }
+
             if (window.location.hash !== nextHash) {
                 history.replaceState(null, '', `${window.location.pathname}${window.location.search}${nextHash}`);
             }

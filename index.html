@@ -2,6 +2,22 @@
 <html lang="en">
 
 <head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-58B2CXSK');</script>
+  <!-- End Google Tag Manager -->
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-54MC4JMJVQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-54MC4JMJVQ');
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
   <title>StudyFlow - Focus &amp; Productivity Timer | Pomodoro Study App</title>
@@ -14,7 +30,7 @@
   <meta name="robots" content="index, follow">
   <meta name="language" content="English">
   <meta name="revisit-after" content="7 days">
-  <meta name="google-site-verification" content="m1vFRt3NnSSZcsT-BZIhy3o9RC5lPgoaLCXbEJWjbQU" />
+  <meta name="google-site-verification" content="WJxBg6PfsLLZco7402kiWpUazOhNS1XIvAxQE8PMVxU" />
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://studyflow.salahuddin.codes">
   <meta property="og:title" content="StudyFlow - Focus &amp; Productivity Timer">
@@ -211,6 +227,10 @@
 </head>
 
 <body class="theme-dark">
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-58B2CXSK"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
   <div id="app" v-cloak>
     <div :class="{ 'hidden': isTouchDevice }" class="custom-cursor" ref="cursor"></div>
     <div :class="{ 'hidden': isTouchDevice }" class="custom-cursor-dot" ref="cursorDot"></div>
@@ -2589,10 +2609,9 @@
                 <span>Subject Distribution</span>
               </h3>
                 <div class="chart-container relative h-64 sm:h-80 w-full" ref="subjectChartContainer">
-                  <canvas ref="subjectChart"></canvas>
+                  <canvas ref="subjectChart" style="touch-action: pan-y !important;"></canvas>
                 </div>
               </div>
-            </div>
             <div class="glass rounded-2xl p-4 sm:p-6 mb-6 border border-purple-500/10 hover:border-purple-500/30 transition-all">
               <h3 class="text-xl font-semibold mb-6 flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600/30 to-pink-600/30 flex items-center justify-center">
@@ -2768,7 +2787,7 @@
                 <!-- Leaderboard Chart -->
                 <div class="mb-6">
                   <div class="chart-container relative h-80 w-full">
-                    <canvas ref="leaderboardChart"></canvas>
+                    <canvas ref="leaderboardChart" style="touch-action: pan-y !important;"></canvas>
                   </div>
                 </div>
 
