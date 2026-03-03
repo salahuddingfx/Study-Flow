@@ -1724,7 +1724,7 @@
 
 
     <div v-if="!showLoader && isAuthenticated" class="h-screen flex overflow-hidden">
-      <aside class="hidden lg:flex flex-col w-64 glass-strong border-r border-gray-700 p-6 sidebar transition-all">
+      <aside class="hidden lg:flex flex-col min-h-0 w-64 glass-strong border-r border-gray-700 p-6 sidebar transition-all">
         <div class="mb-8"><button @click="reloadApp"
             class="flex items-center gap-3 mb-2 hover:opacity-80 transition-opacity"> <i
               class="ph-bold ph-brain text-3xl text-purple-400"></i>
@@ -1736,7 +1736,7 @@
             <span class="text-xs opacity-60">{{ isOnline ? 'Online' : 'Offline' }}</span>
           </div>
         </div>
-        <nav class="flex-1 space-y-2"><button @click="currentView = 'home'"
+        <nav class="flex-1 min-h-0 space-y-2 overflow-y-auto pr-1"><button @click="currentView = 'home'"
             :class="currentView === 'home' ? 'bg-purple-600 text-white' : 'hover:bg-white/10'"
             class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"> <i
               class="ph-bold ph-house text-xl"></i> {{ t('nav_home') }} </button> <button @click="currentView = 'timer'"
