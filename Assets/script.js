@@ -2994,6 +2994,7 @@ const legacyVueApp = createApp({
                         method: 'DELETE'
                      });
                      
+                    // Reset all local data
                     this.subjects = [];
                     this.sessions = [];
                     this.tasks = [];
@@ -3009,6 +3010,21 @@ const legacyVueApp = createApp({
                         highestScore: 0,
                         quizzes: []
                     };
+
+                    // ✅ Reset leaderboards immediately so stale data disappears
+                    this.leaderboardResults = [];
+                    this.achievementLeaderboard = [];
+
+                    // ✅ Re-fetch leaderboards from server so realtime reflects the clear
+                    await Promise.all([
+                        this.loadLeaderboard(),
+                        this.loadAchievementLeaderboard()
+                    ]);
+
+                    // ✅ Trigger socket leaderboard refresh for all connected users
+                    if (this.socket) {
+                        this.socket.emit('request-leaderboard');
+                    }
                     
                     this.showInlineMessage('All data cleared successfully');
                 } catch(e) {

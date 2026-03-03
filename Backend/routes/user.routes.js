@@ -395,14 +395,28 @@ router.put('/data', protect, async (req, res) => {
 // @access  Private
 router.delete('/data', protect, async (req, res) => {
     try {
-        await Task.deleteMany({ user: req.user.id });
-        await Session.deleteMany({ user: req.user.id });
-        await Subject.deleteMany({ user: req.user.id });
-        await Goal.deleteMany({ user: req.user.id });
-        await Achievement.deleteMany({ user: req.user.id }); 
-        await Note.deleteMany({ user: req.user.id });
-        await Streak.deleteMany({ userId: req.user.id });
-        await Quiz.deleteMany({ user: req.user.id });
+        await Promise.all([
+            Task.deleteMany({ user: req.user.id }),
+            Session.deleteMany({ user: req.user.id }),
+            Subject.deleteMany({ user: req.user.id }),
+            Goal.deleteMany({ user: req.user.id }),
+            Achievement.deleteMany({ user: req.user.id }),
+            Note.deleteMany({ user: req.user.id }),
+            Streak.deleteMany({ userId: req.user.id }),
+            Quiz.deleteMany({ user: req.user.id }),
+        ]);
+
+        // ✅ Reset achievement/leaderboard fields on the User document itself
+        await User.findByIdAndUpdate(req.user.id, {
+            $set: {
+                achievementPoints: 0,
+                achievementLevel: 1,
+                achievementLevelName: 'Bronze',
+                totalAchievementsUnlocked: 0,
+                streakCurrent: 0,
+                streakLongest: 0
+            }
+        });
 
         res.json({ 
             success: true,
