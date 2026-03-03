@@ -4917,21 +4917,48 @@ updateCharts() {
                         timestamp: new Date().toISOString()
                     });
                     
-                    // Check if the AI performed an action (Task/Subject/Goal add)
+                    // Check if the AI performed an action (Task/Subject/Goal etc.)
                     if (data.actionPerformed) {
+                         const actionKey = data.actionPerformed;
+
+                         // Handle frontend-only actions
+                         if (actionKey.startsWith('navigate_to:')) {
+                             const page = actionKey.replace('navigate_to:', '').trim();
+                             this.currentView = page;
+                             this.showInlineMessage(`📍 Navigated to ${page}`);
+                             return;
+                         }
+                         if (actionKey.startsWith('start_timer:')) {
+                             const mins = parseInt(actionKey.replace('start_timer:', '')) || 25;
+                             this.startPomodoroFromAI(mins);
+                             this.showInlineMessage(`⏱️ Timer started: ${mins} minutes`);
+                             return;
+                         }
+                         
                          // Refresh data immediately to show changes in UI
                          await this.loadUserData();
                          
                          // Show success notification with action details
-                         const actionMessages = {
-                             'Task created': '✅ Task added successfully!',
-                             'Subject added': '📚 Subject added successfully!',
-                             'Goal set': '🎯 Goal created successfully!',
-                             'Task updated': '✅ Task updated!',
-                             'Subject updated': '📚 Subject updated!'
+                         const actionIcons = {
+                             'Task created': '✅',
+                             'Subject added': '📚',
+                             'Goal set': '🎯',
+                             'Note saved': '📝',
                          };
                          
-                         const message = actionMessages[data.actionPerformed] || data.actionPerformed;
+                         let message = actionKey;
+                         if (actionKey.startsWith('Task completed:')) message = `✅ ${actionKey}`;
+                         else if (actionKey.startsWith('Task deleted:')) message = `🗑️ ${actionKey}`;
+                         else if (actionKey.startsWith('Subject deleted:')) message = `🗑️ ${actionKey}`;
+                         else if (actionKey.startsWith('Goal updated:')) message = `🎯 ${actionKey}`;
+                         else if (actionKey.startsWith('Session logged:')) message = `⏱️ ${actionKey}`;
+                         else if (actionKey === 'Task created') message = '✅ Task added!';
+                         else if (actionKey === 'Subject added') message = '📚 Subject added!';
+                         else if (actionKey === 'Goal set') message = '🎯 Goal created!';
+                         else if (actionKey === 'Note saved') message = '📝 Note saved!';
+                         else if (actionKey === 'Task not found') message = '⚠️ Task not found — try a different name';
+                         else if (actionKey === 'Goal not found') message = '⚠️ Goal not found';
+                         
                          this.showInlineMessage(message);
                     }
 

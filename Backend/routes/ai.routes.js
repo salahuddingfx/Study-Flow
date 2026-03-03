@@ -7,6 +7,7 @@ const Task = require('../models/Task');
 const Session = require('../models/Session');
 const Goal = require('../models/Goal');
 const Quiz = require('../models/Quiz');
+const Note = require('../models/Note');
 
 // যদি API Key না থাকে, তবে ডামি রেসপন্স দিবে
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
@@ -86,11 +87,13 @@ router.post('/ask', protect, async (req, res) => {
             });
         }
         // Fetch user data for context
-        const [subjects, tasks, sessions, goals] = await Promise.all([
+        const [subjects, tasks, sessions, goals, notes, completedTasks] = await Promise.all([
             Subject.find({ user: userId }),
-            Task.find({ user: userId, completed: false }),
-            Session.find({ user: userId }).sort({ createdAt: -1 }).limit(5),
-            Goal.find({ user: userId, current: { $lt: 100 } }) // Incomplete goals
+            Task.find({ user: userId, completed: false }).sort({ createdAt: -1 }).limit(20),
+            Session.find({ user: userId }).sort({ createdAt: -1 }).limit(10),
+            Goal.find({ user: userId }).sort({ createdAt: -1 }).limit(10),
+            Note.find({ user: userId }).sort({ createdAt: -1 }).limit(5),
+            Task.find({ user: userId, completed: true }).sort({ updatedAt: -1 }).limit(5)
         ]);
 
         // Construct context string
@@ -98,10 +101,12 @@ router.post('/ask', protect, async (req, res) => {
             Current Date and Time: ${today}
             User Profile:
             - Name: ${userName}
-            - Current Subjects: ${subjects.map(s => s.name).join(', ') || 'None'}
-            - Pending Tasks: ${tasks.map(t => `${t.title} (Due: ${t.deadline ? new Date(t.deadline).toDateString() : 'No date'})`).join(', ') || 'None'}
+            - Current Subjects (with IDs): ${subjects.map(s => `[ID:${s._id}] ${s.name}`).join(', ') || 'None'}
+            - Pending Tasks (with IDs): ${tasks.map(t => `[ID:${t._id}] ${t.title} (Priority: ${t.priority}, Due: ${t.deadline ? new Date(t.deadline).toDateString() : 'No date'})`).join(', ') || 'None'}
+            - Recently Completed: ${completedTasks.map(t => t.title).join(', ') || 'None'}
             - Recent Study Sessions: ${sessions.map(s => `${s.subject} for ${s.duration} mins on ${new Date(s.createdAt).toDateString()}`).join(', ') || 'None'}
-            - Active Goals: ${goals.map(g => `${g.title} (Target: ${g.target} ${g.unit})`).join(', ') || 'None'}
+            - Goals (with IDs): ${goals.map(g => `[ID:${g._id}] ${g.title} — ${g.current || 0}/${g.target} ${g.unit} (${g.type || 'daily'})`).join(', ') || 'None'}
+            - Recent Notes: ${notes.map(n => `"${(n.content || n.title || '').substring(0, 60)}"`).join(', ') || 'None'}
         `;
 
         // Prepare developer contact info for the prompt
@@ -137,29 +142,63 @@ router.post('/ask', protect, async (req, res) => {
             6. 🤖 SMART AUTO-ACTION DETECTION (MANDATORY):
                
                TRIGGER KEYWORDS (English + Bengali):
-               • Task: "add task", "create task", "new task", "make task", "task add koro", "task banaao"
-               • Subject: "add subject", "new subject", "subject add", "subject banaao", "subject add koro"
-               • Goal: "set goal", "create goal", "new goal", "goal set koro", "goal banaao"
+               • Task create: "add task", "create task", "new task", "task add koro", "task banaao"
+               • Task complete: "complete", "done", "finish", "mark done", "shesh koro", "done koro", "complete koro"
+               • Task delete: "delete task", "remove task", "task delete koro"
+               • Subject add: "add subject", "new subject", "subject add koro", "subject banaao"
+               • Subject delete: "delete subject", "remove subject", "subject delete koro"
+               • Goal create: "set goal", "create goal", "new goal", "goal set koro", "goal banaao"
+               • Goal update: "goal update", "add progress", "I completed", "update goal progress"
+               • Note: "add note", "save note", "note rekho", "note likho", "note add koro"
+               • Session: "I studied", "log session", "session add", "ami porechilam", "porechilam"
+               • Navigate: "go to", "show me", "open", "take me to" + [page name]
+               • Timer: "start timer", "start pomodoro", "timer shuru", "pomodoro start"
                
                ACTION FORMAT: |||{"action": "TYPE", "data": {...}}|||
                
                Examples:
                ✅ "Add CSE Basic as a subject" 
-                  → "${timeGreeting}! I'll add CSE Basic for you. |||{"action": "add_subject", "data": {"name": "CSE Basic"}}|||"
+                  → "I'll add CSE Basic! |||{"action": "add_subject", "data": {"name": "CSE Basic"}}|||"
                
                ✅ "Create task: study math tomorrow"
-                  → "Perfect! Task created. |||{"action": "create_task", "data": {"title": "Study math", "deadline": "YYYY-MM-DD", "priority": "medium"}}|||"
+                  → "Task created! |||{"action": "create_task", "data": {"title": "Study math", "deadline": "YYYY-MM-DD", "priority": "medium"}}|||"
+               
+               ✅ "Mark study math as done"
+                  → "Great job! |||{"action": "complete_task", "data": {"taskTitle": "study math"}}|||"
+               
+               ✅ "Delete the physics homework task"
+                  → "Deleted! |||{"action": "delete_task", "data": {"taskTitle": "physics homework"}}|||"
                
                ✅ "Set goal to complete 10 hours this week"
-                  → "Great goal! |||{"action": "set_goal", "data": {"title": "Study hours", "target": 10, "unit": "hours", "type": "weekly"}}|||"
+                  → "Goal set! |||{"action": "set_goal", "data": {"title": "Study hours", "target": 10, "unit": "hours", "type": "weekly"}}|||"
+               
+               ✅ "I studied math for 45 minutes"
+                  → "Logged! |||{"action": "log_session", "data": {"subject": "math", "duration": 45}}|||"
+               
+               ✅ "Save a note: revise chapter 3 before Friday"
+                  → "Note saved! |||{"action": "add_note", "data": {"content": "revise chapter 3 before Friday"}}|||"
+               
+               ✅ "Go to my goals page"
+                  → "Opening goals! |||{"action": "navigate_to", "data": {"page": "goals"}}|||"
+               
+               ✅ "Start a 25 minute pomodoro"
+                  → "Timer starting! |||{"action": "start_timer", "data": {"minutes": 25}}|||"
                
                ✅ "task add koro - math homework"
                   → "Thik ache! |||{"action": "create_task", "data": {"title": "Math homework", "priority": "medium"}}|||"
                
                SUPPORTED ACTIONS:
                • create_task: {title: string, deadline?: "YYYY-MM-DD", priority?: "low"|"medium"|"high"}
-               • add_subject: {name: string, category?: string, color?: string}
+               • complete_task: {taskId?: string, taskTitle?: string}  ← use taskTitle if exact ID unknown
+               • delete_task: {taskId?: string, taskTitle?: string}
+               • add_subject: {name: string}
+               • delete_subject: {subjectId?: string, subjectName?: string}
                • set_goal: {title: string, target: number, unit: string, type: "daily"|"weekly"|"monthly"}
+               • update_goal: {goalId: string, increment: number}
+               • add_note: {content: string, subject?: string}
+               • log_session: {subject: string, duration: number}
+               • navigate_to: {page: "dashboard"|"tasks"|"goals"|"notes"|"analytics"|"blog"|"calendar"|"quiz"|"sessions"}
+               • start_timer: {minutes?: number}
                
                 7. ATTRIBUTION & CONTACT RULES (CRITICAL):
                     - StudyFlow was developed by ${PUBLIC_DEV_NAME}. NEVER claim Google or any other company as the developer.
@@ -260,6 +299,81 @@ router.post('/ask', protect, async (req, res) => {
                     });
                     actionResult = `Goal set`;
                     console.log("✅ Goal created:", newGoal);
+                }
+                else if (actionJson.action === 'complete_task') {
+                    let task;
+                    if (actionJson.data.taskId) {
+                        task = await Task.findOneAndUpdate(
+                            { _id: actionJson.data.taskId, user: userId },
+                            { completed: true, completedAt: new Date() },
+                            { new: true }
+                        );
+                    } else if (actionJson.data.taskTitle) {
+                        task = await Task.findOneAndUpdate(
+                            { user: userId, title: new RegExp(actionJson.data.taskTitle, 'i'), completed: false },
+                            { completed: true, completedAt: new Date() },
+                            { new: true }
+                        );
+                    }
+                    actionResult = task ? `Task completed: ${task.title}` : `Task not found`;
+                    console.log("✅ Task marked complete:", task);
+                }
+                else if (actionJson.action === 'delete_task') {
+                    let task;
+                    if (actionJson.data.taskId) {
+                        task = await Task.findOneAndDelete({ _id: actionJson.data.taskId, user: userId });
+                    } else if (actionJson.data.taskTitle) {
+                        task = await Task.findOneAndDelete({ user: userId, title: new RegExp(actionJson.data.taskTitle, 'i') });
+                    }
+                    actionResult = task ? `Task deleted: ${task.title}` : `Task not found`;
+                    console.log("✅ Task deleted:", task);
+                }
+                else if (actionJson.action === 'delete_subject') {
+                    let subject;
+                    if (actionJson.data.subjectId) {
+                        subject = await Subject.findOneAndDelete({ _id: actionJson.data.subjectId, user: userId });
+                    } else if (actionJson.data.subjectName) {
+                        subject = await Subject.findOneAndDelete({ user: userId, name: new RegExp(actionJson.data.subjectName, 'i') });
+                    }
+                    actionResult = subject ? `Subject deleted: ${subject.name}` : `Subject not found`;
+                    console.log("✅ Subject deleted:", subject);
+                }
+                else if (actionJson.action === 'update_goal') {
+                    const goal = await Goal.findOneAndUpdate(
+                        { _id: actionJson.data.goalId, user: userId },
+                        { $inc: { current: actionJson.data.increment || 1 } },
+                        { new: true }
+                    );
+                    actionResult = goal ? `Goal updated: ${goal.title} → ${goal.current}/${goal.target} ${goal.unit}` : `Goal not found`;
+                    console.log("✅ Goal progress updated:", goal);
+                }
+                else if (actionJson.action === 'add_note') {
+                    const newNote = await Note.create({
+                        user: userId,
+                        content: actionJson.data.content,
+                        title: (actionJson.data.content || 'AI Note').substring(0, 80),
+                        subject: actionJson.data.subject || null
+                    });
+                    actionResult = `Note saved`;
+                    console.log("✅ Note created:", newNote);
+                }
+                else if (actionJson.action === 'log_session') {
+                    const newSession = await Session.create({
+                        user: userId,
+                        subject: actionJson.data.subject || 'General',
+                        duration: Math.abs(actionJson.data.duration) || 25,
+                        type: 'manual'
+                    });
+                    actionResult = `Session logged: ${newSession.subject} for ${newSession.duration} mins`;
+                    console.log("✅ Session logged:", newSession);
+                }
+                else if (actionJson.action === 'navigate_to') {
+                    // Frontend-only — pass through as special marker
+                    actionResult = `navigate_to:${actionJson.data.page}`;
+                }
+                else if (actionJson.action === 'start_timer') {
+                    // Frontend-only — pass through as special marker
+                    actionResult = `start_timer:${actionJson.data.minutes || 25}`;
                 }
                 
                 // Remove the JSON from the user-facing text
